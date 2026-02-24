@@ -159,7 +159,16 @@ export default nextConfig;
 env
 
 ```
-# Supabase local NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh... # MQTT (local dev) MQTT_BROKER_URL=mqtt://localhost:1883 # Payments (add when ready) NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_... STRIPE_SECRET_KEY=sk_test_... BTCPAY_URL=https://your-btcpay-server.com BTCPAY_API_KEY=...
+# Supabase local 
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0 
+
+# MQTT (local dev) 
+MQTT_BROKER_URL=mqtt://localhost:1883 
+
+# Payments (add when ready) 
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_... 
+STRIPE_SECRET_KEY=sk_test_... 
+BTCPAY_URL=https://your-btcpay-server.com BTCPAY_API_KEY=...
 ```
 
 ### Production – Vercel dashboard
