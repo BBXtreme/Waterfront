@@ -31,3 +31,66 @@
 
 # 2026-02-24 17:06:04.173586
 +all
+
+# 2026-02-24 19:41:10.835586
++y
+
+# 2026-02-24 19:41:26.904925
++/add waterfront-web/src/app/admin/**/*.tsx
++/add waterfront-web/src/lib/supabase/**/*.ts
++
++Recreate / fill minimal content for admin dashboard pages if missing or empty:
++
++- src/app/admin/layout.tsx: Protected layout with Supabase server-side session check (redirect to /admin/login if no session), top bar (title "Waterfront Admin", user email, logout form), left sidebar with links: Dashboard, Bookings, Machines & Telemetry, Logs & Events.
++
++- src/app/admin/login/page.tsx: Client component with email/password form, error message, loading state. Use supabase.auth.signInWithPassword from '@/lib/supabase/client'. Redirect to /admin/dashboard on success.
++
++- src/app/admin/dashboard/page.tsx: Simple overview with 3 stat cards (Active Rentals, Available Machines, Alerts) using shadcn Card.
++
++- src/app/admin/bookings/page.tsx: Placeholder <h2>Bookings</h2> + note "Data table coming soon"
++
++- src/app/admin/machines/page.tsx: Placeholder <h2>Machines & Telemetry</h2> + note "Realtime table coming soon"
++
++- src/app/admin/logs/page.tsx: Placeholder <h2>Logs & Events</h2> + note "Event log coming soon"
++
++Do NOT touch public/customer pages (booking, confirmation, home, root layout).
++Commit with message "Recreate/fill admin dashboard placeholder pages and layout"
+
+# 2026-02-24 19:41:36.097023
++y
+
+# 2026-02-24 19:42:54.174388
++/exit
+
+# 2026-02-24 19:43:28.282196
++/add waterfront-web/src/app/admin/**/*.tsx
++/add waterfront-web/src/lib/supabase/**/*.ts
++/add waterfront-web/src/app/layout.tsx
+
+# 2026-02-24 19:43:30.844975
++y
+
+# 2026-02-24 19:43:37.418862
++add
+
+# 2026-02-24 19:43:42.249008
++all
+
+# 2026-02-24 19:44:08.629860
++Recreate/fill minimal placeholder content for admin pages:
++
++- admin/layout.tsx: Protected layout with sidebar (links: Dashboard, Bookings, Machines & Telemetry, Logs & Events), top bar (title "Waterfront Admin", email display, logout button). Include basic Supabase server-side session check (redirect to /admin/login if no session).
++
++- admin/login/page.tsx: Client-side login form (email/password), error message, loading state. Use supabase.auth.signInWithPassword from '@/lib/supabase/client'. Redirect to /admin/dashboard on success.
++
++- admin/dashboard/page.tsx: Simple overview with 3 shadcn Card stat cards (Active Rentals, Available Machines, Alerts).
++
++- admin/bookings/page.tsx: <h2>Bookings</h2> + note "Data table coming soon"
++
++- admin/machines/page.tsx: <h2>Machines & Telemetry</h2> + note "Realtime table coming soon"
++
++- admin/logs/page.tsx: <h2>Logs & Events</h2> + note "Event log coming soon"
++
++Do NOT modify public/customer pages (booking, confirmation, home, root layout).
++
++Commit with message "Recreate/fill admin dashboard placeholder pages and layout"
