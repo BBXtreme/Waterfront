@@ -1,47 +1,57 @@
-# Waterfront
-
-**Kayak / SUP Rental Booking App + ESP32 MQTT Controller**  
+# Waterfront  
+**Kayak / SUP Rental Booking App + ESP32 MQTT Controller**
 
 Self-service, unmanned rental system with Next.js PWA, Supabase backend, BTCPay/Stripe payments, and ESP32-based smart locker control via MQTT.
 
+Live demo (Vercel): https://waterfront-[your-project-slug].vercel.app  
+
+[![Deployed with Vercel](https://therealsujitk-vercel-badge.vercel.app/api/BBXtreme/Waterfront?branch=main)](https://vercel.com/bbxtreme/waterfront-[your-project-slug])  
+
+<!-- Replace with your real Vercel project slug / badge link after connecting the repo -->
+
+**Current status**: Early development – auth & local setup working, calendar & payments next
+
 ## Features (Current & Planned)
 
-- Guest booking (no login required)
+- Guest booking (no login required for basic flow)
 - Calendar + time slot selection
 - Location / equipment selection
-- Real-time availability (Supabase)
-- Payments: Stripe (fiat) + BTCPay (Lightning / Liquid BTC)
+- Real-time availability (Supabase Realtime)
+- Payments: Stripe (fiat) + BTCPay Server (Lightning / Liquid BTC)
 - Instant PIN + QR code confirmation (via email or on-screen)
 - ESP32 MQTT integration for locker unlock / sensor feedback (take/return events)
 - Admin dashboard (telemetry, bookings, payments, logs)
-- Offline-tolerant PWA (cached QR/PIN)
+- Offline-tolerant PWA (cached QR/PIN for poor connectivity)
 
 ## Tech Stack
 
-- **Frontend / PWA** — Next.js 16+, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend / Database** — Supabase (PostgreSQL + Auth + Realtime + Storage)
-- **Payments** — Stripe + BTCPay Server (self-hosted)
-- **IoT / Hardware** — ESP32 (Arduino framework + PlatformIO), PubSubClient (MQTT), TinyGSM (LTE fallback)
-- **Infrastructure** — Docker + Mosquitto MQTT broker
-- **Development** — pnpm, Aider (AI coding), GitHub
+- **Frontend / PWA** — Next.js 16+, TypeScript, Tailwind CSS, shadcn/ui  
+- **Backend / Database** — Supabase (PostgreSQL + Auth + Realtime + Storage)  
+- **Payments** — Stripe + BTCPay Server (self-hosted)  
+- **IoT / Hardware** — ESP32 (Arduino framework + PlatformIO), PubSubClient (MQTT), TinyGSM (LTE fallback)  
+- **Infrastructure** — Docker + Mosquitto MQTT broker  
+- **Development** — pnpm, Aider (AI coding), GitHub  
+- **Deployment** — Vercel (frontend only)
 
 ## Project Structure (Monorepo)
 
 Waterfront/ 
 
-├── docs/                        # Specifications, screenshots, wireframes 
+├── docs/                 # Specifications, screenshots, wireframes, FSD/TSD 
 
-├── supabase-local/              # Local Supabase dev environment 
+├── supabase-local/       # Local Supabase dev environment (CLI) 
 
-├── waterfront-web/              # Next.js PWA (customer booking app) 
+├── waterfront-web/       # Next.js PWA → deployed to Vercel 
 
-├── waterfront-infra/            # Docker Compose (MQTT broker, future BTCPay) 
+├── waterfront-infra/     # Docker Compose (MQTT broker, future BTCPay, etc.) 
 
-├── waterfront-esp32/            # PlatformIO project (ESP32 firmware) 
+├── waterfront-esp32/     # PlatformIO project (ESP32 firmware) 
 
-├── waterfront-backend/          # Optional Node.js backend (if needed) 
+├── waterfront-backend/   # Optional Node.js/Edge Functions (if needed) 
 
 └── README.md
+
+**Note**: Only `waterfront-web` is deployed to Vercel. The rest (ESP32, infra, local Supabase) remain local/dev tools.
 
 ## Quick Start – Development Setup
 
@@ -52,20 +62,19 @@ Waterfront/
 - Docker Desktop
 - Supabase CLI (`brew install supabase/tap/supabase` or `npm install -g supabase`)
 - PlatformIO (VS Code extension)
-- GitHub account (for repo sync)
+- GitHub account
 
-### 1. Clone & Install Dependencies
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/BBXtreme/Waterfront.git
 cd Waterfront
 
-# Install pnpm dependencies for the PWA
 cd waterfront-web
 pnpm install
 ```
 
-### 2. Run the PWA (Customer Booking App)
+### 2. Run the PWA locally
 
 Bash
 
@@ -74,23 +83,19 @@ cd waterfront-web
 pnpm dev
 ```
 
-→ Open [http://localhost:3000](http://localhost:3000/) You should see the home screen ("Book Kayak or SUP").
+→ [http://localhost:3000](http://localhost:3000/)
 
-### 3. Start Local Supabase (Database + Auth + Realtime)
+### 3. Local Supabase (Database + Auth + Realtime)
 
 Bash
 
 ```
-cd ~/Documents/GitHub/Waterfront/supabase-local
+cd ../supabase-local
 supabase init    # only first time
 supabase start
 ```
 
-→ Open Studio: [http://127.0.0.1:54323](http://127.0.0.1:54323/) (default credentials: postgres/postgres) → Create tables manually or via migration (see docs/ for schema examples):
-
-- bookings
-- machines
-- events
+→ Studio: [http://127.0.0.1:54323](http://127.0.0.1:54323/) Default login: postgres / postgres → Create tables / run migrations (see docs/ for schema)
 
 Add to waterfront-web/.env.local:
 
@@ -100,61 +105,95 @@ env
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh...
 ```
 
-Restart pnpm dev → PWA can now connect to local Supabase.
+Restart pnpm dev.
 
-### 4. Start MQTT Broker (Local Testing for ESP32)
+### 4. Local MQTT Broker (for ESP32 testing)
 
 Bash
 
 ```
-cd ~/Documents/GitHub/Waterfront/waterfront-infra
+cd ../waterfront-infra
 docker compose up -d
 ```
 
-→ Mosquitto broker running on localhost:1883 (anonymous access for dev) → Test with MQTT Explorer or mosquitto_pub / mosquitto_sub
+→ Mosquitto at mqtt://localhost:1883 (anonymous)
 
-### 5. ESP32 Development (PlatformIO)
+### 5. ESP32 Firmware (PlatformIO)
 
-1. Open VS Code → open folder ~/Documents/GitHub/Waterfront/waterfront-esp32
-2. PlatformIO extension → Home → New Project (if not already initialized)
-   - Board: ESP32 Dev Module (or your board)
-   - Framework: Arduino
-   - Location: current folder
-3. Edit platformio.ini and src/main.cpp (see docs/ for examples)
-4. Build / Upload via PlatformIO toolbar (bottom of VS Code)
+Open waterfront-esp32 folder in VS Code → use PlatformIO toolbar to build/upload.
 
-### Environment Variables (waterfront-web/.env.local)
+## Deployment – Vercel (waterfront-web only)
+
+1. Go to [https://vercel.com](https://vercel.com/) → New Project → Import Git Repository
+2. Select this repo (BBXtreme/Waterfront)
+3. **Important**: Set **Root Directory** = waterfront-web
+4. Framework Preset: Next.js (auto-detected)
+5. Add environment variables in Vercel dashboard (see below)
+6. Deploy
+
+→ Every push to main auto-deploys. Preview branches work automatically.
+
+**Common monorepo fixes** (add to waterfront-web/next.config.mjs if build fails):
+
+JavaScript
+
+```
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // If you have shared/internal packages later
+  transpilePackages: [],
+
+  // Helps with monorepo tracing sometimes
+  experimental: {
+    outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
+  },
+};
+
+export default nextConfig;
+```
+
+## Environment Variables
+
+### Local – waterfront-web/.env.local
 
 env
 
 ```
-# Supabase (local) NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh... # Production Supabase (later) # NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co # NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh... # MQTT broker (for dev) MQTT_BROKER_URL=mqtt://localhost:1883 # Stripe / BTCPay (add later) STRIPE_SECRET_KEY=sk_test_... BTCPAY_URL=https://your-btcpay-server.com BTCPAY_API_KEY=...
+# Supabase local NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh... # MQTT (local dev) MQTT_BROKER_URL=mqtt://localhost:1883 # Payments (add when ready) NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_... STRIPE_SECRET_KEY=sk_test_... BTCPAY_URL=https://your-btcpay-server.com BTCPAY_API_KEY=...
 ```
 
-### Useful Commands Summary
+### Production – Vercel dashboard
 
-| Task                    | Command                                     |
-| ----------------------- | ------------------------------------------- |
-| Run PWA                 | cd waterfront-web && pnpm dev               |
-| Start local Supabase    | cd supabase-local && supabase start         |
-| Start MQTT broker       | cd waterfront-infra && docker compose up -d |
-| Stop MQTT               | cd waterfront-infra && docker compose down  |
-| Build ESP32 firmware    | PlatformIO → Build (in VS Code)             |
-| Upload to ESP32         | PlatformIO → Upload                         |
-| Open project in VS Code | code . (from repo root)                     |
+Add these keys (no .env file in git):
 
-### Development Guidelines
+env
 
-- Use Aider for AI-assisted coding: aider --model xai/grok-code-fast-1
-- Commit often with clear messages
-- Keep waterfront-web as main focus until PWA is complete
-- Document new features in docs/
-- Use branches for big features (git checkout -b feat/supabase-integration)
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh... NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_... STRIPE_SECRET_KEY=sk_live_... BTCPAY_URL=https://your-btcpay-server.com BTCPAY_API_KEY=... # Optional – for admin/debug MQTT_BROKER_URL=wss://your-mosquitto-domain:8084/mqtt
+```
 
-### License
+**Rule of thumb**: NEXT_PUBLIC_ → client-side (browser), others → server/edge only.
+
+## Useful Commands
+
+| Task                 | Command                                     |
+| -------------------- | ------------------------------------------- |
+| Run PWA              | cd waterfront-web && pnpm dev               |
+| Start local Supabase | cd supabase-local && supabase start         |
+| Start MQTT broker    | cd waterfront-infra && docker compose up -d |
+| Stop MQTT            | cd waterfront-infra && docker compose down  |
+| Open whole project   | code . (from root)                          |
+
+## Development Guidelines
+
+- Use Aider: aider --model xai/grok-code-fast-1
+- Commit often, small & clear messages
+- Keep waterfront-web as priority until PWA flow is complete
+- Document decisions & schemas in docs/
+- Feature branches: git checkout -b feat/calendar-availability
+
+## License
 
 MIT License (to be confirmed)
 
-------
-
-Happy building! Questions → open an Issue in this repo.
+Happy building! Questions → open an Issue
