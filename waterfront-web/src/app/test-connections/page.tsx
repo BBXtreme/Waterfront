@@ -4,9 +4,6 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import mqtt from 'mqtt';
 
-// Optional debug log (can stay here now)
-console.log('MQTT_BROKER_URL from env:', process.env.MQTT_BROKER_URL);
-
 // Define types for status objects
 interface Status {
   status: string;
@@ -15,6 +12,9 @@ interface Status {
 }
 
 export default function TestConnectionsPage() {
+  const mqttUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'mqtt://localhost:1883';
+  console.log('MQTT URL:', mqttUrl);
+
   // State for loading
   const [loading, setLoading] = useState(true);
 
@@ -66,21 +66,12 @@ export default function TestConnectionsPage() {
 
   // Function to check MQTT connection
   const checkMQTT = () => {
-    const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL; // Assuming env var is NEXT_PUBLIC_MQTT_BROKER_URL
-    if (!brokerUrl) {
-      setMqttStatus({
-        status: 'Error',
-        message: 'MQTT_BROKER_URL not set',
-        timestamp: new Date().toLocaleString(),
-      });
-      return;
-    }
     try {
-      const client = mqtt.connect(brokerUrl);
+      const client = mqtt.connect(mqttUrl);
       client.on('connect', () => {
         setMqttStatus({
           status: 'Connected',
-          message: 'MQTT client connected',
+          message: `Connected to ${mqttUrl}`,
           timestamp: new Date().toLocaleString(),
         });
         client.end(); // Disconnect after confirming connection
@@ -110,13 +101,8 @@ export default function TestConnectionsPage() {
 
   // Function to send test message
   const sendTestMessage = () => {
-    const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL;
-    if (!brokerUrl) {
-      alert('MQTT_BROKER_URL not set');
-      return;
-    }
     try {
-      const client = mqtt.connect(brokerUrl);
+      const client = mqtt.connect(mqttUrl);
       client.on('connect', () => {
         const payload = {
           action: 'test_unlock',
