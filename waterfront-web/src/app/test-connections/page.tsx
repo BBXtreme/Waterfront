@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toggle } from '@/components/ui/toggle';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { toast, Toaster } from 'sonner';
 import { Calendar } from '@/components/ui/calendar';
 
 // Define types for status objects
@@ -22,7 +23,6 @@ interface Status {
 
 function TestConnectionsPage() {
   const { theme, setTheme } = useTheme();
-  const { toast } = useToast();
 
   // State for loading
   const [loading, setLoading] = useState(true);
@@ -349,26 +349,16 @@ function TestConnectionsPage() {
       localClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast({
-            title: 'Publish Failed',
-            description: err.message,
-            variant: 'destructive',
-          });
+          toast.error('Publish Failed', { description: err.message });
         } else {
           console.log('Test message published to local');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'local');
-            toast({
-              title: 'Message Sent',
-              description: 'Logged to Supabase',
-            });
+            toast('Message Sent', { description: `to local` });
+            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
-            toast({
-              title: 'Log Failed',
-              description: 'Supabase log failed',
-              variant: 'destructive',
-            });
+            toast.error('Log Failed', { description: 'Supabase log failed' });
           }
         }
       });
@@ -386,26 +376,16 @@ function TestConnectionsPage() {
       hivemqClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast({
-            title: 'Publish Failed',
-            description: err.message,
-            variant: 'destructive',
-          });
+          toast.error('Publish Failed', { description: err.message });
         } else {
           console.log('Test message published to hivemq');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'hivemq');
-            toast({
-              title: 'Message Sent',
-              description: 'Logged to Supabase',
-            });
+            toast('Message Sent', { description: `to hivemq` });
+            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
-            toast({
-              title: 'Log Failed',
-              description: 'Supabase log failed',
-              variant: 'destructive',
-            });
+            toast.error('Log Failed', { description: 'Supabase log failed' });
           }
         }
       });
@@ -423,26 +403,16 @@ function TestConnectionsPage() {
       emqxClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast({
-            title: 'Publish Failed',
-            description: err.message,
-            variant: 'destructive',
-          });
+          toast.error('Publish Failed', { description: err.message });
         } else {
           console.log('Test message published to emqx');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'emqx');
-            toast({
-              title: 'Message Sent',
-              description: 'Logged to Supabase',
-            });
+            toast('Message Sent', { description: `to emqx` });
+            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
-            toast({
-              title: 'Log Failed',
-              description: 'Supabase log failed',
-              variant: 'destructive',
-            });
+            toast.error('Log Failed', { description: 'Supabase log failed' });
           }
         }
       });
@@ -460,26 +430,16 @@ function TestConnectionsPage() {
       hivemqCloudClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast({
-            title: 'Publish Failed',
-            description: err.message,
-            variant: 'destructive',
-          });
+          toast.error('Publish Failed', { description: err.message });
         } else {
           console.log('Test message published to hivemq-cloud');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'hivemq-cloud');
-            toast({
-              title: 'Message Sent',
-              description: 'Logged to Supabase',
-            });
+            toast('Message Sent', { description: `to hivemq-cloud` });
+            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
-            toast({
-              title: 'Log Failed',
-              description: 'Supabase log failed',
-              variant: 'destructive',
-            });
+            toast.error('Log Failed', { description: 'Supabase log failed' });
           }
         }
       });
@@ -554,7 +514,7 @@ function TestConnectionsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-lg">
-                Status: <span className={envStatus.status === 'OK' ? 'text-green-600' : 'text-red-600'}>{envStatus.status}</span>
+                Status: <Badge variant={envStatus.status === 'OK' ? 'default' : 'destructive'}>{envStatus.status}</Badge>
               </p>
               <p className="text-sm text-muted-foreground">{envStatus.message}</p>
             </CardContent>
@@ -567,7 +527,7 @@ function TestConnectionsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-lg">
-                Status: <span className={supabaseStatus.status.includes('Connected') ? 'text-green-600' : 'text-red-600'}>{supabaseStatus.status}</span>
+                Status: <Badge variant={supabaseStatus.status.includes('Connected') ? 'default' : 'destructive'}>{supabaseStatus.status}</Badge>
               </p>
               <p className="text-sm text-muted-foreground">{supabaseStatus.message}</p>
               {supabaseStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {supabaseStatus.timestamp}</p>}
@@ -576,7 +536,7 @@ function TestConnectionsPage() {
 
           {/* MQTT Broker Cards */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex flex-row gap-4 flex-wrap">
+            <div className="flex flex-col md:flex-row gap-6">
               {/* Local Mosquitto Card */}
               <Card className="flex-1 min-w-[300px]">
                 <CardHeader>
@@ -584,7 +544,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <span className={localIsConnected ? 'text-green-600' : localStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{localStatus.status}</span>
+                    Status: <Badge variant={localIsConnected ? 'default' : localStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{localStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{localStatus.message}</p>
                   {localStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {localStatus.timestamp}</p>}
@@ -613,7 +573,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <span className={hivemqIsConnected ? 'text-green-600' : hivemqStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{hivemqStatus.status}</span>
+                    Status: <Badge variant={hivemqIsConnected ? 'default' : hivemqStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{hivemqStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{hivemqStatus.message}</p>
                   {hivemqStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqStatus.timestamp}</p>}
@@ -641,7 +601,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <span className={emqxIsConnected ? 'text-green-600' : emqxStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{emqxStatus.status}</span>
+                    Status: <Badge variant={emqxIsConnected ? 'default' : emqxStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{emqxStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{emqxStatus.message}</p>
                   {emqxStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {emqxStatus.timestamp}</p>}
@@ -669,7 +629,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <span className={hivemqCloudIsConnected ? 'text-green-600' : hivemqCloudStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{hivemqCloudStatus.status}</span>
+                    Status: <Badge variant={hivemqCloudIsConnected ? 'default' : hivemqCloudStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{hivemqCloudStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{hivemqCloudStatus.message}</p>
                   {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
@@ -745,7 +705,7 @@ function TestConnectionsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-lg">
-                Status: <span className={vercelStatus.status === 'OK' ? 'text-green-600' : 'text-red-600'}>{vercelStatus.status}</span>
+                Status: <Badge variant={vercelStatus.status === 'OK' ? 'default' : 'destructive'}>{vercelStatus.status}</Badge>
               </p>
               <p className="text-sm text-muted-foreground">{vercelStatus.message}</p>
             </CardContent>
@@ -758,6 +718,7 @@ function TestConnectionsPage() {
         >
           {loading ? 'Refreshing...' : 'Refresh All'}
         </Button>
+        <Toaster />
       </main>
     </ThemeProvider>
   );
