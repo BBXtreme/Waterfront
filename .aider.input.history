@@ -600,3 +600,33 @@
 +- Run pnpm dev
 +- Publish message → check Supabase table for new row
 +- Confirm payload is JSONB with action, kayakId, broker, timestamp
+
+# 2026-02-25 17:10:44.445987
++Polish src/app/test-connections/page.tsx with shadcn/ui and dark mode.
++
++Install shadcn-ui components if missing: Card, Button, Input, Toggle, Label, RadioGroup, Toast
++
++Use:
++- shadcn Card for each broker/environment/Supabase card
++- shadcn Button for Start/Stop, Send Test Message, Refresh All
++- shadcn Input for username/password
++- shadcn Toggle for dark mode switch (top right)
++- shadcn RadioGroup for broker selector
++- shadcn Toast for publish/log success/error
++
++Wrap page in <ThemeProvider> from next-themes (assume installed)
++Add dark mode toggle button: "Toggle Dark Mode"
++
++Improve layout:
++- Responsive: cards stack on mobile, horizontal on desktop
++- Dark mode: full support (shadcn dark classes)
++
++Keep all logic (selector, per-broker connect/start/stop, subscribe, publish, Supabase log)
++
++After changes:
++- Remind to run npx shadcn-ui@latest add card button input toggle label radio-group toast
++- pnpm add next-themes if missing
++- Run pnpm dev
++- Test dark mode toggle
++- Check if cards/buttons look polished in light/dark
++- Confirm publish still works
