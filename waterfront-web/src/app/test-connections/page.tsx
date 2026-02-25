@@ -518,8 +518,8 @@ function TestConnectionsPage() {
         {loading && <p className="text-xl text-center">Loading...</p>}
 
         {/* Environment + Supabase */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card className="shadow-md rounded-xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[25px] mb-8">
+          <Card className="shadow-md rounded-xl p-[25px]">
             <CardHeader>
               <CardTitle>Environment</CardTitle>
             </CardHeader>
@@ -531,7 +531,7 @@ function TestConnectionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-md rounded-xl p-6">
+          <Card className="shadow-md rounded-xl p-[25px]">
             <CardHeader>
               <CardTitle>Supabase</CardTitle>
             </CardHeader>
@@ -548,14 +548,14 @@ function TestConnectionsPage() {
         {/* MQTT Brokers */}
         <div>
           <h2 className="text-xl font-medium mb-6">MQTT Brokers</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[25px]">
             {/* Local Mosquitto Card */}
             <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden">
               <CardHeader className="flex justify-between items-center">
                 <CardTitle className="font-medium">MQTT - Local Mosquitto</CardTitle>
                 <Badge variant={getBadgeVariant(localStatus, localIsConnected)}>{localStatus.status}</Badge>
               </CardHeader>
-              <CardContent className="p-6 flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">{localStatus.message}</p>
                   {localStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {localStatus.timestamp}</p>}
@@ -587,7 +587,7 @@ function TestConnectionsPage() {
                 <CardTitle className="font-medium">MQTT - HiveMQ Public</CardTitle>
                 <Badge variant={getBadgeVariant(hivemqStatus, hivemqIsConnected)}>{hivemqStatus.status}</Badge>
               </CardHeader>
-              <CardContent className="p-6 flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">{hivemqStatus.message}</p>
                   {hivemqStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqStatus.timestamp}</p>}
@@ -618,7 +618,7 @@ function TestConnectionsPage() {
                 <CardTitle className="font-medium">MQTT - EMQX Public</CardTitle>
                 <Badge variant={getBadgeVariant(emqxStatus, emqxIsConnected)}>{emqxStatus.status}</Badge>
               </CardHeader>
-              <CardContent className="p-6 flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">{emqxStatus.message}</p>
                   {emqxStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {emqxStatus.timestamp}</p>}
@@ -649,7 +649,7 @@ function TestConnectionsPage() {
                 <CardTitle className="font-medium">MQTT - HiveMQ Cloud (Private)</CardTitle>
                 <Badge variant={getBadgeVariant(hivemqCloudStatus, hivemqCloudIsConnected)}>{hivemqCloudStatus.status}</Badge>
               </CardHeader>
-              <CardContent className="p-6 flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">{hivemqCloudStatus.message}</p>
                   {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
