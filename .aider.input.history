@@ -145,3 +145,38 @@
 
 # 2026-02-24 20:27:33.853865
 +/exit
+
+# 2026-02-25 09:06:22.661057
++We want a very clean, minimal Next.js App Router page that shows connection status.
++
++Create folder src/app/test-connections/ and file page.tsx inside it.
++
++The page should be client component ('use client').
++
++Goals / features:
++
++1. Big title "Waterfront – Connection & Environment Test"
++
++2. Four simple status cards (use Tailwind + basic divs):
++   - Environment: shows NEXT_PUBLIC_SUPABASE_URL and length of NEXT_PUBLIC_SUPABASE_ANON_KEY
++   - Supabase: initializes client with createClient from @supabase/supabase-js
++     → tries supabase.from('_dummy').select('count(*)').maybeSingle() or auth.getSession()
++     → shows "Connected ✅" / "Error ❌" + error message
++   - MQTT: uses mqtt library → connect to MQTT_BROKER_URL
++     → shows Connected / Disconnected / Error + timestamp of last status change
++   - Vercel: shows process.env.NEXT_PUBLIC_VERCEL_ENV or VERCEL_URL if available
++
++3. Add loading state (use useState + useEffect)
++
++4. Add "Refresh Status" button
++
++5. Install needed packages if missing: @supabase/supabase-js mqtt
++
++6. Clean, commented code, TypeScript, async/await
++
++7. Keep it beginner readable – no shadcn yet, simple div + tailwind classes
++
++After creation show me the new test-connections/page.tsx file content.
+
+# 2026-02-25 09:06:49.434591
++all
