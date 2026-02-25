@@ -15,11 +15,12 @@ export default function TestConnectionsPage() {
   const mqttUrls = {
     local: process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'ws://localhost:9001/mqtt',
     hivemq: 'wss://broker.hivemq.com:8883/mqtt',
-    emqx: 'wss://broker.emqx.io:8084/mqtt'
+    emqx: 'wss://broker.emqx.io:8084/mqtt',
+    'hivemq-cloud': 'wss://8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud:8884/mqtt'
   };
 
   // State for selected broker
-  const [selectedBroker, setSelectedBroker] = useState<'local' | 'hivemq' | 'emqx'>('hivemq');
+  const [selectedBroker, setSelectedBroker] = useState<'local' | 'hivemq' | 'emqx' | 'hivemq-cloud'>('hivemq');
 
   const activeUrl = mqttUrls[selectedBroker];
   console.log('Attempting MQTT WS connect to:', activeUrl);
@@ -43,8 +44,8 @@ export default function TestConnectionsPage() {
   // Load selectedBroker from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('mqttBrokerChoice');
-    if (saved && ['local', 'hivemq', 'emqx'].includes(saved)) {
-      setSelectedBroker(saved as 'local' | 'hivemq' | 'emqx');
+    if (saved && ['local', 'hivemq', 'emqx', 'hivemq-cloud'].includes(saved)) {
+      setSelectedBroker(saved as 'local' | 'hivemq' | 'emqx' | 'hivemq-cloud');
     }
   }, []);
 
@@ -98,15 +99,20 @@ export default function TestConnectionsPage() {
     if (!mqttClient) {
       try {
         console.log(`Connecting to ${selectedBroker} broker: ${activeUrl}`);
-        const client = mqtt.connect(activeUrl, {
+        const options: any = {
           protocol: 'ws',
           reconnectPeriod: 3000,
           connectTimeout: 10000,
           rejectUnauthorized: false,
           clientId: 'waterfront-browser-' + Math.random().toString(16).slice(3),
-        });
+        };
+        if (selectedBroker === 'hivemq-cloud') {
+          options.username = 'waterfront-user';
+          options.password = 'YOUR_PASSWORD_HERE';
+        }
+        const client = mqtt.connect(activeUrl, options);
         client.on('connect', () => {
-          console.log('MQTT CONNECTED to ' + activeUrl);
+          console.log(selectedBroker === 'hivemq-cloud' ? 'Connected to HiveMQ Cloud (authenticated)' : 'MQTT CONNECTED to ' + activeUrl);
           setIsMqttConnected(true);
           setMqttStatus({
             status: 'connected',
@@ -118,7 +124,7 @@ export default function TestConnectionsPage() {
           }
         });
         client.on('error', (error) => {
-          console.error('MQTT ERROR:', error);
+          console.error(selectedBroker === 'hivemq-cloud' ? 'HiveMQ Cloud auth/connection failed – check credentials' : 'MQTT ERROR:', error);
           setIsMqttConnected(false);
           setMqttStatus({
             status: 'error',
@@ -261,7 +267,8 @@ export default function TestConnectionsPage() {
   const brokerLabels = {
     local: 'Local Mosquitto',
     hivemq: 'HiveMQ public',
-    emqx: 'EMQX public'
+    emqx: 'EMQX public',
+    'hivemq-cloud': 'HiveMQ Cloud (private)'
   };
 
   return (
@@ -301,7 +308,7 @@ export default function TestConnectionsPage() {
                   name="broker"
                   value={key}
                   checked={selectedBroker === key}
-                  onChange={(e) => setSelectedBroker(e.target.value as 'local' | 'hivemq' | 'emqx')}
+                  onChange={(e) => setSelectedBroker(e.target.value as 'local' | 'hivemq' | 'emqx' | 'hivemq-cloud')}
                   className="mr-2"
                 />
                 <span className="text-sm">{label}</span>
