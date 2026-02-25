@@ -519,8 +519,8 @@ function TestConnectionsPage() {
 
         {/* Environment + Supabase */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-[25px] mb-8">
-          <Card className="shadow-md rounded-xl p-[25px]">
-            <CardHeader>
+          <Card className="shadow-md rounded-xl p-[25px] min-w-[300px] max-w-[75vw]">
+            <CardHeader className="p-[25px]">
               <CardTitle>Environment</CardTitle>
             </CardHeader>
             <CardContent>
@@ -531,8 +531,8 @@ function TestConnectionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-md rounded-xl p-[25px]">
-            <CardHeader>
+          <Card className="shadow-md rounded-xl p-[25px] min-w-[300px] max-w-[75vw]">
+            <CardHeader className="p-[25px]">
               <CardTitle>Supabase</CardTitle>
             </CardHeader>
             <CardContent>
@@ -550,8 +550,8 @@ function TestConnectionsPage() {
           <h2 className="text-xl font-medium mb-6">MQTT Brokers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[25px]">
             {/* Local Mosquitto Card */}
-            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden">
-              <CardHeader className="flex justify-between items-center">
+            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden min-w-[300px] max-w-[75vw]">
+              <CardHeader className="p-[25px] flex justify-between items-center">
                 <CardTitle className="font-medium">MQTT - Local Mosquitto</CardTitle>
                 <Badge variant={getBadgeVariant(localStatus, localIsConnected)}>{localStatus.status}</Badge>
               </CardHeader>
@@ -582,8 +582,8 @@ function TestConnectionsPage() {
             </Card>
 
             {/* HiveMQ Public Card */}
-            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden">
-              <CardHeader className="flex justify-between items-center">
+            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden min-w-[300px] max-w-[75vw]">
+              <CardHeader className="p-[25px] flex justify-between items-center">
                 <CardTitle className="font-medium">MQTT - HiveMQ Public</CardTitle>
                 <Badge variant={getBadgeVariant(hivemqStatus, hivemqIsConnected)}>{hivemqStatus.status}</Badge>
               </CardHeader>
@@ -613,8 +613,8 @@ function TestConnectionsPage() {
             </Card>
 
             {/* EMQX Public Card */}
-            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden">
-              <CardHeader className="flex justify-between items-center">
+            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden min-w-[300px] max-w-[75vw]">
+              <CardHeader className="p-[25px] flex justify-between items-center">
                 <CardTitle className="font-medium">MQTT - EMQX Public</CardTitle>
                 <Badge variant={getBadgeVariant(emqxStatus, emqxIsConnected)}>{emqxStatus.status}</Badge>
               </CardHeader>
@@ -644,8 +644,8 @@ function TestConnectionsPage() {
             </Card>
 
             {/* HiveMQ Cloud Card */}
-            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden">
-              <CardHeader className="flex justify-between items-center">
+            <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden min-w-[300px] max-w-[75vw]">
+              <CardHeader className="p-[25px] flex justify-between items-center">
                 <CardTitle className="font-medium">MQTT - HiveMQ Cloud (Private)</CardTitle>
                 <Badge variant={getBadgeVariant(hivemqCloudStatus, hivemqCloudIsConnected)}>{hivemqCloudStatus.status}</Badge>
               </CardHeader>
