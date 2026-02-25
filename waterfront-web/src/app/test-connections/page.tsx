@@ -285,6 +285,7 @@ function TestConnectionsPage() {
     setLocalIsStarted(true);
     setLocalStatus({ status: 'connecting', message: 'Connecting...' });
     checkMQTT('local');
+    toast('Broker Local Mosquitto', { description: 'Started' });
   };
 
   const stopLocal = () => {
@@ -293,12 +294,14 @@ function TestConnectionsPage() {
     setLocalClient(null);
     setLocalIsConnected(false);
     setLocalStatus({ status: 'disconnected', message: 'Stopped' });
+    toast('Broker Local Mosquitto', { description: 'Stopped' });
   };
 
   const startHivemq = () => {
     setHivemqIsStarted(true);
     setHivemqStatus({ status: 'connecting', message: 'Connecting...' });
     checkMQTT('hivemq');
+    toast('Broker HiveMQ Public', { description: 'Started' });
   };
 
   const stopHivemq = () => {
@@ -307,12 +310,14 @@ function TestConnectionsPage() {
     setHivemqClient(null);
     setHivemqIsConnected(false);
     setHivemqStatus({ status: 'disconnected', message: 'Stopped' });
+    toast('Broker HiveMQ Public', { description: 'Stopped' });
   };
 
   const startEmqx = () => {
     setEmqxIsStarted(true);
     setEmqxStatus({ status: 'connecting', message: 'Connecting...' });
     checkMQTT('emqx');
+    toast('Broker EMQX Public', { description: 'Started' });
   };
 
   const stopEmqx = () => {
@@ -321,12 +326,14 @@ function TestConnectionsPage() {
     setEmqxClient(null);
     setEmqxIsConnected(false);
     setEmqxStatus({ status: 'disconnected', message: 'Stopped' });
+    toast('Broker EMQX Public', { description: 'Stopped' });
   };
 
   const startHivemqCloud = () => {
     setHivemqCloudIsStarted(true);
     setHivemqCloudStatus({ status: 'connecting', message: 'Connecting...' });
     checkMQTT('hivemq-cloud');
+    toast('Broker HiveMQ Cloud (Private)', { description: 'Started' });
   };
 
   const stopHivemqCloud = () => {
@@ -335,6 +342,7 @@ function TestConnectionsPage() {
     setHivemqCloudClient(null);
     setHivemqCloudIsConnected(false);
     setHivemqCloudStatus({ status: 'disconnected', message: 'Stopped' });
+    toast('Broker HiveMQ Cloud (Private)', { description: 'Stopped' });
   };
 
   // Send test message functions
@@ -349,13 +357,12 @@ function TestConnectionsPage() {
       localClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast.error('Publish Failed', { description: err.message });
+          toast.error('Failed', { description: err.message });
         } else {
           console.log('Test message published to local');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'local');
             toast('Message Sent', { description: `to local` });
-            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
             toast.error('Log Failed', { description: 'Supabase log failed' });
@@ -376,13 +383,12 @@ function TestConnectionsPage() {
       hivemqClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast.error('Publish Failed', { description: err.message });
+          toast.error('Failed', { description: err.message });
         } else {
           console.log('Test message published to hivemq');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'hivemq');
             toast('Message Sent', { description: `to hivemq` });
-            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
             toast.error('Log Failed', { description: 'Supabase log failed' });
@@ -403,13 +409,12 @@ function TestConnectionsPage() {
       emqxClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast.error('Publish Failed', { description: err.message });
+          toast.error('Failed', { description: err.message });
         } else {
           console.log('Test message published to emqx');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'emqx');
             toast('Message Sent', { description: `to emqx` });
-            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
             toast.error('Log Failed', { description: 'Supabase log failed' });
@@ -430,13 +435,12 @@ function TestConnectionsPage() {
       hivemqCloudClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
           console.error('Publish failed:', err);
-          toast.error('Publish Failed', { description: err.message });
+          toast.error('Failed', { description: err.message });
         } else {
           console.log('Test message published to hivemq-cloud');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'hivemq-cloud');
             toast('Message Sent', { description: `to hivemq-cloud` });
-            toast('Logged', { description: 'Publish event saved to mqtt_logs' });
           } catch (logErr) {
             console.error('Supabase log failed:', logErr);
             toast.error('Log Failed', { description: 'Supabase log failed' });
@@ -491,6 +495,13 @@ function TestConnectionsPage() {
     };
   }, []);
 
+  const getBadgeVariant = (status: Status, isConnected: boolean) => {
+    if (isConnected) return 'default';
+    if (status.status === 'connecting') return 'secondary';
+    if (status.status === 'disconnected' && status.message === 'Stopped') return 'outline';
+    return 'destructive';
+  };
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <main className="flex min-h-screen flex-col items-center justify-center p-8 text-center relative">
@@ -544,7 +555,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <Badge variant={localIsConnected ? 'default' : localStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{localStatus.status}</Badge>
+                    Status: <Badge variant={getBadgeVariant(localStatus, localIsConnected)}>{localStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{localStatus.message}</p>
                   {localStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {localStatus.timestamp}</p>}
@@ -573,7 +584,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <Badge variant={hivemqIsConnected ? 'default' : hivemqStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{hivemqStatus.status}</Badge>
+                    Status: <Badge variant={getBadgeVariant(hivemqStatus, hivemqIsConnected)}>{hivemqStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{hivemqStatus.message}</p>
                   {hivemqStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqStatus.timestamp}</p>}
@@ -601,7 +612,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <Badge variant={emqxIsConnected ? 'default' : emqxStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{emqxStatus.status}</Badge>
+                    Status: <Badge variant={getBadgeVariant(emqxStatus, emqxIsConnected)}>{emqxStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{emqxStatus.message}</p>
                   {emqxStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {emqxStatus.timestamp}</p>}
@@ -629,7 +640,7 @@ function TestConnectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg">
-                    Status: <Badge variant={hivemqCloudIsConnected ? 'default' : hivemqCloudStatus.status === 'connecting' ? 'secondary' : 'destructive'}>{hivemqCloudStatus.status}</Badge>
+                    Status: <Badge variant={getBadgeVariant(hivemqCloudStatus, hivemqCloudIsConnected)}>{hivemqCloudStatus.status}</Badge>
                   </p>
                   <p className="text-sm text-muted-foreground">{hivemqCloudStatus.message}</p>
                   {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
