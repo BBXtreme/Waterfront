@@ -498,7 +498,7 @@ function TestConnectionsPage() {
   const getBadgeVariant = (status: Status, isConnected: boolean) => {
     if (isConnected) return 'default'; // green
     if (status.status === 'connecting') return 'secondary'; // yellow
-    if (status.status === 'disconnected' && status.message === 'Stopped') return 'outline'; // gray
+    if (status.status === 'disconnected' && status.message === 'Stopped') return 'secondary'; // gray
     return 'destructive'; // red
   };
 
