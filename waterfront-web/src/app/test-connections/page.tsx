@@ -41,11 +41,25 @@ export default function TestConnectionsPage() {
   // State for local connection attempts
   const [localConnectionAttempts, setLocalConnectionAttempts] = useState(0);
 
-  // Load selectedBroker from localStorage on mount
+  // State for credentials
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Load selectedBroker and credentials from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('mqttBrokerChoice');
-    if (saved && ['local', 'hivemq', 'emqx', 'hivemq-cloud'].includes(saved)) {
-      setSelectedBroker(saved as 'local' | 'hivemq' | 'emqx' | 'hivemq-cloud');
+    const savedBroker = localStorage.getItem('mqttBrokerChoice');
+    if (savedBroker && ['local', 'hivemq', 'emqx', 'hivemq-cloud'].includes(savedBroker)) {
+      setSelectedBroker(savedBroker as 'local' | 'hivemq' | 'emqx' | 'hivemq-cloud');
+    }
+    const savedCredentials = localStorage.getItem('mqttCredentials');
+    if (savedCredentials) {
+      try {
+        const { username: u, password: p } = JSON.parse(savedCredentials);
+        setUsername(u || '');
+        setPassword(p || '');
+      } catch (e) {
+        console.error('Failed to parse saved credentials:', e);
+      }
     }
   }, []);
 
@@ -53,6 +67,11 @@ export default function TestConnectionsPage() {
   useEffect(() => {
     localStorage.setItem('mqttBrokerChoice', selectedBroker);
   }, [selectedBroker]);
+
+  // Save credentials to localStorage
+  useEffect(() => {
+    localStorage.setItem('mqttCredentials', JSON.stringify({ username, password }));
+  }, [username, password]);
 
   // Function to check environment variables
   const checkEnvironment = () => {
@@ -106,9 +125,9 @@ export default function TestConnectionsPage() {
           rejectUnauthorized: false,
           clientId: 'waterfront-browser-' + Math.random().toString(16).slice(3),
         };
-        if (selectedBroker === 'hivemq-cloud') {
-          options.username = 'waterfront-user';
-          options.password = 'YOUR_PASSWORD_HERE';
+        if (selectedBroker === 'hivemq-cloud' && username && password) {
+          options.username = username;
+          options.password = password;
         }
         const client = mqtt.connect(activeUrl, options);
         client.on('connect', () => {
@@ -126,9 +145,12 @@ export default function TestConnectionsPage() {
         client.on('error', (error) => {
           console.error(selectedBroker === 'hivemq-cloud' ? 'HiveMQ Cloud auth/connection failed – check credentials' : 'MQTT ERROR:', error);
           setIsMqttConnected(false);
+          const errorMessage = selectedBroker === 'hivemq-cloud' && (error.message?.includes('Not authorized') || error.message?.includes('401') || error.message?.includes('403'))
+            ? 'Authentication failed – check username/password'
+            : 'Connection error: ' + (error.message || error);
           setMqttStatus({
             status: 'error',
-            message: 'Connection error: ' + (error.message || error),
+            message: errorMessage,
             timestamp: new Date().toLocaleString(),
           });
           if (selectedBroker === 'local') {
@@ -319,6 +341,33 @@ export default function TestConnectionsPage() {
             <p className="text-red-600 text-sm mt-2">
               Warning: Local Mosquitto WebSocket may not work reliably on macOS Docker. Use HiveMQ or EMQX public for stable browser testing.
             </p>
+          )}
+          {selectedBroker === 'hivemq-cloud' && (
+            <div className="mt-4">
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter username"
+                />
+              </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter password"
+                />
+              </div>
+              <p className="text-yellow-600 text-sm">
+                Credentials stored in browser localStorage – for dev/testing only, not secure for production.
+              </p>
+            </div>
           )}
         </div>
 
