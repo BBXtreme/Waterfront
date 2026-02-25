@@ -51,8 +51,8 @@ export default function TestConnectionsPage() {
       const { data: session, error } = await supabase.auth.getSession();
       if (error) throw error;
       setSupabaseStatus({
-        status: 'Connected (auth session OK)',
-        message: 'Supabase client initialized and auth session retrieved successfully',
+        status: 'Connected (auth OK)',
+        message: 'Auth session retrieved successfully',
         timestamp: new Date().toLocaleString(),
       });
     } catch (error: any) {
