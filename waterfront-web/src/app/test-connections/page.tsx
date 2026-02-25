@@ -518,7 +518,7 @@ function TestConnectionsPage() {
         {loading && <p className="text-xl text-center">Loading...</p>}
 
         {/* Environment + Supabase */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[25px] mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[25px] mb-8 justify-items-center">
           <Card className="shadow-md rounded-xl p-[25px] min-w-[300px] max-w-[75vw]">
             <CardHeader className="p-[25px]">
               <CardTitle>Environment</CardTitle>
@@ -548,7 +548,7 @@ function TestConnectionsPage() {
         {/* MQTT Brokers */}
         <div>
           <h2 className="text-xl font-medium mb-6">MQTT Brokers</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[25px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[25px] justify-items-center">
             {/* Local Mosquitto Card */}
             <Card className="shadow-md hover:shadow-lg transition-shadow rounded-xl overflow-hidden min-w-[300px] max-w-[75vw]">
               <CardHeader className="p-[25px] flex justify-between items-center">
