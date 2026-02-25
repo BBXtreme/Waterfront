@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import mqtt from 'mqtt';
 import { useTheme } from 'next-themes';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
 
 // Define types for status objects
 interface Status {
@@ -52,6 +56,9 @@ export default function TestConnectionsPage() {
   const [cloudUsername, setCloudUsername] = useState('');
   const [cloudPassword, setCloudPassword] = useState('');
 
+  // State for calendar
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+
   // Load credentials from localStorage on mount
   useEffect(() => {
     const savedCredentials = localStorage.getItem('mqttCloudCreds');
@@ -70,6 +77,20 @@ export default function TestConnectionsPage() {
   useEffect(() => {
     localStorage.setItem('mqttCloudCreds', JSON.stringify({ username: cloudUsername, password: cloudPassword }));
   }, [cloudUsername, cloudPassword]);
+
+  // Function to insert log into Supabase
+  const insertLog = async (topic: string, payload: string, broker: string) => {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    await supabase.from('mqtt_logs').insert({
+      topic,
+      payload,
+      timestamp: new Date().toISOString(),
+      broker
+    });
+  };
 
   // Function to check environment variables
   const checkEnvironment = () => {
@@ -191,6 +212,22 @@ export default function TestConnectionsPage() {
         timestamp: new Date().toLocaleString(),
       });
       setAttempts(0);
+      // Subscribe to ack topic
+      client.subscribe('/kayak/test/ack', (err) => {
+        if (err) console.error(`Subscribe error for ${broker}:`, err);
+      });
+    });
+
+    client.on('message', (topic, message) => {
+      if (topic === '/kayak/test/ack') {
+        const msg = message.toString();
+        console.log(`Ack from ${broker}:`, msg);
+        setStatus({
+          status: 'connected',
+          message: `Ack: ${msg}`,
+          timestamp: new Date().toLocaleString(),
+        });
+      }
     });
 
     client.on('error', (error) => {
@@ -296,7 +333,7 @@ export default function TestConnectionsPage() {
   };
 
   // Send test message functions
-  const sendTestMessageLocal = () => {
+  const sendTestMessageLocal = async () => {
     if (localClient && localIsConnected) {
       const payload = JSON.stringify({
         action: 'test_unlock',
@@ -304,14 +341,18 @@ export default function TestConnectionsPage() {
         broker: 'local',
         timestamp: new Date().toISOString(),
       });
-      localClient.publish('/kayak/test/unlock', payload, { qos: 1 }, (err) => {
-        if (err) console.error('Publish failed:', err);
-        else console.log('Test message published to local');
+      localClient.publish('/kayak/test/unlock', payload, { qos: 1 }, async (err) => {
+        if (err) {
+          console.error('Publish failed:', err);
+        } else {
+          console.log('Test message published to local');
+          await insertLog('/kayak/test/unlock', payload, 'local');
+        }
       });
     }
   };
 
-  const sendTestMessageHivemq = () => {
+  const sendTestMessageHivemq = async () => {
     if (hivemqClient && hivemqIsConnected) {
       const payload = JSON.stringify({
         action: 'test_unlock',
@@ -319,14 +360,18 @@ export default function TestConnectionsPage() {
         broker: 'hivemq',
         timestamp: new Date().toISOString(),
       });
-      hivemqClient.publish('/kayak/test/unlock', payload, { qos: 1 }, (err) => {
-        if (err) console.error('Publish failed:', err);
-        else console.log('Test message published to hivemq');
+      hivemqClient.publish('/kayak/test/unlock', payload, { qos: 1 }, async (err) => {
+        if (err) {
+          console.error('Publish failed:', err);
+        } else {
+          console.log('Test message published to hivemq');
+          await insertLog('/kayak/test/unlock', payload, 'hivemq');
+        }
       });
     }
   };
 
-  const sendTestMessageEmqx = () => {
+  const sendTestMessageEmqx = async () => {
     if (emqxClient && emqxIsConnected) {
       const payload = JSON.stringify({
         action: 'test_unlock',
@@ -334,14 +379,18 @@ export default function TestConnectionsPage() {
         broker: 'emqx',
         timestamp: new Date().toISOString(),
       });
-      emqxClient.publish('/kayak/test/unlock', payload, { qos: 1 }, (err) => {
-        if (err) console.error('Publish failed:', err);
-        else console.log('Test message published to emqx');
+      emqxClient.publish('/kayak/test/unlock', payload, { qos: 1 }, async (err) => {
+        if (err) {
+          console.error('Publish failed:', err);
+        } else {
+          console.log('Test message published to emqx');
+          await insertLog('/kayak/test/unlock', payload, 'emqx');
+        }
       });
     }
   };
 
-  const sendTestMessageHivemqCloud = () => {
+  const sendTestMessageHivemqCloud = async () => {
     if (hivemqCloudClient && hivemqCloudIsConnected) {
       const payload = JSON.stringify({
         action: 'test_unlock',
@@ -349,9 +398,13 @@ export default function TestConnectionsPage() {
         broker: 'hivemq-cloud',
         timestamp: new Date().toISOString(),
       });
-      hivemqCloudClient.publish('/kayak/test/unlock', payload, { qos: 1 }, (err) => {
-        if (err) console.error('Publish failed:', err);
-        else console.log('Test message published to hivemq-cloud');
+      hivemqCloudClient.publish('/kayak/test/unlock', payload, { qos: 1 }, async (err) => {
+        if (err) {
+          console.error('Publish failed:', err);
+        } else {
+          console.log('Test message published to hivemq-cloud');
+          await insertLog('/kayak/test/unlock', payload, 'hivemq-cloud');
+        }
       });
     }
   };
@@ -403,12 +456,12 @@ export default function TestConnectionsPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 text-center relative">
-      <button
+      <Button
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        className="absolute top-4 right-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded"
+        className="absolute top-4 right-4"
       >
         Toggle {theme === 'dark' ? 'Light' : 'Dark'} Mode
-      </button>
+      </Button>
 
       <h1 className="text-4xl font-bold mb-6">Waterfront – Connection & Environment Test</h1>
 
@@ -416,161 +469,214 @@ export default function TestConnectionsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Environment Card */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Environment</h2>
-          <p className="text-lg">
-            Status: <span className={envStatus.status === 'OK' ? 'text-green-600' : 'text-red-600'}>{envStatus.status}</span>
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{envStatus.message}</p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Environment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg">
+              Status: <span className={envStatus.status === 'OK' ? 'text-green-600' : 'text-red-600'}>{envStatus.status}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">{envStatus.message}</p>
+          </CardContent>
+        </Card>
 
         {/* Supabase Card */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Supabase</h2>
-          <p className="text-lg">
-            Status: <span className={supabaseStatus.status.includes('Connected') ? 'text-green-600' : 'text-red-600'}>{supabaseStatus.status}</span>
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{supabaseStatus.message}</p>
-          {supabaseStatus.timestamp && <p className="text-xs text-gray-500 dark:text-gray-500">Last checked: {supabaseStatus.timestamp}</p>}
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Supabase</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg">
+              Status: <span className={supabaseStatus.status.includes('Connected') ? 'text-green-600' : 'text-red-600'}>{supabaseStatus.status}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">{supabaseStatus.message}</p>
+            {supabaseStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {supabaseStatus.timestamp}</p>}
+          </CardContent>
+        </Card>
 
         {/* MQTT Broker Cards */}
         <div className="col-span-1 md:col-span-2">
           <div className="flex flex-row gap-4 flex-wrap">
             {/* Local Mosquitto Card */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 shadow-md flex-1 min-w-[300px]">
-              <h2 className="text-2xl font-bold mb-4">MQTT - Local Mosquitto</h2>
-              <p className="text-lg">
-                Status: <span className={localIsConnected ? 'text-green-600' : localStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{localStatus.status}</span>
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{localStatus.message}</p>
-              {localStatus.timestamp && <p className="text-xs text-gray-500 dark:text-gray-500">Last checked: {localStatus.timestamp}</p>}
-              <p className="text-red-600 text-sm mt-2">Warning: Local WS may fail on macOS Docker – use public for stable test</p>
-              <button
-                onClick={localIsStarted ? stopLocal : startLocal}
-                className={`px-4 py-2 rounded mt-4 ${localIsStarted ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white`}
-              >
-                {localIsStarted ? 'Stop' : 'Start'}
-              </button>
-              <button
-                onClick={sendTestMessageLocal}
-                disabled={!localIsConnected}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4 ml-2 disabled:opacity-50"
-              >
-                Send Test Message
-              </button>
-            </div>
+            <Card className="flex-1 min-w-[300px]">
+              <CardHeader>
+                <CardTitle>MQTT - Local Mosquitto</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg">
+                  Status: <span className={localIsConnected ? 'text-green-600' : localStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{localStatus.status}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">{localStatus.message}</p>
+                {localStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {localStatus.timestamp}</p>}
+                <p className="text-red-600 text-sm mt-2">Warning: Local WS may fail on macOS Docker – use public for stable test</p>
+                <Button
+                  onClick={localIsStarted ? stopLocal : startLocal}
+                  variant={localIsStarted ? 'destructive' : 'default'}
+                  className="mt-4"
+                >
+                  {localIsStarted ? 'Stop' : 'Start'}
+                </Button>
+                <Button
+                  onClick={sendTestMessageLocal}
+                  disabled={!localIsConnected}
+                  className="mt-4 ml-2"
+                >
+                  Send Test Message
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* HiveMQ Public Card */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 shadow-md flex-1 min-w-[300px]">
-              <h2 className="text-2xl font-bold mb-4">MQTT - HiveMQ Public</h2>
-              <p className="text-lg">
-                Status: <span className={hivemqIsConnected ? 'text-green-600' : hivemqStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{hivemqStatus.status}</span>
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{hivemqStatus.message}</p>
-              {hivemqStatus.timestamp && <p className="text-xs text-gray-500 dark:text-gray-500">Last checked: {hivemqStatus.timestamp}</p>}
-              <button
-                onClick={hivemqIsStarted ? stopHivemq : startHivemq}
-                className={`px-4 py-2 rounded mt-4 ${hivemqIsStarted ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white`}
-              >
-                {hivemqIsStarted ? 'Stop' : 'Start'}
-              </button>
-              <button
-                onClick={sendTestMessageHivemq}
-                disabled={!hivemqIsConnected}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4 ml-2 disabled:opacity-50"
-              >
-                Send Test Message
-              </button>
-            </div>
+            <Card className="flex-1 min-w-[300px]">
+              <CardHeader>
+                <CardTitle>MQTT - HiveMQ Public</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg">
+                  Status: <span className={hivemqIsConnected ? 'text-green-600' : hivemqStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{hivemqStatus.status}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">{hivemqStatus.message}</p>
+                {hivemqStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqStatus.timestamp}</p>}
+                <Button
+                  onClick={hivemqIsStarted ? stopHivemq : startHivemq}
+                  variant={hivemqIsStarted ? 'destructive' : 'default'}
+                  className="mt-4"
+                >
+                  {hivemqIsStarted ? 'Stop' : 'Start'}
+                </Button>
+                <Button
+                  onClick={sendTestMessageHivemq}
+                  disabled={!hivemqIsConnected}
+                  className="mt-4 ml-2"
+                >
+                  Send Test Message
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* EMQX Public Card */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 shadow-md flex-1 min-w-[300px]">
-              <h2 className="text-2xl font-bold mb-4">MQTT - EMQX Public</h2>
-              <p className="text-lg">
-                Status: <span className={emqxIsConnected ? 'text-green-600' : emqxStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{emqxStatus.status}</span>
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{emqxStatus.message}</p>
-              {emqxStatus.timestamp && <p className="text-xs text-gray-500 dark:text-gray-500">Last checked: {emqxStatus.timestamp}</p>}
-              <button
-                onClick={emqxIsStarted ? stopEmqx : startEmqx}
-                className={`px-4 py-2 rounded mt-4 ${emqxIsStarted ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white`}
-              >
-                {emqxIsStarted ? 'Stop' : 'Start'}
-              </button>
-              <button
-                onClick={sendTestMessageEmqx}
-                disabled={!emqxIsConnected}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4 ml-2 disabled:opacity-50"
-              >
-                Send Test Message
-              </button>
-            </div>
+            <Card className="flex-1 min-w-[300px]">
+              <CardHeader>
+                <CardTitle>MQTT - EMQX Public</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg">
+                  Status: <span className={emqxIsConnected ? 'text-green-600' : emqxStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{emqxStatus.status}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">{emqxStatus.message}</p>
+                {emqxStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {emqxStatus.timestamp}</p>}
+                <Button
+                  onClick={emqxIsStarted ? stopEmqx : startEmqx}
+                  variant={emqxIsStarted ? 'destructive' : 'default'}
+                  className="mt-4"
+                >
+                  {emqxIsStarted ? 'Stop' : 'Start'}
+                </Button>
+                <Button
+                  onClick={sendTestMessageEmqx}
+                  disabled={!emqxIsConnected}
+                  className="mt-4 ml-2"
+                >
+                  Send Test Message
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* HiveMQ Cloud Card */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 shadow-md flex-1 min-w-[300px]">
-              <h2 className="text-2xl font-bold mb-4">MQTT - HiveMQ Cloud (Private)</h2>
-              <p className="text-lg">
-                Status: <span className={hivemqCloudIsConnected ? 'text-green-600' : hivemqCloudStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{hivemqCloudStatus.status}</span>
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{hivemqCloudStatus.message}</p>
-              {hivemqCloudStatus.timestamp && <p className="text-xs text-gray-500 dark:text-gray-500">Last checked: {hivemqCloudStatus.timestamp}</p>}
-              <div className="mt-4">
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
-                  <input
-                    type="text"
-                    value={cloudUsername}
-                    onChange={(e) => setCloudUsername(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="Enter username"
-                  />
+            <Card className="flex-1 min-w-[300px]">
+              <CardHeader>
+                <CardTitle>MQTT - HiveMQ Cloud (Private)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg">
+                  Status: <span className={hivemqCloudIsConnected ? 'text-green-600' : hivemqCloudStatus.status === 'connecting' ? 'text-yellow-600' : 'text-red-600'}>{hivemqCloudStatus.status}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">{hivemqCloudStatus.message}</p>
+                {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
+                <div className="mt-4">
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium">Username</label>
+                    <Input
+                      type="text"
+                      value={cloudUsername}
+                      onChange={(e) => setCloudUsername(e.target.value)}
+                      placeholder="Enter username"
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium">Password</label>
+                    <Input
+                      type="password"
+                      value={cloudPassword}
+                      onChange={(e) => setCloudPassword(e.target.value)}
+                      placeholder="Enter password"
+                    />
+                  </div>
                 </div>
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                  <input
-                    type="password"
-                    value={cloudPassword}
-                    onChange={(e) => setCloudPassword(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="Enter password"
-                  />
-                </div>
-              </div>
-              <button
-                onClick={hivemqCloudIsStarted ? stopHivemqCloud : startHivemqCloud}
-                className={`px-4 py-2 rounded mt-4 ${hivemqCloudIsStarted ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white`}
-              >
-                {hivemqCloudIsStarted ? 'Stop' : 'Start'}
-              </button>
-              <button
-                onClick={sendTestMessageHivemqCloud}
-                disabled={!hivemqCloudIsConnected}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4 ml-2 disabled:opacity-50"
-              >
-                Send Test Message
-              </button>
-            </div>
+                <Button
+                  onClick={hivemqCloudIsStarted ? stopHivemqCloud : startHivemqCloud}
+                  variant={hivemqCloudIsStarted ? 'destructive' : 'default'}
+                  className="mt-4"
+                >
+                  {hivemqCloudIsStarted ? 'Stop' : 'Start'}
+                </Button>
+                <Button
+                  onClick={sendTestMessageHivemqCloud}
+                  disabled={!hivemqCloudIsConnected}
+                  className="mt-4 ml-2"
+                >
+                  Send Test Message
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
+        {/* Calendar Card */}
+        <Card className="col-span-1 md:col-span-2">
+          <CardHeader>
+            <CardTitle>Availability Calendar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border"
+            />
+            <p className="mt-4">Selected date: {selectedDate?.toDateString()}</p>
+            {/* Placeholder for availability grid */}
+            <div className="mt-4 grid grid-cols-7 gap-2">
+              {Array.from({ length: 7 }, (_, i) => (
+                <div key={i} className="p-2 border rounded text-center">
+                  {i + 9}:00 - {i + 10}:00
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Vercel Card */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Vercel</h2>
-          <p className="text-lg">
-            Status: <span className={vercelStatus.status === 'OK' ? 'text-green-600' : 'text-red-600'}>{vercelStatus.status}</span>
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{vercelStatus.message}</p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Vercel</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg">
+              Status: <span className={vercelStatus.status === 'OK' ? 'text-green-600' : 'text-red-600'}>{vercelStatus.status}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">{vercelStatus.message}</p>
+          </CardContent>
+        </Card>
       </div>
 
-      <button
+      <Button
         onClick={refreshStatuses}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         disabled={loading}
       >
         {loading ? 'Refreshing...' : 'Refresh All'}
-      </button>
+      </Button>
     </main>
   );
 }
