@@ -1,9 +1,11 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* src/app/globals.css */
 
-@custom-variant dark (&:is(.dark *));
+/* Standard Tailwind directives – REQUIRED */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Optional: shadcn/ui compatible theme variables (keep your custom ones) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -47,6 +49,7 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* Light mode defaults */
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -82,6 +85,7 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Dark mode overrides */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -116,6 +120,7 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Base layer resets */
 @layer base {
   * {
     @apply border-border outline-ring/50;
