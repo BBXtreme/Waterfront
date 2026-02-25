@@ -37,6 +37,9 @@ export default function TestConnectionsPage() {
   const [mqttClient, setMqttClient] = useState<any>(null);
   const [isMqttConnected, setIsMqttConnected] = useState(false);
 
+  // State for local connection attempts
+  const [localConnectionAttempts, setLocalConnectionAttempts] = useState(0);
+
   // Load selectedBroker from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('mqttBrokerChoice');
@@ -110,6 +113,9 @@ export default function TestConnectionsPage() {
             message: 'Connected to broker',
             timestamp: new Date().toLocaleString(),
           });
+          if (selectedBroker === 'local') {
+            setLocalConnectionAttempts(0);
+          }
         });
         client.on('error', (error) => {
           console.error('MQTT ERROR:', error);
@@ -119,6 +125,14 @@ export default function TestConnectionsPage() {
             message: 'Connection error: ' + (error.message || error),
             timestamp: new Date().toLocaleString(),
           });
+          if (selectedBroker === 'local') {
+            const newAttempts = localConnectionAttempts + 1;
+            setLocalConnectionAttempts(newAttempts);
+            if (newAttempts >= 3) {
+              setSelectedBroker('hivemq');
+              alert('Auto-switched to HiveMQ public due to local connection failure');
+            }
+          }
         });
         client.on('offline', () => {
           console.log('MQTT OFFLINE');
@@ -219,13 +233,30 @@ export default function TestConnectionsPage() {
 
   // useEffect to reconnect when broker changes
   useEffect(() => {
+    console.log(`Switched to broker: ${selectedBroker} (${activeUrl})`);
     if (mqttClient) {
       mqttClient.end();
       setMqttClient(null);
       setIsMqttConnected(false);
     }
+    if (selectedBroker === 'local') {
+      setLocalConnectionAttempts(0);
+    }
     checkMQTT();
   }, [selectedBroker]);
+
+  // useEffect for auto-fallback timeout on local
+  useEffect(() => {
+    if (selectedBroker === 'local') {
+      const timer = setTimeout(() => {
+        if (!isMqttConnected && selectedBroker === 'local') {
+          setSelectedBroker('hivemq');
+          alert('Auto-switched to HiveMQ public due to local connection failure');
+        }
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedBroker, isMqttConnected]);
 
   const brokerLabels = {
     local: 'Local Mosquitto',
@@ -277,11 +308,16 @@ export default function TestConnectionsPage() {
               </label>
             ))}
           </div>
+          {selectedBroker === 'local' && (
+            <p className="text-red-600 text-sm mt-2">
+              Warning: Local Mosquitto WebSocket may not work reliably on macOS Docker. Use HiveMQ or EMQX public for stable browser testing.
+            </p>
+          )}
         </div>
 
         {/* MQTT Card */}
         <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">MQTT – {brokerLabels[selectedBroker]}</h2>
+          <h2 className="text-2xl font-bold mb-4">MQTT – {brokerLabels[selectedBroker]}</h2>
           <p className="text-lg">
             Status: <span className={isMqttConnected ? 'text-green-600' : 'text-red-600'}>{mqttStatus.status}</span>
           </p>
