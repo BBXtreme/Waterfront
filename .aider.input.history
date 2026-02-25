@@ -222,3 +222,180 @@
 +Add console.log on publish for debugging.
 +
 +Do not change other parts of the page.
+
+# 2026-02-25 09:57:54.425657
++In src/app/test-connections/page.tsx:
++
++The MQTT card shows "MQTT_BROKER_URL not set" even though it's in .env.local as MQTT_BROKER_URL=mqtt://localhost:1883
++
++Fix the MQTT check:
++- Prefix the env var in code to NEXT_PUBLIC_MQTT_BROKER_URL (add NEXT_PUBLIC_ in .env.local if not already)
++- Add fallback: const mqttUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'mqtt://localhost:1883'
++- Add console.log('MQTT URL:', mqttUrl) at the top of the component
++- Update connect logic to use mqttUrl
++- If connect succeeds, show "Connected to [mqttUrl]"
++- Keep try/catch, loading, and "Send Test Message" button
++
++Do not change Supabase or other cards.
++
++After fix, remind to update .env.local with NEXT_PUBLIC_MQTT_BROKER_URL if needed, run pnpm dev, check console for log, refresh page, and test with MQTT broker running.
+
+# 2026-02-25 09:59:42.232873
++In src/app/test-connections/page.tsx:
++
++MQTT card shows "Disconnected" / "MQTT client offline" even though MQTT_BROKER_URL is in .env.local as mqtt://localhost:1883 and broker is running via docker compose.
++
++Fix and improve MQTT connection:
++- Ensure env var is accessed as process.env.NEXT_PUBLIC_MQTT_BROKER_URL (add NEXT_PUBLIC_ prefix in .env.local if missing)
++- Fallback to 'mqtt://localhost:1883' if undefined
++- Use mqtt.connect(mqttUrl, { clientId: 'waterfront-test-' + Math.random().toString(16).slice(3) })
++- Add reconnect: true, clean: true options
++- Add event handlers: on('connect') → set "Connected to [mqttUrl]"
++- on('error') → set error message + "Reconnecting..."
++- on('offline') → set "Offline"
++- on('close') → log "Closed"
++- Disconnect on unmount (useEffect cleanup)
++- Add console.log on connect/error/offline for debugging
++- Keep "Send Test Message" button disabled if !connected
++- When button clicked: client.publish('/kayak/test/unlock', JSON.stringify({ action: "test_unlock", kayakId: "test-001", timestamp: new Date().toISOString() }), { qos: 1 }, err => { if (err) console.error(err); else console.log('Published test message') })
++
++Keep code clean, useState for status, try/catch in connect, do not change Supabase or Environment cards.
++
++After fix, remind to:
++- Update .env.local with NEXT_PUBLIC_MQTT_BROKER_URL=mqtt://localhost:1883 if needed
++- Restart pnpm dev
++- Ensure broker running (docker compose up -d in waterfront-infra)
++- Check browser console for MQTT logs
++- Refresh test page and click "Send Test Message" to verify publish
+
+# 2026-02-25 10:02:46.688480
++In src/app/test-connections/page.tsx:
++
++MQTT is disconnected with console error: WebSocket connection to 'ws://localhost:1883/' failed.
++
++Fix:
++- Use ws://localhost:9001/mqtt as the URL (broker now supports WebSocket on 9001)
++- Update to process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'ws://localhost:9001/mqtt'
++- In mqtt.connect use correct options: { protocol: 'ws' } if needed, but mqtt library auto-detects from ws://
++- Add reconnectPeriod: 1000, connectTimeout: 5000
++- Log on connect: console.log('MQTT connected to', mqttUrl)
++- Log on error: console.error('MQTT error:', err)
++- Log on offline/close
++- When connected, enable "Send Test Message" button
++- On button click: publish to topic '/kayak/test/unlock' with payload JSON.stringify({ action: "test_unlock", kayakId: "test-001", timestamp: new Date().toISOString() })
++- Show publish success/error in status or console
++
++Keep Supabase and other cards unchanged.
++After fix, remind to restart pnpm dev, refresh page, check console for connect log, and test publish button.
+
+# 2026-02-25 10:09:47.817561
++You are fixing the MQTT WebSocket connection in src/app/test-connections/page.tsx.
++
++Current problem:
++- Browser console shows repeated error: WebSocket connection to 'ws://localhost:9001/mqtt' failed: The network connection was lost.
++- MQTT card stays "Disconnected" / "MQTT client offline"
++- Supabase is already green – do not touch it.
++
++Fix requirements – do all of these exactly:
++
++1. Use this exact URL: ws://localhost:9001/mqtt
++   - Read from process.env.NEXT_PUBLIC_MQTT_BROKER_URL
++   - Fallback: 'ws://localhost:9001/mqtt'
++   - Log immediately: console.log('Attempting MQTT WS connect to:', mqttUrl)
++
++2. mqtt.connect options must include:
++   - protocol: 'ws'
++   - reconnectPeriod: 3000
++   - connectTimeout: 10000
++   - rejectUnauthorized: false   // for local dev
++   - clientId: 'waterfront-browser-' + Math.random().toString(16).slice(3)
++
++3. Add detailed event handlers:
++   - on('connect'): 
++     console.log('MQTT CONNECTED to ' + mqttUrl)
++     setStatus({ status: 'connected', message: 'Connected to broker' })
++   - on('error'): 
++     console.error('MQTT ERROR:', err)
++     setStatus({ status: 'error', message: 'Connection error: ' + (err.message || err) })
++   - on('offline'): 
++     console.log('MQTT OFFLINE')
++     setStatus({ status: 'disconnected', message: 'Offline – reconnecting...' })
++   - on('close'): 
++     console.log('MQTT CLOSED')
++   - on('reconnect'): 
++     console.log('MQTT reconnect attempt')
++
++4. Cleanup: return () => client.end() in useEffect
++
++5. "Send Test Message" button:
++   - Disabled if status !== 'connected'
++   - On click: 
++     const payload = JSON.stringify({
++       action: "test_unlock",
++       kayakId: "test-001",
++       timestamp: new Date().toISOString()
++     })
++     client.publish('/kayak/test/unlock', payload, { qos: 1 }, (err) => {
++       if (err) console.error('Publish failed:', err)
++       else console.log('Test message published successfully')
++     })
++
++6. Keep loading state, refresh button, and all existing UI/Tailwind.
++
++Do NOT remove console.log lines – they are for debugging.
++
++After changes:
++- Remind user to:
++  1. Confirm docker logs mqtt-broker shows "Opening websocket listener on port 9001"
++  2. Run pnpm dev
++  3. Hard-refresh browser (Cmd+Shift+R)
++  4. Open DevTools Console and look for "MQTT CONNECTED" log
++  5. If still failing, paste new console errors and docker logs mqtt-broker | tail -n 20
+
+# 2026-02-25 16:14:27.460403
++We are improving src/app/test-connections/page.tsx
++
++Current state: Supabase is green, MQTT is trying ws://localhost:9001/mqtt but often fails due to Docker networking.
++
++New feature: Add broker selector (local Mosquitto, HiveMQ public, EMQX public)
++
++Requirements – implement exactly:
++
++1. Above the MQTT status card add a selector:
++   - Three radio buttons with labels:
++     - Local Mosquitto (ws://localhost:9001/mqtt or fallback ws://host.docker.internal:9001/mqtt)
++     - HiveMQ public (wss://broker.hivemq.com:8883/mqtt)
++     - EMQX public (wss://broker.emqx.io:8084/mqtt)
++   - Default: HiveMQ public (most reliable for browser)
++   - Use useState for selectedBroker (string: 'local' | 'hivemq' | 'emqx')
++   - Save/restore choice in localStorage ('mqttBrokerChoice')
++   - Show current selected broker name in the card title (e.g. "MQTT – HiveMQ public")
++
++2. Compute active mqttUrl based on selectedBroker:
++   const mqttUrls = {
++     local: process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'ws://localhost:9001/mqtt',
++     hivemq: 'wss://broker.hivemq.com:8883/mqtt',
++     emqx: 'wss://broker.emqx.io:8084/mqtt'
++   }
++   const activeUrl = mqttUrls[selectedBroker]
++
++3. Update mqtt.connect to use activeUrl
++   - Keep existing options (reconnectPeriod: 3000, etc.)
++   - Log: console.log(`Connecting to ${selectedBroker} broker: ${activeUrl}`)
++
++4. When selection changes → disconnect old client (client?.end()) and reconnect to new URL
++
++5. Keep "Send Test Message" button – publish always goes to current active broker
++   - Topic: '/kayak/test/unlock'
++   - Payload: JSON.stringify({ action: "test_unlock", kayakId: "test-001", broker: selectedBroker, timestamp: new Date().toISOString() })
++
++6. Use Tailwind for nice radio group (flex gap-4, labels with cursor-pointer, checked:bg-blue-600 etc.)
++
++7. Do NOT touch Supabase card or other parts.
++
++After changes:
++- Remind to run pnpm dev
++- Hard-refresh page
++- Check console for connect logs
++- Switch between brokers and watch status change
++- If local still fails, suggest trying host.docker.internal or confirm docker logs show websocket listener
