@@ -12,8 +12,17 @@ interface Status {
 }
 
 export default function TestConnectionsPage() {
-  const mqttUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'ws://localhost:9001/mqtt';
-  console.log('Attempting MQTT WS connect to:', mqttUrl);
+  const mqttUrls = {
+    local: process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'ws://localhost:9001/mqtt',
+    hivemq: 'wss://broker.hivemq.com:8883/mqtt',
+    emqx: 'wss://broker.emqx.io:8084/mqtt'
+  };
+
+  // State for selected broker
+  const [selectedBroker, setSelectedBroker] = useState<'local' | 'hivemq' | 'emqx'>('hivemq');
+
+  const activeUrl = mqttUrls[selectedBroker];
+  console.log('Attempting MQTT WS connect to:', activeUrl);
 
   // State for loading
   const [loading, setLoading] = useState(true);
@@ -27,6 +36,19 @@ export default function TestConnectionsPage() {
   // MQTT client state
   const [mqttClient, setMqttClient] = useState<any>(null);
   const [isMqttConnected, setIsMqttConnected] = useState(false);
+
+  // Load selectedBroker from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('mqttBrokerChoice');
+    if (saved && ['local', 'hivemq', 'emqx'].includes(saved)) {
+      setSelectedBroker(saved as 'local' | 'hivemq' | 'emqx');
+    }
+  }, []);
+
+  // Save selectedBroker to localStorage
+  useEffect(() => {
+    localStorage.setItem('mqttBrokerChoice', selectedBroker);
+  }, [selectedBroker]);
 
   // Function to check environment variables
   const checkEnvironment = () => {
@@ -72,7 +94,8 @@ export default function TestConnectionsPage() {
   const checkMQTT = () => {
     if (!mqttClient) {
       try {
-        const client = mqtt.connect(mqttUrl, {
+        console.log(`Connecting to ${selectedBroker} broker: ${activeUrl}`);
+        const client = mqtt.connect(activeUrl, {
           protocol: 'ws',
           reconnectPeriod: 3000,
           connectTimeout: 10000,
@@ -80,7 +103,7 @@ export default function TestConnectionsPage() {
           clientId: 'waterfront-browser-' + Math.random().toString(16).slice(3),
         });
         client.on('connect', () => {
-          console.log('MQTT CONNECTED to ' + mqttUrl);
+          console.log('MQTT CONNECTED to ' + activeUrl);
           setIsMqttConnected(true);
           setMqttStatus({
             status: 'connected',
@@ -138,6 +161,7 @@ export default function TestConnectionsPage() {
       const payload = JSON.stringify({
         action: 'test_unlock',
         kayakId: 'test-001',
+        broker: selectedBroker,
         timestamp: new Date().toISOString(),
       });
       mqttClient.publish('/kayak/test/unlock', payload, { qos: 1 }, (err) => {
@@ -193,6 +217,22 @@ export default function TestConnectionsPage() {
     };
   }, [mqttClient]);
 
+  // useEffect to reconnect when broker changes
+  useEffect(() => {
+    if (mqttClient) {
+      mqttClient.end();
+      setMqttClient(null);
+      setIsMqttConnected(false);
+    }
+    checkMQTT();
+  }, [selectedBroker]);
+
+  const brokerLabels = {
+    local: 'Local Mosquitto',
+    hivemq: 'HiveMQ public',
+    emqx: 'EMQX public'
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 text-center">
       <h1 className="text-4xl font-bold mb-6">Waterfront – Connection & Environment Test</h1>
@@ -219,9 +259,29 @@ export default function TestConnectionsPage() {
           {supabaseStatus.timestamp && <p className="text-xs text-gray-500">Last checked: {supabaseStatus.timestamp}</p>}
         </div>
 
+        {/* MQTT Broker Selector */}
+        <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-md col-span-1 md:col-span-2">
+          <h2 className="text-2xl font-semibold mb-4">Select MQTT Broker</h2>
+          <div className="flex gap-4 flex-wrap">
+            {Object.entries(brokerLabels).map(([key, label]) => (
+              <label key={key} className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="broker"
+                  value={key}
+                  checked={selectedBroker === key}
+                  onChange={(e) => setSelectedBroker(e.target.value as 'local' | 'hivemq' | 'emqx')}
+                  className="mr-2"
+                />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* MQTT Card */}
         <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">MQTT</h2>
+          <h2 className="text-2xl font-semibold mb-4">MQTT – {brokerLabels[selectedBroker]}</h2>
           <p className="text-lg">
             Status: <span className={isMqttConnected ? 'text-green-600' : 'text-red-600'}>{mqttStatus.status}</span>
           </p>
