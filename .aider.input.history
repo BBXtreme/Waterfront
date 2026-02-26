@@ -1252,3 +1252,54 @@
 +where isPositive = status.includes("OK") || status.includes("Connected") || status.includes("Detected")
 +Apply to Environment, Supabase, Vercel, Mosquitto, HiveMQ statuses.
 +Show updated diff.
+
+# 2026-02-26 11:10:56.960460
++File: app/connection-test/page.tsx
++
++DO NOT skip this. Make these precise changes:
++
++1. Find the div that wraps the three cards in "System Connections" section.
++   It has className containing "grid grid-cols-1 md:grid-cols-3" or "flex" with gap.
++   Change its gap class to gap-2.5 (exactly 10px space between cards).
++
++2. For every status display ("OK", "Connected (auth OK)", "Not Detected", "disconnected"):
++   Replace the current Badge or span with:
++   <Badge
++     className={cn(
++       "px-2 py-1 rounded-full text-xs font-medium",
++       status === "OK" || status.includes("Connected") || status.includes("Detected")
++         ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
++         : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
++     )}
++   >
++     {status}
++   </Badge>
++
++3. Add import { cn } from "@/lib/utils"; at the top if missing.
++
++4. NO other changes whatsoever — no padding, no shadows, no new components, no MachineCard usage.
++
++Show ONLY the diff for app/connection-test/page.tsx.
+
+# 2026-02-26 11:12:33.247696
++/exit
+
+# 2026-02-26 11:22:08.590426
++File: app/connection-test/page.tsx
++
++Make these exact changes:
++
++1. Line 93 (grid for System Connections row): Change "gap-4" to "gap-2.5" for exactly 10px space between the three cards (Environment, Vercel, Supabase).
++
++2. For all Badge components (lines 100, 118, 136, 156, 194, 232, 270):
++   - Remove variant="outline" to allow background colors to show.
++   - Keep the cn() conditional class for green/red.
++   - Make sure the condition for green is: status.status === "OK" || status.status.includes("Connected") || status.status.includes("Detected") || status.status.includes("connected")
++   - Add a const isPositive = ... above each Badge if not there, using the above condition.
++
++3. No other changes — no padding, no shadows, no new imports, no MachineCard usage.
++
++Show the diff only for app/connection-test/page.tsx.
+
+# 2026-02-26 11:22:26.189922
++all
