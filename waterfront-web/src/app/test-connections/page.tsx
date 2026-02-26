@@ -576,6 +576,16 @@ function TestConnectionsPage() {
                 <div>
                   <p className="text-muted-foreground">{envStatus.message}</p>
                 </div>
+                <div className="flex gap-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => checkEnvironment()}
+                    disabled={loading}
+                  >
+                    Test Connection
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -598,6 +608,16 @@ function TestConnectionsPage() {
               <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{vercelStatus.message}</p>
+                </div>
+                <div className="flex gap-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => checkVercel()}
+                    disabled={loading}
+                  >
+                    Test Connection
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -622,6 +642,16 @@ function TestConnectionsPage() {
                 <div>
                   <p className="text-muted-foreground">{supabaseStatus.message}</p>
                   {supabaseStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {supabaseStatus.timestamp}</p>}
+                </div>
+                <div className="flex gap-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => checkSupabase()}
+                    disabled={loading}
+                  >
+                    Test Connection
+                  </Button>
                 </div>
               </CardContent>
             </Card>
