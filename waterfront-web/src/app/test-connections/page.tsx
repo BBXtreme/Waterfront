@@ -559,7 +559,7 @@ function TestConnectionsPage() {
               <div>
                 <p className="text-destructive text-xs">Warning: Local WS may fail on macOS Docker – use public for stable test</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <Button
                   onClick={localIsStarted ? stopLocal : startLocal}
                   variant="outline"
@@ -585,7 +585,7 @@ function TestConnectionsPage() {
               timestamp={hivemqStatus.timestamp}
               isConnected={hivemqIsConnected}
             >
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <Button
                   onClick={hivemqIsStarted ? stopHivemq : startHivemq}
                   variant="outline"
@@ -611,7 +611,7 @@ function TestConnectionsPage() {
               timestamp={emqxStatus.timestamp}
               isConnected={emqxIsConnected}
             >
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <Button
                   onClick={emqxIsStarted ? stopEmqx : startEmqx}
                   variant="outline"
@@ -659,7 +659,7 @@ function TestConnectionsPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <Button
                   onClick={hivemqCloudIsStarted ? stopHivemqCloud : startHivemqCloud}
                   variant="outline"

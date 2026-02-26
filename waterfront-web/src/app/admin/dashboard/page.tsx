@@ -18,7 +18,7 @@ export default function AdminDashboardPage() {
             timestamp="2023-10-01 12:00:00"
             isConnected={true}
           >
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <Button className="px-5 py-2.5 mr-2.5">Action</Button>
             </div>
           </MachineCard>
@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
             timestamp="2023-10-01 11:00:00"
             isConnected={false}
           >
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <Button className="px-5 py-2.5 mr-2.5">Action</Button>
             </div>
           </MachineCard>
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
             timestamp="2023-10-01 10:00:00"
             isConnected={false}
           >
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <Button className="px-5 py-2.5 mr-2.5">Action</Button>
             </div>
           </MachineCard>
