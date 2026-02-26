@@ -536,8 +536,8 @@ function TestConnectionsPage() {
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
                       envStatus.status === "OK" || envStatus.status.includes("Connected") || envStatus.status.includes("Detected") || envStatus.status.includes("connected")
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
                   >
                     {envStatus.status}
@@ -559,8 +559,8 @@ function TestConnectionsPage() {
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
                       vercelStatus.status === "OK" || vercelStatus.status.includes("Connected") || vercelStatus.status.includes("Detected") || vercelStatus.status.includes("connected")
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
                   >
                     {vercelStatus.status}
@@ -582,8 +582,8 @@ function TestConnectionsPage() {
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
                       supabaseStatus.status === "OK" || supabaseStatus.status.includes("Connected") || supabaseStatus.status.includes("Detected") || supabaseStatus.status.includes("connected")
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
                   >
                     {supabaseStatus.status}
@@ -613,8 +613,8 @@ function TestConnectionsPage() {
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
                       localStatus.status === "OK" || localStatus.status.includes("Connected") || localStatus.status.includes("Detected") || localStatus.status.includes("connected")
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
                   >
                     {localStatus.status}
@@ -657,8 +657,8 @@ function TestConnectionsPage() {
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
                       hivemqStatus.status === "OK" || hivemqStatus.status.includes("Connected") || hivemqStatus.status.includes("Detected") || hivemqStatus.status.includes("connected")
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
                   >
                     {hivemqStatus.status}
@@ -698,8 +698,8 @@ function TestConnectionsPage() {
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
                       emqxStatus.status === "OK" || emqxStatus.status.includes("Connected") || emqxStatus.status.includes("Detected") || emqxStatus.status.includes("connected")
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
                   >
                     {emqxStatus.status}
@@ -739,8 +739,8 @@ function TestConnectionsPage() {
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
                       hivemqCloudStatus.status === "OK" || hivemqCloudStatus.status.includes("Connected") || hivemqCloudStatus.status.includes("Detected") || hivemqCloudStatus.status.includes("connected")
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
                   >
                     {hivemqCloudStatus.status}
