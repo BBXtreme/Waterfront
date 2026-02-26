@@ -20,6 +20,7 @@ export default function MachineCard({
   isConnected = false,
   children,
 }: MachineCardProps) {
+  const isPositive = status.includes("OK") || status.includes("Connected") || status.includes("Detected") || status.includes("connected");
   return (
     <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
       <CardHeader className="p-[25px]">
@@ -28,10 +29,8 @@ export default function MachineCard({
           <Badge
             variant="outline"
             className={cn(
-              "font-medium px-2 py-1 mr-2",
-              isConnected
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
+              "px-2 py-1 rounded-full text-xs font-medium",
+              isPositive ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
             )}
           >
             {status}
