@@ -752,32 +752,36 @@ function TestConnectionsPage() {
                   <p className="text-muted-foreground">{hivemqCloudStatus.message}</p>
                   {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
                 </div>
-           <div className="space-y-6 p-6 bg-muted/30 rounded-lg border border-border"> {/* outer group padding & subtle background */}
-  <div className="space-y-2">
-    <Label htmlFor="username">Username</Label>
-    <Input
-      id="username"
-      type="text"
-      value={cloudUsername}
-      onChange={(e) => setCloudUsername(e.target.value)}
-      placeholder="Enter username"
-      className="h-11" // slightly taller input for better touch/click
-    />
-  </div>
+                <div className="space-y-6 p-6 bg-muted/20 rounded-lg border border-border">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <div className="max-w-xs">
+                      <Input
+                        id="username"
+                        type="text"
+                        value={cloudUsername}
+                        onChange={(e) => setCloudUsername(e.target.value)}
+                        placeholder="Enter username"
+                        className="h-10"
+                      />
+                    </div>
+                  </div>
 
-  <div className="space-y-2">
-    <Label htmlFor="password">Password</Label>
-    <Input
-      id="password"
-      type="password"
-      value={cloudPassword}
-      onChange={(e) => setCloudPassword(e.target.value)}
-      placeholder="Enter password"
-      className="h-11"
-    />
-  </div>
-</div>
-                <div className="flex gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="max-w-xs">
+                      <Input
+                        id="password"
+                        type="password"
+                        value={cloudPassword}
+                        onChange={(e) => setCloudPassword(e.target.value)}
+                        placeholder="Enter password"
+                        className="h-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3 pt-2">
                   <Button
                     onClick={hivemqCloudIsStarted ? stopHivemqCloud : startHivemqCloud}
                     variant="outline"
