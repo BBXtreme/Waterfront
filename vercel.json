@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "rootDirectory": "waterfront-web",
   "builds": [
     {
@@ -8,5 +9,6 @@
   ],
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
-  "outputDirectory": ".next"
+  "outputDirectory": "waterfront-web/.next",
+  "framework": "nextjs"
 }
