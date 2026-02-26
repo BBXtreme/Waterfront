@@ -552,10 +552,7 @@ function TestConnectionsPage() {
         </Toggle>
       </header>
 
-      <main className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Connection & Payment Gateway Tests</h1>
-        <p className="text-muted-foreground mb-8">Test connectivity to payment providers and database. Click "Test" to check status.</p>
-        
+      <main className="max-w-7xl mx-auto">        
         {loading && <p className="text-xl text-center">Loading...</p>}
 
         {/* System Connections */}
