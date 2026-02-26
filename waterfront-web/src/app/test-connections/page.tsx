@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Toggle } from '@/components/ui/toggle';
 import { Label } from '@/components/ui/label';
 import { toast, Toaster } from 'sonner';
-import MachineCard from '@/components/MachineCard';
+import MachineCard from "@/components/MachineCard";  // @ alias = src/
 
 // Define types for status objects
 interface Status {
