@@ -1303,3 +1303,65 @@
 
 # 2026-02-26 11:22:26.189922
 +all
+
+# 2026-02-26 11:29:55.977965
++File: app/connection-test/page.tsx
++
++Critical fix:
++
++1. Remove variant="outline" from EVERY Badge in this file (Environment, Vercel, Supabase, Local Mosquitto, HiveMQ, EMQX, HiveMQ Cloud Badges). Delete the variant prop completely so background colors (bg-green-50 etc.) can show.
++
++2. Keep the existing cn() conditional class for green/red (already has includes("connected") — good).
++
++3. No other changes — do not touch gap, padding, shadows, or anything else.
++
++Show the diff only for app/connection-test/page.tsx.
+
+# 2026-02-26 11:33:05.165570
++File: app/connection-test/page.tsx
++
++Exact changes:
++
++1. Line with "grid grid-cols-1 md:grid-cols-3 gap-4" (System Connections row): Change "gap-4" to "gap-2.5" for 10px space between cards.
++
++2. For every <Badge variant="outline" ...> in this file (all 7 Badges for Environment, Vercel, Supabase, Local Mosquitto, HiveMQ, EMQX, HiveMQ Cloud):
++   - Delete variant="outline" completely (remove the prop).
++   - Keep the cn() conditional class for bg-green-50 / bg-red-50 etc.
++   - Ensure condition for green includes "OK", "Connected", "Detected", "connected".
++
++3. No other changes — do not add imports, do not use MachineCard, do not touch padding/shadows.
++
++Show ONLY the diff for app/connection-test/page.tsx.
+
+# 2026-02-26 11:39:47.786679
++page test connectionis not starting. review the complete code base and find problem. debug and test.
+
+# 2026-02-26 11:40:27.115655
++y
+
+# 2026-02-26 11:40:27.128324
++/run pnpm run dev
+
+# 2026-02-26 11:40:27.128536
++/run pnpm run dev
+
+# 2026-02-26 11:40:35.141275
++y
+
+# 2026-02-26 11:41:41.005113
++run npm run dev
+
+# 2026-02-26 11:41:49.691006
++all
+
+# 2026-02-26 11:42:10.662410
++y
+
+# 2026-02-26 11:42:10.673846
++/run pnpm dev
+
+# 2026-02-26 11:42:10.673957
++/run pnpm dev
+
+# 2026-02-26 11:42:13.960605
++y

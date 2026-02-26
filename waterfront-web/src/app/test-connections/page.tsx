@@ -527,8 +527,8 @@ function TestConnectionsPage() {
         {/* System Connections */}
         <div className="mb-12">
           <h2 className="text-xl font-medium text-center mb-6">System Connections</h2>
-          <div className="grid grid-cols-3 gap-2.5">
-            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+          <div className="grid grid-cols-3 gap-2.5 w-full">
+            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Environment</CardTitle>
@@ -551,7 +551,7 @@ function TestConnectionsPage() {
               </CardContent>
             </Card>
 
-            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Vercel</CardTitle>
@@ -574,7 +574,7 @@ function TestConnectionsPage() {
               </CardContent>
             </Card>
 
-            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Supabase</CardTitle>
