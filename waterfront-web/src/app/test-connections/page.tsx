@@ -1270,10 +1270,10 @@ const debugHivemqCloudMQTT = async () => {
                   <p className="text-muted-foreground">{hivemqCloudStatus.message}</p>
                   {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
                 </div>
-                <div className="space-y-6 p-6 bg-muted/20 rounded-lg border border-border">
+                <div className="max-w-[320px] space-y-6 p-6 bg-muted/20 rounded-lg border border-border">
                   <div className="space-y-2">
                     <Label htmlFor="username">Username</Label>
-                    <div className="w-64">
+                    <div className="max-w-[280px]">
                       <Input
                         id="username"
                         type="text"
@@ -1287,7 +1287,7 @@ const debugHivemqCloudMQTT = async () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <div className="w-64">
+                    <div className="max-w-[280px]">
                       <Input
                         id="password"
                         type="password"
@@ -1321,11 +1321,7 @@ const debugHivemqCloudMQTT = async () => {
               </CardContent>
             </Card>
           </div>
-          <div className="text-center mt-4">
-            <Button variant="secondary" size="sm" onClick={debugMQTTConnection}>
-              Deep Debug MQTT
-            </Button>
-          </div>
+          
         </div>
 
         {/* Refresh All Button */}
@@ -1344,7 +1340,6 @@ const debugHivemqCloudMQTT = async () => {
     </div>
   );
 }
-
 export default function Page() {
   return (
     <TestConnectionsPage />

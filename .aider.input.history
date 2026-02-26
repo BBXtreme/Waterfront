@@ -1859,3 +1859,104 @@
 +4. Show the diff and list modified files after changes.
 +
 +Start now.
+
+# 2026-02-26 20:05:55.450085
++We have redundancy in the "System Connections" section of the connection test page (src/app/admin/connections/page.tsx or test-connections/page.tsx).
++
++Currently both "Environment" and "Supabase" cards basically check the same Supabase env vars / connection.
++
++Please refactor as follows (keep visual style, grid, dark theme, card components unchanged):
++
++1. Rename the "Environment" card title to: "Required Environment Variables"
++
++2. Change its content to show a short list / table of critical env vars status:
++
++   - Supabase URL & Anon Key → "Present" (green) or "Missing" / "Invalid length" (red)
++   - MQTT Broker URL        → "Present" or "Missing"
++   - (optional later: Stripe Secret, BTCPay URL, etc.)
++
++   Use simple <div> or <p> with colored badges (green/red) instead of full table.
++
++   Example structure inside CardContent:
++
++   <div className="space-y-3">
++     <div className="flex justify-between">
++       <span>Supabase URL & Key</span>
++       <Badge variant={supabaseEnvOk ? "default" : "destructive"}>
++         {supabaseEnvOk ? "Present" : "Missing"}
++       </Badge>
++     </div>
++     <div className="flex justify-between">
++       <span>MQTT Broker URL</span>
++       <Badge variant={mqttUrlOk ? "default" : "destructive"}>
++         {mqttUrlOk ? "Present" : "Missing"}
++       </Badge>
++     </div>
++   </div>
++
++3. Keep the "Supabase" card as "Supabase API & Auth" – leave its current logic (getSession() success) unchanged.
++
++4. Do NOT remove any buttons (Test Connection, Deep Debug Supabase, Deep Debug MQTT).
++
++5. Keep Vercel card as is.
++
++6. Show diff and explain changes.
++
++Start now.
+
+# 2026-02-26 20:07:41.798983
++add link information as well to the Supabase API & Auth card 
+
+# 2026-02-26 20:10:02.234296
++in the card required environment variables, delete the OK text and the test connection button, as those make no snese here, right?
+
+# 2026-02-26 20:14:59.143360
++Move the "Deep Debug MQTT" button out of the Supabase card.
++
++Place it once, at the bottom of the MQTT brokers section (after all broker cards like Local, HiveMQ, EMQX, HiveMQ Cloud).
++
++Options for placement:
++- as last child inside the parent div that contains all MQTT cards
++- or in a small new Card titled "MQTT Debug Tools" right below the brokers
++
++Keep the button exactly as it is (variant="secondary" size="sm" onClick={debugMQTTConnection}).
++
++Do NOT:
++- duplicate the button
++- change any card layout / styling / grid
++- remove any existing buttons
++
++Show diff and explain placement.
++
++Start now.
+
+# 2026-02-26 20:19:24.385261
++Add a "Deep Debug" button to each MQTT broker card (Local, EMQX Public, HiveMQ Public, HiveMQ Cloud).
++
++Placement: next to "Stop" and "Send Test Message" buttons, variant="secondary" size="sm".
++
++Each button should call a broker-specific debug function that:
++- uses THAT card's broker URL (hardcode or from state)
++- uses that card's username/password if applicable (HiveMQ Cloud)
++- logs "Debugging [Broker Name] ..." + full connect/subscribe/publish flow
++- same logic as current debugMQTTConnection but customized per broker
++
++Do NOT remove the global Deep Debug MQTT button (keep it for general testing).
++
++Do NOT change card layout significantly — only add the button in the button group.
++
++Show diff and list changes.
++
++Start now.
+
+# 2026-02-26 20:23:17.130539
++In the HiveMQ Cloud card (MQTT - HiveMQ Cloud (Private)):
++
++Change the wrapper divs around username and password <Input> from max-w-xs to w-64
++so the input fields become shorter and more compact.
++
++Do NOT change anything else (labels, buttons, layout, classes on Input itself, etc.).
++
++Show diff and confirm the file path.
++
++Start now.
