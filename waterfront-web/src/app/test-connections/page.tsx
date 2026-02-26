@@ -686,7 +686,7 @@ const debugMQTTConnection = async () => {
             <Card className="m-[10px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[15px] pb-0">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="font-medium">Environment</CardTitle>
+                  <CardTitle className="font-medium">Required Environment Variables</CardTitle>
                   <Badge
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
@@ -700,9 +700,19 @@ const debugMQTTConnection = async () => {
                 </div>
               </CardHeader>
               <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
-                <div>
-                  <p className="text-muted-foreground">{envStatus.message}</p>
-                  {envStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {envStatus.timestamp}</p>}
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>Supabase URL & Key</span>
+                    <Badge variant={process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "default" : "destructive"}>
+                      {process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Present" : "Missing"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>MQTT Broker URL</span>
+                    <Badge variant={process.env.NEXT_PUBLIC_MQTT_BROKER_URL ? "default" : "destructive"}>
+                      {process.env.NEXT_PUBLIC_MQTT_BROKER_URL ? "Present" : "Missing"}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="flex gap-4">
                   <Button 
@@ -754,7 +764,7 @@ const debugMQTTConnection = async () => {
             <Card className="m-[10px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[15px] pb-0">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="font-medium">Supabase</CardTitle>
+                  <CardTitle className="font-medium">Supabase API & Auth</CardTitle>
                   <Badge
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
