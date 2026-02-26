@@ -636,7 +636,7 @@ function TestConnectionsPage() {
           <h2 className="text-xl font-medium text-center mb-6">Payment Gateway Tests</h2>
           <div className="grid grid-cols-3 gap-2.5">
             <Card className="m-[10px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
-              <CardHeader className="p-[15px] pb-0">
+              <CardHeader className="p-[15px] pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Stripe</CardTitle>
                   <Badge
@@ -664,7 +664,7 @@ function TestConnectionsPage() {
             </Card>
             
             <Card className="m-[10px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
-              <CardHeader className="p-[15px] pb-0">
+              <CardHeader className="p-[15px] pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">BTCPay/Lightning</CardTitle>
                   <Badge
@@ -692,7 +692,7 @@ function TestConnectionsPage() {
             </Card>
             
             <Card className="m-[10px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
-              <CardHeader className="p-[15px] pb-0">
+              <CardHeader className="p-[15px] pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Supabase Database</CardTitle>
                   <Badge
