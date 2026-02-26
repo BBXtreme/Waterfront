@@ -103,32 +103,48 @@ function TestConnectionsPage() {
     if (error) throw error;
   };
 
-  const debugSupabaseConnection = async () => {
+const debugSupabaseConnection = async () => {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    console.log('=== Supabase Deep Debug Start ===');
+    console.log('URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('Anon key length:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 'missing');
+
+    // Auth check – always safe
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Auth session:', session);
+    console.log('Session error:', sessionError);
+
+    // Safe metadata check: count public tables (works on empty project)
+    const { count, error: metaError } = await supabase
+      .from('pg_tables')
+      .select('*', { count: 'exact', head: true })
+      .eq('schemaname', 'public');
+
+    console.log('Public tables count:', count ?? 'unknown');
+    console.log('Metadata error:', metaError);
+
+    // Optional: try to read from a common table (silent fail if missing)
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const { count: bookingCount, error: bookingError } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true });
 
-      console.log('=== Supabase Deep Debug Start ===');
-      console.log('Using URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log('Anon key length:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 'missing');
-
-      // Check auth session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('Auth session:', session);
-      console.log('Session error:', sessionError);
-
-      // Try a lightweight metadata query (no table dependency)
-      const { data: versionData, error: versionError } = await supabase.rpc('version');
-      console.log('Version query result:', versionData);
-      console.log('Version query error:', versionError);
-
-      console.log('=== Supabase Deep Debug End ===');
-    } catch (err) {
-      console.error('Supabase debug failed:', err);
+      console.log('Bookings count:', bookingCount ?? 0);
+      console.log('Bookings error:', bookingError);
+    } catch (e) {
+      console.log('Bookings table check skipped (likely not created yet):', e.message);
     }
-  };
+
+    console.log('=== Supabase Deep Debug End ===');
+  } catch (err) {
+    console.error('Supabase debug failed:', err);
+  }
+};
 
   // Function to check environment variables
   const checkEnvironment = () => {
