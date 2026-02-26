@@ -1,4 +1,5 @@
 import MachineCard from '@/components/MachineCard';
+import { Button } from '@/components/ui/button';
 
 export default function AdminDashboardPage() {
   return (
@@ -18,7 +19,7 @@ export default function AdminDashboardPage() {
             isConnected={true}
           >
             <div className="flex gap-3">
-              <button className="px-5 py-2.5 bg-primary text-primary-foreground rounded">Action</button>
+              <Button className="px-5 py-2.5">Action</Button>
             </div>
           </MachineCard>
 
@@ -30,7 +31,7 @@ export default function AdminDashboardPage() {
             isConnected={false}
           >
             <div className="flex gap-3">
-              <button className="px-5 py-2.5 bg-primary text-primary-foreground rounded">Action</button>
+              <Button className="px-5 py-2.5">Action</Button>
             </div>
           </MachineCard>
 
@@ -42,7 +43,7 @@ export default function AdminDashboardPage() {
             isConnected={false}
           >
             <div className="flex gap-3">
-              <button className="px-5 py-2.5 bg-primary text-primary-foreground rounded">Action</button>
+              <Button className="px-5 py-2.5">Action</Button>
             </div>
           </MachineCard>
         </div>

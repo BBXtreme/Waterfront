@@ -21,16 +21,15 @@ export default function MachineCard({
   children,
 }: MachineCardProps) {
   return (
-    <Card className="m-4 shadow-sm rounded-lg overflow-hidden w-full bg-gradient-to-br from-card to-card/80">
+    <Card className="m-4 shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
       <CardHeader className="p-6">
         <div className="flex justify-between items-center">
           <CardTitle className="font-medium">{title}</CardTitle>
           <Badge
-            variant="default"
+            variant="outline"
             className={cn(
-              isConnected
-                ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
-                : ''
+              "font-medium",
+              isConnected && "text-green-600 dark:text-green-400 border-green-600 dark:border-green-400"
             )}
           >
             {status}
