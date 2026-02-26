@@ -111,11 +111,13 @@ function TestConnectionsPage() {
       setEnvStatus({
         status: 'OK',
         message: `URL: ${supabaseUrl}, Key Length: ${supabaseKey.length}`,
+        timestamp: new Date().toLocaleString(),
       });
     } else {
       setEnvStatus({
         status: 'Error',
         message: 'Missing SUPABASE_URL or SUPABASE_ANON_KEY',
+        timestamp: new Date().toLocaleString(),
       });
     }
   };
@@ -464,11 +466,13 @@ function TestConnectionsPage() {
       setVercelStatus({
         status: 'OK',
         message: `Env: ${vercelEnv || 'N/A'}, URL: ${vercelUrl || 'N/A'}`,
+        timestamp: new Date().toLocaleString(),
       });
     } else {
       setVercelStatus({
         status: 'Not Detected',
         message: 'Not running on Vercel or env vars not set',
+        timestamp: new Date().toLocaleString(),
       });
     }
   };
@@ -575,6 +579,7 @@ function TestConnectionsPage() {
               <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{envStatus.message}</p>
+                  {envStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {envStatus.timestamp}</p>}
                 </div>
                 <div className="flex gap-4">
                   <Button 
@@ -608,6 +613,7 @@ function TestConnectionsPage() {
               <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{vercelStatus.message}</p>
+                  {vercelStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {vercelStatus.timestamp}</p>}
                 </div>
                 <div className="flex gap-4">
                   <Button 
