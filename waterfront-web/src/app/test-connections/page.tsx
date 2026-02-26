@@ -120,13 +120,9 @@ function TestConnectionsPage() {
       console.log('Session error:', sessionError);
 
       // Try a lightweight metadata query (no table dependency)
-      const { data: versionData, error: versionError } = await supabase
-        .from('pg_tables')
-        .select('count(*)')
-        .limit(1);
-
-      console.log('Metadata query result:', versionData);
-      console.log('Metadata query error:', versionError);
+      const { data: versionData, error: versionError } = await supabase.rpc('version');
+      console.log('Version query result:', versionData);
+      console.log('Version query error:', versionError);
 
       console.log('=== Supabase Deep Debug End ===');
     } catch (err) {
