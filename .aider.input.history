@@ -1650,3 +1650,212 @@
 
 # 2026-02-26 13:02:16.609256
 +/exit
+
+# 2026-02-26 19:38:11.975889
++We have a connection test page at src/app/admin/connections/page.tsx (or src/app/test-connections/page.tsx – whichever exists).
++
++The page is already a Client Component ("use client") and has a Supabase test button that shows "Connected (auth OK)" based on getSession() or similar.
++
++Please do the following **without changing layout, card styles, grid, existing buttons, or any visual elements**:
++
++1. In the same component/file where the Supabase test logic lives (likely the main page component):
++
++   - Add this async function near the top (after imports, before return):
++
++     const debugSupabaseConnection = async () => {
++       try {
++         const supabase = createClient(
++           process.env.NEXT_PUBLIC_SUPABASE_URL!,
++           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
++         );
++
++         console.log('=== Supabase Deep Debug Start ===');
++         console.log('Using URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
++         console.log('Anon key length:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 'missing');
++
++         // Check auth session
++         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
++         console.log('Auth session:', session);
++         console.log('Session error:', sessionError);
++
++         // Try a lightweight metadata query (no table dependency)
++         const { data: versionData, error: versionError } = await supabase
++           .from('pg_stat_activity')
++           .select('count(*)')
++           .limit(0);
++
++         console.log('Metadata query result:', versionData);
++         console.log('Metadata query error:', versionError);
++
++         // If bookings table exists – optional safe check
++         try {
++           const { data: countData, error: countError } = await supabase
++             .from('bookings')
++             .select('count(*)', { count: 'exact', head: true });
++
++           console.log('Bookings table count:', countData, 'error:', countError);
++         } catch (tableErr) {
++           console.log('Bookings table check skipped (table may not exist yet):', tableErr.message);
++         }
++
++         console.log('=== Supabase Deep Debug End ===');
++       } catch (err) {
++         console.error('Supabase debug failed:', err);
++       }
++     };
++
++2. Add **one new small button** inside the Supabase card (CardContent or CardFooter – prefer Footer if it has space):
++
++   - shadcn/ui Button, variant="secondary" size="sm"
++   - Text: "Deep Debug Supabase"
++   - onClick={debugSupabaseConnection}
++
++   Example placement (append to existing content, do NOT replace anything):
++
++   <Button variant="secondary" size="sm" onClick={debugSupabaseConnection}>
++     Deep Debug Supabase
++   </Button>
++
++3. Do NOT:
++   - Remove or modify existing "Test Connection" buttons
++   - Change any card titles, colors, status texts, or grid layout
++   - Add new cards or sections
++   - Import new dependencies (createClient is already used)
++
++4. After changes, show the diff and explain what was added.
++
++Start now.
+
+# 2026-02-26 19:38:23.765429
++y
+
+# 2026-02-26 19:43:24.029629
++debug -> Replace the problematic queries with safer ones that work on a fresh local Supabase:
++
++Use .rpc('version') or a simple from('pg_tables').select('count(*)') instead of pg_stat_activity
++Skip table-specific queries or make them optional + silent
+
+# 2026-02-26 19:45:50.175929
++[Error] Failed to load resource: the server responded with a status of 400 (Bad Request) (pg_tables, line 0)
++[Error] Failed to load resource: the server responded with a status of 400 (Bad Request) (pg_tables, line 0)
+
+# 2026-02-26 19:47:11.191947
++debug error and fix and test: [Warning] GoTrueClient@sb-127-auth-token:1 (2.98.0) 2026-02-26T18:46:56.455Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. (f9810_next_dist_1e12043d._.js, line 2298)
++[Log] === Supabase Deep Debug Start === (f9810_next_dist_1e12043d._.js, line 2298)
++[Log] Using URL: – "http://127.0.0.1:54321" (f9810_next_dist_1e12043d._.js, line 2298)
++[Log] Anon key length: – 46 (f9810_next_dist_1e12043d._.js, line 2298)
++[Log] Auth session: – null (f9810_next_dist_1e12043d._.js, line 2298)
++[Log] Session error: – null (f9810_next_dist_1e12043d._.js, line 2298)
++[Error] Failed to load resource: the server responded with a status of 404 (Not Found) (version, line 0)
++[Log] Version query result: – null (f9810_next_dist_1e12043d._.js, line 2298)
++[Log] Version query error: – {code: "PGRST202", details: "Searched for the function public.version without p…r, but no matches were found in the schema cache.", hint: null, …} (f9810_next_dist_1e12043d._.js, line 2298)
++{code: "PGRST202", details: "Searched for the function public.version without p…r, but no matches were found in the schema cache.", hint: null, message: "Could not find the function public.version without parameters in the schema cache"}Object
+
+# 2026-02-26 19:47:17.058643
++y
+
+# 2026-02-26 19:47:20.086593
++n
+
+# 2026-02-26 19:49:13.096538
++/undo
+
+# 2026-02-26 19:52:49.583898
++We're working on the connection test page in src/app/admin/connections/page.tsx or src/app/test-connections/page.tsx (whichever exists).
++
++It already has a debugSupabaseConnection function and "Deep Debug Supabase" button.
++
++Please do the following **without changing layout, card styles, grid, existing buttons, or any visual elements**:
++
++1. Add a new async function debugMQTTConnection right below debugSupabaseConnection:
++
++   const debugMQTTConnection = async () => {
++     try {
++       console.log('=== MQTT Deep Debug Start ===');
++
++       const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL;
++       console.log('Broker URL:', brokerUrl || 'NOT SET');
++
++       if (!brokerUrl) {
++         console.warn('No NEXT_PUBLIC_MQTT_BROKER_URL in env – cannot test');
++         return;
++       }
++
++       const options: any = {
++         protocol: brokerUrl.startsWith('wss') ? 'wss' : 'ws',
++         connectTimeout: 5000,
++         reconnectPeriod: 0, // no auto-reconnect for test
++       };
++
++       if (process.env.NEXT_PUBLIC_MQTT_USERNAME) {
++         options.username = process.env.NEXT_PUBLIC_MQTT_USERNAME;
++       }
++       if (process.env.NEXT_PUBLIC_MQTT_PASSWORD) {
++         options.password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
++       }
++
++       // For local self-signed certs – temporary debug only!
++       if (brokerUrl.includes('localhost') || brokerUrl.includes('127.0.0.1')) {
++         options.rejectUnauthorized = false;
++         console.warn('rejectUnauthorized = false (local debug only)');
++       }
++
++       const mqtt = (await import('mqtt')).default;
++       const client = mqtt.connect(brokerUrl, options);
++
++       client.on('connect', () => {
++         console.log('MQTT connected successfully');
++         client.subscribe('/kayak/+/status', (err) => {
++           if (err) {
++             console.error('Subscribe failed:', err);
++           } else {
++             console.log('Subscribed to /kayak/+/status');
++           }
++         });
++         // Publish a test message (optional)
++         client.publish('/kayak/test/debug', 'Hello from browser debug', (err) => {
++           if (err) console.error('Test publish failed:', err);
++           else console.log('Test message published');
++         });
++         setTimeout(() => client.end(), 4000); // close after ~4s
++       });
++
++       client.on('message', (topic, message) => {
++         console.log(`MQTT message received on ${topic}:`, message.toString());
++       });
++
++       client.on('error', (err) => {
++         console.error('MQTT error:', err.message || err);
++         client.end();
++       });
++
++       client.on('close', () => {
++         console.log('MQTT connection closed');
++       });
++
++       // Safety timeout
++       setTimeout(() => {
++         if (!client.connected && !client.disconnecting) {
++           console.error('MQTT connection timeout after 5s');
++           client.end();
++         }
++       }, 6000);
++
++     } catch (err) {
++       console.error('MQTT debug init failed:', err);
++     }
++   };
++
++2. Add one new button in the Supabase card footer (or below the existing debug button if space allows):
++
++   <Button variant="secondary" size="sm" onClick={debugMQTTConnection}>
++     Deep Debug MQTT
++   </Button>
++
++3. Do NOT:
++   - Change any existing code, layout, or cards (e.g. don't touch MQTT-specific cards like local/HiveMQ if they exist)
++   - Add top-level imports (use dynamic import for mqtt as shown)
++
++4. Show the diff and list modified files after changes.
++
++Start now.
