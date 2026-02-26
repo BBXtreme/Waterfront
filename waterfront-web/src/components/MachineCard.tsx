@@ -22,7 +22,7 @@ export default function MachineCard({
 }: MachineCardProps) {
   const isPositive = status.includes("OK") || status.includes("Connected") || status.includes("Detected") || status.includes("connected");
   return (
-    <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+    <Card className="shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
       <CardHeader className="p-[25px]">
         <div className="flex justify-between items-center">
           <CardTitle className="font-medium">{title}</CardTitle>
