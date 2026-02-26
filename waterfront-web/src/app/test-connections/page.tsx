@@ -687,16 +687,6 @@ const debugMQTTConnection = async () => {
               <CardHeader className="p-[15px] pb-0">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Required Environment Variables</CardTitle>
-                  <Badge
-                    className={cn(
-                      "px-2 py-1 rounded-full text-xs font-medium",
-                      envStatus.status === "OK" || envStatus.status.includes("Connected") || envStatus.status.includes("Detected") || envStatus.status.includes("connected")
-                        ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
-                        : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"
-                    )}
-                  >
-                    {envStatus.status}
-                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
@@ -713,16 +703,6 @@ const debugMQTTConnection = async () => {
                       {process.env.NEXT_PUBLIC_MQTT_BROKER_URL ? "Present" : "Missing"}
                     </Badge>
                   </div>
-                </div>
-                <div className="flex gap-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={checkEnvironment}
-                    disabled={loading}
-                  >
-                    Test Connection
-                  </Button>
                 </div>
               </CardContent>
             </Card>
