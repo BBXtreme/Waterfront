@@ -527,7 +527,7 @@ function TestConnectionsPage() {
         {/* System Connections */}
         <div className="mb-12">
           <h2 className="text-xl font-medium text-center mb-6">System Connections</h2>
-          <div className="grid grid-cols-3 gap-2.5 w-full">
+          <div className="grid grid-cols-3 gap-2.5">
             <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
@@ -605,7 +605,7 @@ function TestConnectionsPage() {
           <h2 className="text-xl font-medium text-center mb-6">MQTT Brokers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Local Mosquitto Card */}
-            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - Local Mosquitto</CardTitle>
@@ -649,7 +649,7 @@ function TestConnectionsPage() {
             </Card>
 
             {/* HiveMQ Public Card */}
-            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - HiveMQ Public</CardTitle>
@@ -690,7 +690,7 @@ function TestConnectionsPage() {
             </Card>
 
             {/* EMQX Public Card */}
-            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - EMQX Public</CardTitle>
@@ -731,7 +731,7 @@ function TestConnectionsPage() {
             </Card>
 
             {/* HiveMQ Cloud Card */}
-            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden w-full bg-card border border-border">
+            <Card className="m-[15px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[25px]">
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - HiveMQ Cloud (Private)</CardTitle>
@@ -752,28 +752,31 @@ function TestConnectionsPage() {
                   <p className="text-muted-foreground">{hivemqCloudStatus.message}</p>
                   {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
                 </div>
-                <div className="space-y-2">
-                  <div>
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      type="text"
-                      value={cloudUsername}
-                      onChange={(e) => setCloudUsername(e.target.value)}
-                      placeholder="Enter username"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={cloudPassword}
-                      onChange={(e) => setCloudPassword(e.target.value)}
-                      placeholder="Enter password"
-                    />
-                  </div>
-                </div>
+           <div className="space-y-6 p-6 bg-muted/30 rounded-lg border border-border"> {/* outer group padding & subtle background */}
+  <div className="space-y-2">
+    <Label htmlFor="username">Username</Label>
+    <Input
+      id="username"
+      type="text"
+      value={cloudUsername}
+      onChange={(e) => setCloudUsername(e.target.value)}
+      placeholder="Enter username"
+      className="h-11" // slightly taller input for better touch/click
+    />
+  </div>
+
+  <div className="space-y-2">
+    <Label htmlFor="password">Password</Label>
+    <Input
+      id="password"
+      type="password"
+      value={cloudPassword}
+      onChange={(e) => setCloudPassword(e.target.value)}
+      placeholder="Enter password"
+      className="h-11"
+    />
+  </div>
+</div>
                 <div className="flex gap-4">
                   <Button
                     onClick={hivemqCloudIsStarted ? stopHivemqCloud : startHivemqCloud}
