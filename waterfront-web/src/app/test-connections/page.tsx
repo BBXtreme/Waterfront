@@ -528,10 +528,11 @@ function TestConnectionsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Environment</CardTitle>
                   <Badge
-                    variant="outline"
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      (envStatus.status.includes("OK") || envStatus.status.includes("Connected") || envStatus.status.includes("Detected") || envStatus.status.includes("connected")) ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                      envStatus.status === "OK" || envStatus.status.includes("Connected") || envStatus.status.includes("Detected")
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
                     )}
                   >
                     {envStatus.status}
@@ -550,10 +551,11 @@ function TestConnectionsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Vercel</CardTitle>
                   <Badge
-                    variant="outline"
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      (vercelStatus.status.includes("OK") || vercelStatus.status.includes("Connected") || vercelStatus.status.includes("Detected") || vercelStatus.status.includes("connected")) ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                      vercelStatus.status === "OK" || vercelStatus.status.includes("Connected") || vercelStatus.status.includes("Detected")
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
                     )}
                   >
                     {vercelStatus.status}
@@ -572,10 +574,11 @@ function TestConnectionsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">Supabase</CardTitle>
                   <Badge
-                    variant="outline"
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      (supabaseStatus.status.includes("OK") || supabaseStatus.status.includes("Connected") || supabaseStatus.status.includes("Detected") || supabaseStatus.status.includes("connected")) ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                      supabaseStatus.status === "OK" || supabaseStatus.status.includes("Connected") || supabaseStatus.status.includes("Detected")
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
                     )}
                   >
                     {supabaseStatus.status}
@@ -602,10 +605,11 @@ function TestConnectionsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - Local Mosquitto</CardTitle>
                   <Badge
-                    variant="outline"
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      (localStatus.status.includes("OK") || localStatus.status.includes("Connected") || localStatus.status.includes("Detected") || localStatus.status.includes("connected")) ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                      localStatus.status === "OK" || localStatus.status.includes("Connected") || localStatus.status.includes("Detected")
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
                     )}
                   >
                     {localStatus.status}
@@ -645,10 +649,11 @@ function TestConnectionsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - HiveMQ Public</CardTitle>
                   <Badge
-                    variant="outline"
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      (hivemqStatus.status.includes("OK") || hivemqStatus.status.includes("Connected") || hivemqStatus.status.includes("Detected") || hivemqStatus.status.includes("connected")) ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                      hivemqStatus.status === "OK" || hivemqStatus.status.includes("Connected") || hivemqStatus.status.includes("Detected")
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
                     )}
                   >
                     {hivemqStatus.status}
@@ -685,10 +690,11 @@ function TestConnectionsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - EMQX Public</CardTitle>
                   <Badge
-                    variant="outline"
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      (emqxStatus.status.includes("OK") || emqxStatus.status.includes("Connected") || emqxStatus.status.includes("Detected") || emqxStatus.status.includes("connected")) ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                      emqxStatus.status === "OK" || emqxStatus.status.includes("Connected") || emqxStatus.status.includes("Detected")
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
                     )}
                   >
                     {emqxStatus.status}
@@ -725,10 +731,11 @@ function TestConnectionsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="font-medium">MQTT - HiveMQ Cloud (Private)</CardTitle>
                   <Badge
-                    variant="outline"
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      (hivemqCloudStatus.status.includes("OK") || hivemqCloudStatus.status.includes("Connected") || hivemqCloudStatus.status.includes("Detected") || hivemqCloudStatus.status.includes("connected")) ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                      hivemqCloudStatus.status === "OK" || hivemqCloudStatus.status.includes("Connected") || hivemqCloudStatus.status.includes("Detected")
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
                     )}
                   >
                     {hivemqCloudStatus.status}
