@@ -1031,7 +1031,7 @@ const debugVercelEnvironment = async () => {
                   {supabaseStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {supabaseStatus.timestamp}</p>}
                   {process.env.NEXT_PUBLIC_SUPABASE_URL && (
                     <p className="text-xs text-muted-foreground">
-                      URL: <a href={process.env.NEXT_PUBLIC_SUPABASE_URL} target="_blank" rel="noopener noreferrer">{process.env.NEXT_PUBLIC_SUPABASE_URL}</a>
+                      API URL: <a href={process.env.NEXT_PUBLIC_SUPABASE_URL} target="_blank" rel="noopener noreferrer">{process.env.NEXT_PUBLIC_SUPABASE_URL}</a>
                     </p>
                   )}
                 </div>

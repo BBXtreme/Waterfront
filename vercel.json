@@ -1,0 +1,12 @@
+{
+  "rootDirectory": "waterfront-web",
+  "builds": [
+    {
+      "src": "waterfront-web/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next"
+}
