@@ -687,7 +687,8 @@ function TestConnectionsPage() {
               </CardHeader>
               <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Check connection to Stripe API</p>
+                  <p className="text-muted-foreground">Connection to Stripe API</p>
+                  <p className="text-xs text-muted-foreground">Endpoint: api.stripe.com</p>
                 </div>
                 <div className="flex gap-4">
                   <Button 
@@ -719,7 +720,8 @@ function TestConnectionsPage() {
               </CardHeader>
               <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Check connection to BTCPay Server</p>
+                  <p className="text-muted-foreground">Connection to BTCPay Server</p>
+                  <p className="text-xs text-muted-foreground">Endpoint: btcpay.example.com</p>
                 </div>
                 <div className="flex gap-4">
                   <Button 
