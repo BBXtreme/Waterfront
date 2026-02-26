@@ -634,7 +634,7 @@ function TestConnectionsPage() {
         {/* Payment Gateway Tests */}
         <div className="mb-12">
           <h2 className="text-xl font-medium text-center mb-6">Payment Gateway Tests</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-3 gap-2.5">
             <Card className="m-[10px] shadow-sm rounded-lg overflow-hidden bg-card border border-border">
               <CardHeader className="p-[15px] pb-0">
                 <div className="flex justify-between items-center">
