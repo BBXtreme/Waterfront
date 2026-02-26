@@ -26,10 +26,10 @@ export default function MachineCard({
         <div className="flex justify-between items-center">
           <CardTitle className="font-medium">{title}</CardTitle>
           <Badge
-            variant="outline"
+            variant="default"
             className={cn(
               "font-medium px-2 py-1 mr-2",
-              isConnected && "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 border-green-600 dark:border-green-400"
+              isConnected && "bg-green-500 text-white"
             )}
           >
             {status}
