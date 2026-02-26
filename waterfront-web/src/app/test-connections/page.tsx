@@ -539,7 +539,7 @@ function TestConnectionsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{envStatus.message}</p>
                 </div>
@@ -562,7 +562,7 @@ function TestConnectionsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{vercelStatus.message}</p>
                 </div>
@@ -585,7 +585,7 @@ function TestConnectionsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{supabaseStatus.message}</p>
                   {supabaseStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {supabaseStatus.timestamp}</p>}
@@ -616,7 +616,7 @@ function TestConnectionsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{localStatus.message}</p>
                   {localStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {localStatus.timestamp}</p>}
@@ -660,7 +660,7 @@ function TestConnectionsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{hivemqStatus.message}</p>
                   {hivemqStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqStatus.timestamp}</p>}
@@ -701,7 +701,7 @@ function TestConnectionsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{emqxStatus.message}</p>
                   {emqxStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {emqxStatus.timestamp}</p>}
@@ -742,7 +742,7 @@ function TestConnectionsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-4 text-sm">
+              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
                 <div>
                   <p className="text-muted-foreground">{hivemqCloudStatus.message}</p>
                   {hivemqCloudStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {hivemqCloudStatus.timestamp}</p>}
