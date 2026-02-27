@@ -1,15 +1,9 @@
 /*
- * Waterfront Kayak Rental Controller – Bremen
- * MDB/vending completely removed
- * MQTT remote unlock + sensor base
- * Adapted from Nodestark/mdb-esp32-cashless master
- */
-
 /*
- * VMflow.xyz
- *
- * mdb-master-esp32s3.c - Vending machine controller
- *
+ * Waterfront Kayak Rental Controller – Bremen, DE
+ * MDB / vending protocol completely removed
+ * Purpose: MQTT-based remote solenoid lock control + ultrasonic return sensor + battery monitoring
+ * Original base: Nodestark/mdb-esp32-cashless master mode (adapted)
  */
 
 #include <esp_log.h>

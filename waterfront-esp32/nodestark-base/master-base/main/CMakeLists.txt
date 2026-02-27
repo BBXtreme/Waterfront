@@ -1,2 +1,2 @@
-idf_component_register(SRCS "mdb-master-esp32s3.c"
-                    INCLUDE_DIRS ".")
+idf_component_register(SRCS "waterfront-main.c"
+                       INCLUDE_DIRS ".")

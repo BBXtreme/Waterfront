@@ -1,4 +1,9 @@
-# ESP32 - Tiny Vending Machine with MDB and EVA-DTS/DEX Implementation
-This project is a comprehensive implementation of a vending machine controller using the ESP32 microcontroller. It integrates support for the Multi-Drop Bus (MDB) protocol to communicate with various vending peripherals (e.g., coin changers, bill validators, cashless payment systems) and incorporates the EVA-DTS (European Vending Association - Data Transfer Standard) for data exchange and telemetry.
+# Waterfront ESP32 Kayak Rental Controller
 
-![Vending Machine Controller](esp32-s3n16r8.jpeg)
+Adapted from Nodestark/mdb-esp32-cashless (master mode)  
+MDB / vending protocol completely removed.  
+
+Purpose: MQTT-based remote solenoid lock control + ultrasonic return sensor + battery monitoring  
+For unmanned kayak/SUP bays waterfront setup (solar-powered).
+
+<image-card alt="Waterfront ESP32 Controller" src="esp32-s3n16r8.jpeg" ></image-card>

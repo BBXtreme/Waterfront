@@ -2012,3 +2012,185 @@
 +
 +Next.js version: 16.1.6 (Turbopack)
 +
+
+# 2026-02-27 12:10:32.297773
++You are helping adapt an ESP32-S3 firmware project (originally from Nodestark/mdb-esp32-cashless) for a kayak rental vending system.
++
++The project no longer uses MDB (Multi-Drop Bus) protocol at all — there is no MDB hardware, no coin/bill/cashless peripherals, no vending machine bus. All payments and bookings happen via a web app (PWA) and remote MQTT commands.
++
++Current folder: master-base (this is the copied & renamed mdb-master-esp32s3 folder)
++
++Goal: Completely remove all traces of MDB protocol so the firmware becomes a clean MQTT + GPIO + sensor base for:
++- Receiving JSON unlock commands via MQTT (e.g. {"bookingId":"bk_abc","pin":"7482","durationSec":7200})
++- Controlling a relay (solenoid lock) on GPIO 23
++- Reading ultrasonic sensor for kayak presence (GPIO 5 trigger, GPIO 18 echo)
++- Reading battery voltage via ADC (GPIO 34)
++- Publishing status events via MQTT (e.g. {"state":"returned","kayakPresent":true,"battery":87})
++
++Tasks to perform now:
++
++1. Remove or comment out every line / block / function related to MDB:
++   - Any #define or const with "mdb", "MDB", "pin_mdb_rx", "pin_mdb_tx", "pin_mdb_led"
++   - enum MDB_COMMAND and any related enums / structs
++   - All functions containing "mdb_" prefix (mdb_init, mdb_poll, mdb_send_command, mdb_parse_response, etc.)
++   - Any UART configuration specifically for MDB (9-bit mode, 9600 baud, odd parity, break detection)
++   - Any polling loops, state machines, credit/vend approval logic, EVA-DTS/DEX/DDCMP telemetry formatting
++   - Any variables / queues / tasks named mdb_*, vend_*, credit_*, cashless_*
++
++2. Keep general-purpose code that can be reused:
++   - WiFi connection & provisioning (SoftAP/BLE)
++   - MQTT client initialization, connect, publish, subscribe
++   - BLE stack (if used for provisioning or PAX counter)
++   - General app_main() / main task structure
++   - Any logging / debug output
++
++3. After removal, the main loop / app_main should no longer have any MDB polling or UART MDB handling.
++   Leave room for future additions (MQTT callback handler, relay control, sensor read).
++
++4. If removing code causes compile errors (undefined references, missing includes), comment out the calling code instead of deleting includes.
++
++5. Add a comment block at the top of the main source file (probably mdb-master-esp32s3.c or main.c):
++
++   /*
++    * Waterfront Kayak Rental Adaptation
++    * MDB protocol completely removed - no vending bus
++    * Used for MQTT-based remote lock control + sensor feedback
++    * Original base: Nodestark/mdb-esp32-cashless (master mode)
++    */
++
++6. Do NOT add new features yet (relay, sensor, JSON parsing) — focus only on stripping MDB cleanly.
++
++7. After changes, show me:
++   - The diff / summary of what was removed
++   - Any remaining files that still mention MDB (run grep -r "MDB" . again)
++   - Whether the code still builds with idf.py build (or note obvious compile blockers)
++
++Start now — edit files in this directory.
+
+# 2026-02-27 12:11:03.612406
++exit
+
+# 2026-02-27 12:11:38.082108
++all
+
+# 2026-02-27 12:35:25.184693
++Project: Adapt ESP32-S3 firmware from Nodestark/mdb-esp32-cashless (master mode) for kayak rental lock control.
++
++No MDB hardware exists anymore — remove **all** Multi-Drop Bus / vending logic completely.
++
++Current directory: master-base (copied mdb-master-esp32s3 content)
++
++Tasks — do these in order:
++
++1. In every .c / .h file:
++   - Remove or fully comment out:
++     - All lines defining MDB pins (pin_mdb_rx, pin_mdb_tx, pin_mdb_led, etc.)
++     - enum MDB_COMMAND and any MDB-related enums/structs
++     - All functions starting with mdb_ (mdb_init, mdb_poll, mdb_send, mdb_parse, etc.)
++     - MDB-specific UART config (9-bit mode, 9600 baud, odd parity, break handling)
++     - Any MDB polling loops, state machines, command/response handlers
++     - Credit/vend approval, EVA-DTS/DEX/DDCMP formatting, vending state variables
++
++2. Preserve:
++   - WiFi setup & provisioning (SoftAP/BLE)
++   - MQTT client init, connect, publish, subscribe
++   - BLE code (provisioning or scanning)
++   - General app_main() structure and FreeRTOS tasks (if not MDB-specific)
++   - Logging / debug functions
++
++3. Add this comment block at the top of the main source file (likely mdb-master-esp32s3.c or main.c):
++
++   /*
++    * Waterfront Kayak Rental Adaptation – Bremen, DE
++    * MDB / vending protocol completely removed
++    * Purpose: MQTT-based remote solenoid lock + ultrasonic return sensor
++    * Original base: Nodestark/mdb-esp32-cashless master mode
++    */
++
++4. Do **not** add new relay/sensor/JSON code yet — only strip MDB.
++
++5. After changes:
++   - Show summary of files changed and lines removed
++   - Run internal grep -r -i "mdb\|vend\|credit\|eva\|dex\|ddc" . and show remaining hits (if any)
++   - Report if idf.py build still runs without obvious MDB-related errors
++
++Focus on surgical removal — prefer commenting out over deleting if unsure about dependencies.
++Start editing now.
+
+# 2026-02-27 12:36:21.101900
++y
+
+# 2026-02-27 12:37:28.946862
++yes
+
+# 2026-02-27 12:38:33.526889
++all
+
+# 2026-02-27 12:39:20.623950
++yes
+
+# 2026-02-27 12:41:34.220415
++All changes should be made inside the folder: waterfront-esp32/nodestark-base/master-base
++Main source file to edit: waterfront-esp32/nodestark-base/master-base/main/mdb-master-esp32s3.c -- Final cleanup pass on mdb-master-esp32s3.c in master-base folder.
++
++MDB is already mostly commented out — now aggressively delete all remaining dead vending code:
++
++1. Delete these entire functions/blocks (they're dead):
++   - void write_payload_9(...)
++   - void mdb_vmc_loop(...)
++   - void eva_dts_loop(...)
++   - Any remaining sequences with mdb_payload_tx / mdb_payload_rx arrays, 0x10, 0x60, RESET, POLL, VEND, ACK, CHK, Vend Approved/Denied
++
++2. Remove these defines/variables:
++   - pin_dex_rx, pin_dex_tx, pin_mdb_led
++   - Any leftover reader0x10, reader0x08 structs/vars
++   - BIT_ADD_SET, BIT_CMD_SET, BIT_MODE_SET constants if only used for MDB
++
++3. Update file comment at top to:
++   /*
++    * Waterfront Kayak Rental Controller – Bremen
++    * MDB/vending completely removed
++    * MQTT remote unlock + sensor base
++    * Adapted from Nodestark/mdb-esp32-cashless master
++    */
++
++4. In CMakeLists.txt: change project(mdb-master-esp32s3) to project(waterfront-esp32s3)
++
++5. After changes:
++   - Show remaining grep -r -i "mdb\|vend\|credit\|eva\|dex\|ddc\|cashless\|0x10\|0x60" .
++   - Confirm idf.py build runs (or note main errors)
++
++Focus only on deletion/commenting — no new code added.
+
+# 2026-02-27 12:42:39.904200
++all
+
+# 2026-02-27 12:44:24.423303
++Final aggressive cleanup on waterfront-esp32/nodestark-base/master-base/main/mdb-master-esp32s3.c
++
++Delete these entirely (remove whole functions and blocks):
++- void write_payload_9(...)
++- void mdb_vmc_loop(...) { ... } including all its content
++- void eva_dts_loop(...) { ... } including all its content
++- All remaining commented blocks with mdb_payload_tx[0] =, 0x10, 0x60, RESET, POLL, SETUP, VEND, ACK, CHK, Vend Approved/Denied, Session Complete, etc.
++
++Remove these defines:
++- pin_dex_rx
++- pin_dex_tx
++- pin_mdb_led
++
++In CMakeLists.txt (same folder level): change project(mdb-master-esp32s3) to project(waterfront-esp32s3)
++
++Update top comment in mdb-master-esp32s3.c to:
++   /*
++    * Waterfront Kayak Rental Controller – Bremen
++    * MDB/vending completely removed
++    * MQTT remote unlock + sensor base
++    * Adapted from Nodestark/mdb-esp32-cashless master
++    */
++
++After changes:
++- Show remaining grep -r -i "mdb\|vend\|credit\|eva\|dex\|ddc\|cashless\|0x10\|0x60"
++- Confirm if idf.py build succeeds (no MDB errors)
++
++Only delete/comment — no new code.
