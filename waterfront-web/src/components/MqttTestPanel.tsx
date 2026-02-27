@@ -154,8 +154,19 @@ export default function MqttTestPanel() {
   }, [client]);
 
   return (
-    <div className="p-[25px] bg-gray-900 text-gray-100 rounded-lg">
-      <h2 className="text-xl font-bold mb-6">MQTT Broker Connections</h2>
+    <div className="p-6 lg:p-8 bg-gray-900 text-gray-100 rounded-lg">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold">MQTT Broker Connections</h2>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+          ${status === 'connected' ? 'bg-green-900/50 text-green-400 border border-green-600' :
+            status === 'connecting' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-600' :
+            'bg-red-900/50 text-red-400 border border-red-600'}`}>
+          <span className={`w-2 h-2 rounded-full mr-2 
+            ${status === 'connected' ? 'bg-green-400 animate-pulse' :
+              status === 'connecting' ? 'bg-yellow-400' : 'bg-red-400'}`}></span>
+          {status.toUpperCase()}
+        </span>
+      </div>
 
       <div className="mb-6">
         <div className="flex gap-2 mb-2 flex-wrap">
@@ -184,7 +195,7 @@ export default function MqttTestPanel() {
             Use Local Docker (macOS)
           </button>
         </div>
-        <label className="block mb-1">Broker URL (ws:// or wss://)</label>
+        <label className="block mb-3 text-base">Broker URL (ws:// or wss://)</label>
         <input
           type="text"
           value={brokerUrl}
@@ -194,7 +205,7 @@ export default function MqttTestPanel() {
         />
         {brokerUrl === HIVEMQ_CLOUD_BROKER && (
           <div className="mt-2 space-y-2">
-            <label className="block text-sm">Username</label>
+            <label className="block text-base">Username</label>
             <input
               type="text"
               value={username}
@@ -202,7 +213,7 @@ export default function MqttTestPanel() {
               className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
               placeholder="Enter username"
             />
-            <label className="block text-sm">Password</label>
+            <label className="block text-base">Password</label>
             <input
               type="password"
               value={password}
@@ -213,55 +224,55 @@ export default function MqttTestPanel() {
           </div>
         )}
         {brokerUrl.includes('host.docker.internal') && (
-          <div className="text-red-400 bg-red-950/30 p-2 rounded mt-1">
+          <div className="text-red-400 bg-red-950/30 p-2 rounded mt-1 text-base">
             Local Docker selected: ensure mosquitto.conf has "listener 9001" and "protocol websockets", docker-compose.yml has "9001:9001", and container is running. macOS Docker WS often fails — use public if issues.
           </div>
         )}
         {!brokerUrl.includes('host.docker.internal') && (
-          <p className="text-sm text-yellow-400 mt-1">
+          <p className="text-base text-yellow-400 mt-1">
             macOS Docker local Mosquitto WS often fails — use public broker (above) for stable test
           </p>
         )}
       </div>
 
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-4 mb-6">
         <button
           onClick={connect}
           disabled={status === 'connecting'}
-          className="px-4 py-2 bg-green-700 hover:bg-green-600 rounded disabled:opacity-50"
+          className="px-4 py-3 bg-green-700 hover:bg-green-600 rounded disabled:opacity-50 text-base"
         >
           Start/Reconnect
         </button>
         <button
           onClick={disconnect}
           disabled={status === 'disconnected'}
-          className="px-4 py-2 bg-red-700 hover:bg-red-600 rounded disabled:opacity-50"
+          className="px-4 py-3 bg-red-700 hover:bg-red-600 rounded disabled:opacity-50 text-base"
         >
           Disconnect
         </button>
         <button
           onClick={sendTestMessage}
           disabled={status !== 'connected'}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded disabled:opacity-50"
+          className="px-4 py-3 bg-blue-700 hover:bg-blue-600 rounded disabled:opacity-50 text-base"
         >
           Send Test Message
         </button>
         <button
           onClick={clearLogs}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+          className="px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded text-base"
         >
           Clear Logs
         </button>
         <button
           onClick={() => setShowDeepDebug(!showDeepDebug)}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 rounded disabled:opacity-50 text-white"
+          className="px-4 py-3 bg-purple-700 hover:bg-purple-600 rounded disabled:opacity-50 text-white text-base"
         >
           {showDeepDebug ? 'Hide Deep Debug' : 'Deep Debug'}
         </button>
       </div>
 
 
-      <div className="bg-black p-3 rounded font-mono text-sm max-h-80 overflow-y-auto">
+      <div className="bg-gray-950/80 p-4 rounded font-mono text-base leading-6 max-h-80 overflow-y-auto">
         {logs.length === 0 ? 'No logs yet...' : logs.map((log, i) => <div key={i} className="whitespace-pre-wrap break-words">{log}</div>)}
       </div>
 
