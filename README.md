@@ -2,6 +2,7 @@
 **Kayak / SUP Rental Booking App + ESP32 MQTT Controller**
 
 Self-service, unmanned rental system with Next.js PWA, Supabase backend, BTCPay/Stripe payments, and ESP32-based smart locker control via MQTT.
+The Waterfront project (as detailed in the TSD and FSD) focuses on an ESP32-based controller for self-service kayak rental vending machines. It requires MQTT for real-time communication (e.g., unlock commands, status telemetry), WiFi with runtime provisioning, cellular (LTE) fallback, sensor-driven logic (e.g., kayak presence detection for auto-locking/return confirmation), relay control for locks, power optimization for solar/battery setups, offline fallbacks (e.g., local PIN validation), and integration with booking flows (e.g., handling JSON payloads with booking IDs, durations, and deposits)
 
 Live demo (Vercel/Railway....tbd): https://waterfront-[your-project-slug].vercel.app  
 
