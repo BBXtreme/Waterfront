@@ -155,6 +155,7 @@ export default function MqttTestPanel() {
 
   return (
     <div className="p-[25px] bg-gray-900 text-gray-100 rounded-lg">
+      <h2 className="text-xl font-bold mb-6">MQTT Broker Connections</h2>
 
       <div className="mb-6">
         <div className="flex gap-2 mb-2 flex-wrap">
