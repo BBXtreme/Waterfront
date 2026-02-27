@@ -32,6 +32,7 @@
 
 #define pin_dex_rx  	GPIO_NUM_18
 #define pin_dex_tx      GPIO_NUM_17
+#define pin_mdb_led     GPIO_NUM_2  // General LED pin
 
 // Removed MDB-related defines, pins, enums, structs, functions
 
