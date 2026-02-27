@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast, Toaster } from 'sonner';
+import MqttTestPanel from '@/components/MqttTestPanel';
 
 // Define types for status objects
 interface Status {
@@ -1146,34 +1147,8 @@ const debugVercelEnvironment = async () => {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-[25px] flex flex-col gap-2.5 text-sm">
-                <div>
-                  <p className="text-muted-foreground">{localStatus.message}</p>
-                  {localStatus.timestamp && <p className="text-xs text-muted-foreground">Last checked: {localStatus.timestamp}</p>}
-                </div>
-                <div>
-                  <p className="text-destructive text-xs">Warning: Local WS may fail on macOS Docker – use public for stable test</p>
-                </div>
-                <div className="flex gap-4">
-                  <Button
-                    onClick={localIsStarted ? stopLocal : startLocal}
-                    variant="outline"
-                    className="px-5 py-2.5 mr-2.5"
-                  >
-                    {localIsStarted ? 'Stop' : 'Start'}
-                  </Button>
-                  <Button
-                    onClick={sendTestMessageLocal}
-                    disabled={!localIsConnected}
-                    className="px-5 py-2.5 mr-2.5"
-                  >
-                    Send Test Message
-                  </Button>
-                  <Button variant="secondary" size="sm" onClick={debugLocalMQTT}>
-                    Deep Debug
-                  </Button>
-                </div>
-              </CardContent>
+              {/* Replaced old local Mosquitto card with enhanced MqttTestPanel – only affects this MQTT section */}
+              <MqttTestPanel />
             </Card>
 
             {/* HiveMQ Public Card */}
