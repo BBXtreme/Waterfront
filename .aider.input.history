@@ -3157,3 +3157,54 @@
 
 # 2026-02-28 15:49:26.910651
 +/commit
+
+# 2026-02-28 15:50:28.757195
++commit and change code files in the end always. Implement full runtime WiFi provisioning in waterfront-esp32 using ESP-IDF wifi_provisioning component.
++
++- Preferred: BLE transport (wifi_prov_scheme_ble) – secure pairing, works with nRF Connect / LightBlue.
++- Fallback: SoftAP + captive portal (wifi_prov_scheme_softap) with random WPA2 password shown on LED.
++- Trigger: 
++  1. First boot (if !wifi_prov_mgr_is_provisioned())
++  2. Long-press GPIO button (debounced)
++  3. Future MQTT command /kayak/{machineId}/provision/start (admin only)
++- Store SSID/password in NVS namespace "wifi"
++- After success: stop provisioning, restart WiFi STA, reconnect MQTT, publish {"wifiState":"connected","ssid":"...","ip":"..."}
++- Keep existing MQTT client alive.
++- Add to main.cpp + new files: provisioning.cpp / provisioning.h
++- Update platformio.ini with required components.
++- Include full beginner comments + test steps (nRF Connect flow).
+
+# 2026-02-28 15:50:32.263982
++all
+
+# 2026-02-28 15:53:57.709866
++review code and debug
+
+# 2026-02-28 15:54:42.785144
++all
+
+# 2026-02-28 15:54:47.344795
++y
+
+# 2026-02-28 15:56:46.779616
++test code and debug if needed
+
+# 2026-02-28 15:58:04.016504
++test again and debug if needed
+
+# 2026-02-28 15:58:46.572432
++n
+
+# 2026-02-28 15:59:20.849406
++if not done already, Add LTE cellular fallback to waterfront-esp32 (TinyGSM + UART2).
++
++- Hardware: SIM7600/SIM7000 on UART2 (GPIO16/17), PWRKEY on GPIOx (MOSFET control).
++- State machine: Try WiFi 30s → if fail, power-up modem → LTE-M/NB-IoT → MQTT over TinyGSM TCP.
++- Prefer WiFi when available (power down modem).
++- Telemetry in /kayak/{machineId}/status: {"connType":"WiFi|LTE","rssi":-78,"dataKB":124}
++- Power optimisation: deep sleep modem when idle.
++- Test command: simulate WiFi fail → confirm unlock still arrives via LTE.
++- Update platformio.ini lib_deps.
+
+# 2026-02-28 15:59:58.425627
++y
