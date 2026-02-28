@@ -1,10 +1,13 @@
 #include "mqtt_client.h"
-#include "config.h"
+#include "config_loader.h"
 #include <ArduinoJson.h>
 
 // Adapted from original mqtt_event_handler in mdb-slave-esp32s3.c
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
+
+// Extern global config
+extern GlobalConfig g_config;
 
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     String message = "";
@@ -23,9 +26,13 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void mqtt_init() {
-    mqttClient.setServer(g_config.mqtt.broker.c_str(), g_config.mqtt.port);
+    // Use runtime config with fallback
+    String broker = g_config.mqtt.broker.length() > 0 ? g_config.mqtt.broker : "192.168.178.50";
+    int port = g_config.mqtt.port > 0 ? g_config.mqtt.port : 1883;
+    mqttClient.setServer(broker.c_str(), port);
     mqttClient.setCallback(mqtt_callback);
-    if (mqttClient.connect((g_config.mqtt.clientIdPrefix + "-client").c_str())) {
+    String clientId = (g_config.mqtt.clientIdPrefix.length() > 0 ? g_config.mqtt.clientIdPrefix : "waterfront") + "-client";
+    if (mqttClient.connect(clientId.c_str())) {
         ESP_LOGI("MQTT", "Connected and subscribed");
     }
 }
@@ -38,13 +45,15 @@ void mqtt_publish_status() {
     String payload;
     serializeJson(doc, payload);
     char topic[64];
-    snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", g_config.location.code.c_str());
+    String locationCode = g_config.location.code.length() > 0 ? g_config.location.code : "harbor-01";
+    snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", locationCode.c_str());
     mqttClient.publish(topic, payload.c_str(), true);  // Retained publish for machine status
 }
 
 // New function for publishing slot-specific status (e.g., booked, gateState)
 void mqtt_publish_slot_status(int slotId, const char* jsonPayload) {
     char topic[64];
+    String locationCode = g_config.location.code.length() > 0 ? g_config.location.code : "harbor-01";
     snprintf(topic, sizeof(topic), "waterfront/slots/%d/status", slotId);
     mqttClient.publish(topic, jsonPayload, true);  // Retained publish for slot status
 }
