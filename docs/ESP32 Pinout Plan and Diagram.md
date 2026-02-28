@@ -13,6 +13,16 @@ MQTT-based unlock commands, sensor-driven return confirmation, relay-controlled 
 
 **Important**: All GPIOs listed are safe for normal operation (no conflict with boot, flash SPI, or WiFi/BT radio after initialization). Final pin selection depends on your exact board model and peripherals.
 
+All compartment pins (servo, limit switches, ultrasonic trigger/echo, etc.) are now loaded dynamically from /config.json → compartments array.
+
+Example structure in config.json:
+"compartments": [
+  {"number":1, "servoPin":12, "limitOpenPin":13, "limitClosePin":14, "ultrasonicTriggerPin":15, "ultrasonicEchoPin":16},
+  ...
+]
+
+Pins are assigned at boot via compartment_manager. Update the JSON file or send via MQTT config/update topic for changes.
+
 ## 1. Recommended GPIO Assignments
 
 | Function                                        | Classic ESP32 GPIO | ESP32-S3 GPIO | Direction | Notes / Requirements                                         |
@@ -42,7 +52,7 @@ MQTT-based unlock commands, sensor-driven return confirmation, relay-controlled 
 Left: 3V3, EN, 36(VP), 39(VN), 34, 35, 32, 33, 25, 26, 27, 14, 12, 13, GND, 5V  
 Right: GND, 23, 22, 21, 19, 18, 17, 16, 4, 0, 2, 15, 13, 12, GND, TX0, RX0
 
-**WATERFRONT recommended mapping**:
+**WATERFRONT recommended mapping** (example/default only – actual pins loaded from config.json):  
 - Relay → 23
 - Ultrasonic Trig → 5
 - Ultrasonic Echo → 18
@@ -56,7 +66,7 @@ Right: GND, 23, 22, 21, 19, 18, 17, 16, 4, 0, 2, 15, 13, 12, GND, TX0, RX0
 Modern pin layout (varies slightly by revision – v1.0/v1.1).  
 Safe output GPIOs: mostly 1–21 and 35–48. ADC channels differ from classic ESP32.
 
-**WATERFRONT recommended mapping**:
+**WATERFRONT recommended mapping** (example/default only – actual pins loaded from config.json):  
 - Relay → 21
 - Ultrasonic Trig → 4
 - Ultrasonic Echo → 5
@@ -108,4 +118,3 @@ Use these `#define` macros in `main/config.h` to keep pin assignments centralize
 ```
 
 **Pins now loaded from /config.json – edit via MQTT or PlatformIO data upload**
-```
