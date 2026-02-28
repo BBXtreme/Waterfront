@@ -32,6 +32,19 @@ static const char *TAG = "MAIN";
 static char current_booking_id[32] = {0};
 
 /**
+ * @brief Global error handler for critical failures.
+ * @param error_code The ESP error code.
+ * @param message Descriptive message for the error.
+ * @note Logs the error and restarts the ESP32.
+ */
+void global_error_handler(esp_err_t error_code, const char* message) {
+    ESP_LOGE(TAG, "Critical error: %s (code: %d)", message, error_code);
+    ESP_LOGI(TAG, "Restarting ESP32 in 5 seconds...");
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    esp_restart();
+}
+
+/**
  * @brief FreeRTOS task for monitoring kayak presence via ultrasonic sensor.
  * @param pvParameters Unused parameter for FreeRTOS task.
  * @note Polls sensor every 500ms, detects state changes, and publishes MQTT events.
@@ -77,26 +90,34 @@ void sensor_monitor_task(void *pvParameters) {
 void app_main() {
     ESP_LOGI(TAG, "WATERFRONT ESP32 starting...");
 
-    // Initialize NVS
+    // Initialize NVS with error handling
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
-    ESP_ERROR_CHECK(ret);
+    if (ret != ESP_OK) {
+        global_error_handler(ret, "Failed to initialize NVS");
+    }
 
-    // Initialize event loop
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    // Initialize event loop with error handling
+    ret = esp_event_loop_create_default();
+    if (ret != ESP_OK) {
+        global_error_handler(ret, "Failed to create event loop");
+    }
 
-    // Initialize components
-    wifi_init();  // From wifi_manager
+    // Initialize components with error checks
+    wifi_init();  // Assuming wifi_init returns esp_err_t or handle internally
     mqtt_init();
     relay_init();
     sensor_init();
     deposit_init();
 
-    // Create sensor monitor task
-    xTaskCreate(sensor_monitor_task, "sensor_monitor", 4096, NULL, 1, NULL);
+    // Create sensor monitor task with error check
+    BaseType_t task_ret = xTaskCreate(sensor_monitor_task, "sensor_monitor", 4096, NULL, 1, NULL);
+    if (task_ret != pdPASS) {
+        global_error_handler(ESP_FAIL, "Failed to create sensor monitor task");
+    }
 
     ESP_LOGI(TAG, "All components initialized. Entering main loop.");
 
