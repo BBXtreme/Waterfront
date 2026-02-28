@@ -2953,3 +2953,33 @@
 
 # 2026-02-28 14:32:06.828759
 +read all documents in the /doc folder and summarize
+
+# 2026-02-28 14:32:48.575225
++how to add the documents from the =doc folder?
+
+# 2026-02-28 14:33:46.703246
++all
+
+# 2026-02-28 14:37:47.295244
++how to let aider add all files in the /doc folder automatically every time Aider ist started somewhere in the root folder or subfolders?
+
+# 2026-02-28 14:40:09.886097
++/exit
+
+# 2026-02-28 14:41:59.643186
++create .aider.conf.yml
+
+# 2026-02-28 14:42:34.773437
++the configuration should add all filed from the /doc folder
+
+# 2026-02-28 14:43:53.451250
++is the file created?
+
+# 2026-02-28 14:44:15.452857
++/exit
+
+# 2026-02-28 14:45:02.630515
++find the file .aider.conf.yml and let me know in which folder it is
+
+# 2026-02-28 14:46:19.945271
++did aider add or read all files in the /doc folder?
