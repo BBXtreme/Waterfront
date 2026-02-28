@@ -3208,3 +3208,51 @@
 
 # 2026-02-28 15:59:58.425627
 +y
+
+# 2026-02-28 16:05:23.285578
++/add src/return_sensor.cpp src/deposit_logic.cpp src/return_sensor.h src/deposit_logic.h
++
++If .h files don't exist yet, create minimal headers with function declarations.
++
++Now wire everything into main.cpp:
++
++- Add includes: #include "return_sensor.h" #include "deposit_logic.h"
++- In app_main() or init function: sensor_init(); deposit_init();
++- Create FreeRTOS task "sensor_monitor_task" (priority 1, stack 4096):
++  - every 500 ms: bool present = sensor_is_kayak_present();
++  - track static bool last_present = true;
++  - edge present→!present → deposit_on_take(); mqtt_publish_event("taken");
++  - edge !present→present → deposit_on_return(mqtt_client);
++- For mqtt_publish_event(const char* event): use mqtt_client to publish JSON {"event":event,"bookingId":current_booking_id} to /kayak/{MACHINE_ID}/event
++- Add current_booking_id char[32] global or static, fill it from unlock callback
++- Log state changes + distance readings
+
+# 2026-02-28 16:05:30.316614
++y
+
+# 2026-02-28 16:05:59.239109
++all
+
+# 2026-02-28 16:06:12.680488
++y
+
+# 2026-02-28 16:06:15.915928
++yy
+
+# 2026-02-28 16:06:16.125026
++y
+
+# 2026-02-28 16:06:18.332752
++yy
+
+# 2026-02-28 16:06:18.527789
++y
+
+# 2026-02-28 16:06:20.640651
++all
+
+# 2026-02-28 16:07:16.356759
++/undo
+
+# 2026-02-28 16:10:07.494130
++review code in src/ folder only and make no changes to any other folder or files. debug
