@@ -30,6 +30,44 @@ mqttClient.on('error', (err) => {
   console.error('MQTT error:', err);
 });
 
+// Shared payment success handler
+async function handlePaymentSuccess(bookingId, paymentId) {
+  try {
+    // Query Supabase for booking details
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single();
+
+    if (fetchError || !booking) {
+      console.error('Booking not found:', fetchError);
+      throw new Error('Booking not found');
+    }
+
+    // Update booking status in Supabase
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({ status: 'paid', payment_id: paymentId })
+      .eq('id', bookingId);
+
+    if (updateError) {
+      console.error('Failed to update booking:', updateError);
+      throw new Error('Failed to update booking');
+    }
+
+    // Publish MQTT unlock message
+    const topic = `waterfront/${booking.location}/${booking.locationCode}/compartments/${booking.compartmentNumber}/unlock`;
+    const payload = JSON.stringify({ bookingId, durationSec: 7200 });
+    mqttClient.publish(topic, payload);
+
+    console.log(`Published MQTT unlock for booking ${bookingId} to ${topic}`);
+  } catch (err) {
+    console.error('Error in handlePaymentSuccess:', err);
+    throw err;
+  }
+}
+
 // Basic route for testing
 app.get('/', (req, res) => {
   res.send('Waterfront Backend is running');
@@ -60,37 +98,8 @@ app.post('/webhook/stripe', async (req, res) => {
     }
 
     try {
-      // Query Supabase for booking details
-      const { data: booking, error: fetchError } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('id', bookingId)
-        .single();
-
-      if (fetchError || !booking) {
-        console.error('Booking not found:', fetchError);
-        return res.status(400).send('Booking not found');
-      }
-
-      // Update booking status in Supabase
-      const { error: updateError } = await supabase
-        .from('bookings')
-        .update({ status: 'paid', payment_id: session.id })
-        .eq('id', bookingId);
-
-      if (updateError) {
-        console.error('Failed to update booking:', updateError);
-        return res.status(500).send('Failed to update booking');
-      }
-
-      // Publish MQTT unlock message
-      const topic = `waterfront/${booking.location}/${booking.locationCode}/compartments/${booking.compartmentNumber}/unlock`;
-      const payload = JSON.stringify({ bookingId, durationSec: 7200 });
-      mqttClient.publish(topic, payload);
-
-      console.log(`Published MQTT unlock for booking ${bookingId} to ${topic}`);
+      await handlePaymentSuccess(bookingId, session.id);
     } catch (err) {
-      console.error('Error processing webhook:', err);
       return res.status(500).send('Internal server error');
     }
   } else {
@@ -129,37 +138,8 @@ app.post('/webhook/btcpay', async (req, res) => {
     }
 
     try {
-      // Query Supabase for booking details
-      const { data: booking, error: fetchError } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('id', bookingId)
-        .single();
-
-      if (fetchError || !booking) {
-        console.error('Booking not found:', fetchError);
-        return res.status(400).send('Booking not found');
-      }
-
-      // Update booking status in Supabase
-      const { error: updateError } = await supabase
-        .from('bookings')
-        .update({ status: 'paid', payment_id: invoice.id })
-        .eq('id', bookingId);
-
-      if (updateError) {
-        console.error('Failed to update booking:', updateError);
-        return res.status(500).send('Failed to update booking');
-      }
-
-      // Publish MQTT unlock message
-      const topic = `waterfront/${booking.location}/${booking.locationCode}/compartments/${booking.compartmentNumber}/unlock`;
-      const payload = JSON.stringify({ bookingId, durationSec: 7200 });
-      mqttClient.publish(topic, payload);
-
-      console.log(`Published MQTT unlock for booking ${bookingId} to ${topic}`);
+      await handlePaymentSuccess(bookingId, invoice.id);
     } catch (err) {
-      console.error('Error processing BTCPay webhook:', err);
       return res.status(500).send('Internal server error');
     }
   } else {
