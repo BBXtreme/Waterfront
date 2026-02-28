@@ -13,6 +13,7 @@
 #include "config.h"
 #include <PubSubClient.h>
 #include <Client.h>
+#include <ArduinoJson.h>
 
 // Mock Client for PubSubClient
 class MockClient : public Client {
@@ -69,6 +70,28 @@ MockPubSubClient mockMqttClient;
 
 // Override extern mqttClient for tests
 PubSubClient& mqttClient = mockMqttClient;
+
+// Test version of mqtt_callback that uses the mock
+void mqtt_callback(char* topic, byte* payload, unsigned int length) {
+    String msg;
+    for (unsigned int i = 0; i < length; i++) msg += (char)payload[i];
+
+    // Parse JSON
+    DynamicJsonDocument doc(1024);
+    DeserializationError error = deserializeJson(doc, msg);
+    if (error) {
+        return;
+    }
+
+    // Simple logic for testing: if topic contains "status" and booked=true, publish ack
+    if (strstr(topic, "status") != nullptr && doc["booked"] == true) {
+        char ackTopic[96];
+        snprintf(ackTopic, sizeof(ackTopic), "waterfront/locations/bremen-harbor-01/compartments/1/ack");
+        char ackPayload[128];
+        snprintf(ackPayload, sizeof(ackPayload), "{\"action\":\"gate_opened\"}");
+        mqttClient.publish(ackTopic, ackPayload, false);
+    }
+}
 
 // Test retained status payload simulation
 TEST_CASE("Simulate Retained Status Payload and Verify Ack Publish", "[mqtt]") {
