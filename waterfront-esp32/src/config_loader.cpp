@@ -178,8 +178,8 @@ GlobalConfig getDefaultConfig() {
     GlobalConfig def;
     def.mqtt.broker = "192.168.178.50";
     def.mqtt.port = 8883;
-    def.mqtt.username = "";
-    def.mqtt.password = "";
+    def.mqtt.username = "mqttuser";
+    def.mqtt.password = "strongpass123";
     def.mqtt.clientIdPrefix = "waterfront";
     def.mqtt.useTLS = true;
     def.location.slug = "bremen";

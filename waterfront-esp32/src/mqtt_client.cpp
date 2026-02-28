@@ -61,7 +61,13 @@ esp_err_t mqtt_init() {
     mqttClient.setServer(broker.c_str(), port);
     mqttClient.setCallback(mqtt_callback);
     String clientId = (g_config.mqtt.clientIdPrefix.length() > 0 ? g_config.mqtt.clientIdPrefix : "waterfront") + "-client";
-    if (mqttClient.connect(clientId.c_str())) {
+    bool connected;
+    if (g_config.mqtt.username.length() > 0) {
+        connected = mqttClient.connect(clientId.c_str(), g_config.mqtt.username.c_str(), g_config.mqtt.password.c_str());
+    } else {
+        connected = mqttClient.connect(clientId.c_str());
+    }
+    if (connected) {
         ESP_LOGI("MQTT", "Connected and subscribed");
         return ESP_OK;
     } else {
