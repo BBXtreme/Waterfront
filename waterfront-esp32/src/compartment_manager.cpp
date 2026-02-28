@@ -24,7 +24,9 @@ struct Compartment {
     int servoPin;
     int limitOpenPin;
     int limitClosePin;
-    int sensorPin;
+    int ultrasonicTriggerPin;
+    int ultrasonicEchoPin;
+    int weightSensorPin;
     std::string name;
 };
 
@@ -34,21 +36,21 @@ std::vector<Compartment> compartments;
 // Load compartments from runtime config
 void load_compartments() {
     compartments.clear();
-    for (const auto& comp : globalConfig.compartments) {
+    for (const auto& comp : g_config.compartments) {
         Compartment c;
         c.id = comp.number;
         c.servoPin = comp.servoPin;
         c.limitOpenPin = comp.limitOpenPin;
         c.limitClosePin = comp.limitClosePin;
-        c.sensorPin = comp.sensorPin;
+        c.ultrasonicTriggerPin = comp.ultrasonicTriggerPin;
+        c.ultrasonicEchoPin = comp.ultrasonicEchoPin;
+        c.weightSensorPin = comp.weightSensorPin;
         c.name = "Compartment " + std::to_string(c.id);
         compartments.push_back(c);
     }
     if (compartments.empty()) {
         ESP_LOGW("COMPARTMENT", "No compartments in config, using defaults");
-        compartments.push_back({1, SERVO_PIN_1, 13, 14, 18, "Compartment 1"});
-        compartments.push_back({2, SERVO_PIN_2, 16, 17, 19, "Compartment 2"});
-        compartments.push_back({3, SERVO_PIN_3, 20, 21, 22, "Compartment 3"});
+        compartments.push_back({1, 12, 13, 14, 15, 16, 17, "Compartment 1"});
     }
     ESP_LOGI("COMPARTMENT", "Loaded %d compartments from config", compartments.size());
 }

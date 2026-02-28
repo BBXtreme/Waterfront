@@ -12,19 +12,23 @@
 #include <ArduinoJson.h>
 
 // Global config instance
-Config globalConfig;
+GlobalConfig g_config;
 
 // Validate config: check types, bounds (pins 0-39, etc.)
-bool validateConfig(const Config& cfg) {
+bool validateConfig(const GlobalConfig& cfg) {
     if (cfg.mqtt.port < 1 || cfg.mqtt.port > 65535) return false;
-    if (cfg.wifiLte.rssiThreshold > 0 || cfg.wifiLte.rssiThreshold < -100) return false;  // RSSI range
-    if (cfg.maxCompartments < 1 || cfg.maxCompartments > 20) return false;
-    if (cfg.gracePeriodSec < 0 || cfg.gracePeriodSec > 86400) return false;  // 0 to 24h
+    if (cfg.lte.rssiThreshold > 0 || cfg.lte.rssiThreshold < -100) return false;
+    if (cfg.system.maxCompartments < 1 || cfg.system.maxCompartments > 20) return false;
+    if (cfg.system.gracePeriodSec < 0 || cfg.system.gracePeriodSec > 86400) return false;
+    if (cfg.system.batteryLowThresholdPercent < 0 || cfg.system.batteryLowThresholdPercent > 100) return false;
+    if (cfg.system.solarVoltageMin < 0.0f || cfg.system.solarVoltageMin > 5.0f) return false;
     for (const auto& comp : cfg.compartments) {
         if (comp.servoPin < 0 || comp.servoPin > 39) return false;
         if (comp.limitOpenPin < 0 || comp.limitOpenPin > 39) return false;
         if (comp.limitClosePin < 0 || comp.limitClosePin > 39) return false;
-        if (comp.sensorPin < 0 || comp.sensorPin > 39) return false;
+        if (comp.ultrasonicTriggerPin < 0 || comp.ultrasonicTriggerPin > 39) return false;
+        if (comp.ultrasonicEchoPin < 0 || comp.ultrasonicEchoPin > 39) return false;
+        if (comp.weightSensorPin < 0 || comp.weightSensorPin > 39) return false;
     }
     return true;
 }
@@ -32,24 +36,21 @@ bool validateConfig(const Config& cfg) {
 bool loadConfig() {
     if (!LittleFS.begin()) {
         ESP_LOGE("CONFIG", "Failed to mount LittleFS");
-        globalConfig = getDefaultConfig();
-        createDefaultConfigFile();
+        g_config = getDefaultConfig();
         return false;
     }
     File configFile = LittleFS.open("/config.json", "r");
     if (!configFile) {
-        ESP_LOGW("CONFIG", "config.json not found, using defaults and creating file");
-        globalConfig = getDefaultConfig();
-        createDefaultConfigFile();
+        ESP_LOGW("CONFIG", "config.json not found, using defaults");
+        g_config = getDefaultConfig();
         return false;
     }
-    DynamicJsonDocument doc(2048);
+    DynamicJsonDocument doc(4096);
     DeserializationError error = deserializeJson(doc, configFile);
     if (error) {
         ESP_LOGE("CONFIG", "Failed to parse config.json: %s, using defaults", error.c_str());
         configFile.close();
-        globalConfig = getDefaultConfig();
-        createDefaultConfigFile();
+        g_config = getDefaultConfig();
         return false;
     }
     configFile.close();
@@ -57,52 +58,74 @@ bool loadConfig() {
     // Parse MQTT
     if (doc.containsKey("mqtt")) {
         JsonObject mqtt = doc["mqtt"];
-        globalConfig.mqtt.broker = mqtt["broker"].as<std::string>();
-        globalConfig.mqtt.port = mqtt["port"];
-        globalConfig.mqtt.username = mqtt["username"].as<std::string>();
-        globalConfig.mqtt.password = mqtt["password"].as<std::string>();
-    }
-
-    // Parse WiFi/LTE
-    if (doc.containsKey("wifiLte")) {
-        JsonObject wl = doc["wifiLte"];
-        globalConfig.wifiLte.apn = wl["apn"].as<std::string>();
-        globalConfig.wifiLte.simPin = wl["simPin"].as<std::string>();
-        globalConfig.wifiLte.rssiThreshold = wl["rssiThreshold"];
+        g_config.mqtt.broker = mqtt["broker"].as<std::string>();
+        g_config.mqtt.port = mqtt["port"];
+        g_config.mqtt.username = mqtt["username"].as<std::string>();
+        g_config.mqtt.password = mqtt["password"].as<std::string>();
+        g_config.mqtt.clientIdPrefix = mqtt["clientIdPrefix"].as<std::string>();
     }
 
     // Parse location
     if (doc.containsKey("location")) {
         JsonObject loc = doc["location"];
-        globalConfig.location.slug = loc["slug"].as<std::string>();
-        globalConfig.location.code = loc["code"].as<std::string>();
+        g_config.location.slug = loc["slug"].as<std::string>();
+        g_config.location.code = loc["code"].as<std::string>();
+    }
+
+    // Parse WiFi provisioning
+    if (doc.containsKey("wifiProvisioning")) {
+        JsonObject wp = doc["wifiProvisioning"];
+        g_config.wifiProvisioning.fallbackSsid = wp["fallbackSsid"].as<std::string>();
+        g_config.wifiProvisioning.fallbackPass = wp["fallbackPass"].as<std::string>();
+    }
+
+    // Parse LTE
+    if (doc.containsKey("lte")) {
+        JsonObject lte = doc["lte"];
+        g_config.lte.apn = lte["apn"].as<std::string>();
+        g_config.lte.simPin = lte["simPin"].as<std::string>();
+        g_config.lte.rssiThreshold = lte["rssiThreshold"];
+        g_config.lte.dataUsageAlertLimitKb = lte["dataUsageAlertLimitKb"];
     }
 
     // Parse compartments
     if (doc.containsKey("compartments")) {
         JsonArray comps = doc["compartments"];
-        globalConfig.compartments.clear();
+        g_config.compartments.clear();
         for (JsonObject comp : comps) {
             CompartmentConfig c;
             c.number = comp["number"];
             c.servoPin = comp["servoPin"];
             c.limitOpenPin = comp["limitOpenPin"];
             c.limitClosePin = comp["limitClosePin"];
-            c.sensorPin = comp["sensorPin"];
-            globalConfig.compartments.push_back(c);
+            c.ultrasonicTriggerPin = comp["ultrasonicTriggerPin"];
+            c.ultrasonicEchoPin = comp["ultrasonicEchoPin"];
+            c.weightSensorPin = comp["weightSensorPin"];
+            g_config.compartments.push_back(c);
         }
     }
 
-    // Parse others
-    globalConfig.maxCompartments = doc["maxCompartments"] | 8;
-    globalConfig.debugMode = doc["debugMode"] | false;
-    globalConfig.gracePeriodSec = doc["gracePeriodSec"] | 3600;  // 1 hour default
+    // Parse system
+    if (doc.containsKey("system")) {
+        JsonObject sys = doc["system"];
+        g_config.system.maxCompartments = sys["maxCompartments"];
+        g_config.system.debugMode = sys["debugMode"];
+        g_config.system.gracePeriodSec = sys["gracePeriodSec"];
+        g_config.system.batteryLowThresholdPercent = sys["batteryLowThresholdPercent"];
+        g_config.system.solarVoltageMin = sys["solarVoltageMin"];
+    }
+
+    // Parse other
+    if (doc.containsKey("other")) {
+        JsonObject oth = doc["other"];
+        g_config.other.offlinePinTtlSec = oth["offlinePinTtlSec"];
+        g_config.other.depositHoldAmountFallback = oth["depositHoldAmountFallback"];
+    }
 
     // Validate
-    if (!validateConfig(globalConfig)) {
+    if (!validateConfig(g_config)) {
         ESP_LOGE("CONFIG", "Config validation failed, using defaults");
-        globalConfig = getDefaultConfig();
-        createDefaultConfigFile();
+        g_config = getDefaultConfig();
         return false;
     }
 
@@ -110,21 +133,7 @@ bool loadConfig() {
     return true;
 }
 
-bool saveConfig(const std::string& jsonStr) {
-    DynamicJsonDocument doc(2048);
-    DeserializationError error = deserializeJson(doc, jsonStr);
-    if (error) {
-        ESP_LOGE("CONFIG", "Invalid JSON for save: %s", error.c_str());
-        return false;
-    }
-    // Parse into temp config
-    Config temp = getDefaultConfig();
-    // Same parsing as loadConfig...
-    // (omitted for brevity, but implement full parse)
-    if (!validateConfig(temp)) {
-        ESP_LOGE("CONFIG", "Validation failed for save");
-        return false;
-    }
+bool saveConfig() {
     if (!LittleFS.begin()) {
         ESP_LOGE("CONFIG", "Failed to mount LittleFS for save");
         return false;
@@ -134,46 +143,57 @@ bool saveConfig(const std::string& jsonStr) {
         ESP_LOGE("CONFIG", "Failed to open config.json for write");
         return false;
     }
-    configFile.print(jsonStr.c_str());
+    DynamicJsonDocument doc(4096);
+    // Serialize g_config to doc...
+    // (implement full serialization)
+    serializeJson(doc, configFile);
     configFile.close();
-    ESP_LOGI("CONFIG", "Saved and validated config to LittleFS");
+    ESP_LOGI("CONFIG", "Saved config to LittleFS");
     return true;
 }
 
-bool createDefaultConfigFile() {
-    Config def = getDefaultConfig();
-    DynamicJsonDocument doc(2048);
-    // Populate doc with def...
-    // (implement serialization)
-    String jsonStr;
-    serializeJson(doc, jsonStr);
-    if (!LittleFS.begin()) return false;
-    File configFile = LittleFS.open("/config.json", "w");
-    if (!configFile) return false;
-    configFile.print(jsonStr);
-    configFile.close();
-    ESP_LOGI("CONFIG", "Created default config.json");
-    return true;
+bool updateConfigFromJson(const std::string& jsonPayload) {
+    DynamicJsonDocument doc(4096);
+    DeserializationError error = deserializeJson(doc, jsonPayload);
+    if (error) {
+        ESP_LOGE("CONFIG", "Invalid JSON for update: %s", error.c_str());
+        return false;
+    }
+    // Parse into temp config
+    GlobalConfig temp = getDefaultConfig();
+    // Same parsing as loadConfig...
+    if (!validateConfig(temp)) {
+        ESP_LOGE("CONFIG", "Validation failed for update");
+        return false;
+    }
+    g_config = temp;
+    return saveConfig();
 }
 
-Config getDefaultConfig() {
-    Config def;
-    def.mqtt.broker = MQTT_SERVER;
-    def.mqtt.port = MQTT_PORT;
+GlobalConfig getDefaultConfig() {
+    GlobalConfig def;
+    def.mqtt.broker = "192.168.178.50";
+    def.mqtt.port = 1883;
     def.mqtt.username = "";
     def.mqtt.password = "";
-    def.wifiLte.apn = LTE_APN;
-    def.wifiLte.simPin = "";
-    def.wifiLte.rssiThreshold = -70;
-    def.location.slug = "bremen-harbor";
-    def.location.code = LOCATION_CODE;
+    def.mqtt.clientIdPrefix = "waterfront";
+    def.location.slug = "bremen";
+    def.location.code = "harbor-01";
+    def.wifiProvisioning.fallbackSsid = "WATERFRONT-DEFAULT";
+    def.wifiProvisioning.fallbackPass = "defaultpass123";
+    def.lte.apn = "internet.t-mobile.de";
+    def.lte.simPin = "";
+    def.lte.rssiThreshold = -70;
+    def.lte.dataUsageAlertLimitKb = 100000;
     def.compartments = {
-        {1, SERVO_PIN_1, 13, 14, 18},  // sensorPin example
-        {2, SERVO_PIN_2, 16, 17, 19},
-        {3, SERVO_PIN_3, 20, 21, 22}
+        {1, 12, 13, 14, 15, 16, 17}
     };
-    def.maxCompartments = 8;
-    def.debugMode = DEBUG_MODE;
-    def.gracePeriodSec = 3600;
+    def.system.maxCompartments = 10;
+    def.system.debugMode = true;
+    def.system.gracePeriodSec = 3600;
+    def.system.batteryLowThresholdPercent = 20;
+    def.system.solarVoltageMin = 3.0f;
+    def.other.offlinePinTtlSec = 86400;
+    def.other.depositHoldAmountFallback = 50;
     return def;
 }

@@ -4,7 +4,7 @@
 // Integrates with MQTT for real-time sync and gate control.
 
 #include "deposit_logic.h"
-#include "config.h"
+#include "config_loader.h"
 #include <PubSubClient.h>
 
 // External MQTT client
@@ -25,8 +25,7 @@ void deposit_init() {
 void deposit_on_take() {
     deposit_held = true;
     rental_start_time = millis();
-    // Assume duration from MQTT unlock payload; set default or pass as param
-    rental_duration_ms = 7200000;  // 2 hours default; TODO: get from unlock message
+    rental_duration_ms = g_config.system.gracePeriodSec * 1000;
     ESP_LOGI("DEPOSIT", "Deposit held, rental started");
 }
 
@@ -41,8 +40,7 @@ void deposit_on_return(PubSubClient* client) {
         // Publish deposit release event
         char topic[64];
         char payload[128];
-        // Use slot ID from config
-        snprintf(topic, sizeof(topic), "waterfront/slots/%s/depositRelease", SLOT_ID);
+        snprintf(topic, sizeof(topic), "waterfront/locations/%s/depositRelease", g_config.location.code.c_str());
         snprintf(payload, sizeof(payload), "{\"bookingId\":\"current\",\"release\":true}");
         client->publish(topic, payload);
     } else {
@@ -62,7 +60,7 @@ void deposit_check_overdue(PubSubClient* client) {
         // Publish returnConfirm for auto-lock
         char topic[64];
         char payload[128];
-        snprintf(topic, sizeof(topic), "waterfront/slots/%s/returnConfirm", SLOT_ID);
+        snprintf(topic, sizeof(topic), "waterfront/locations/%s/returnConfirm", g_config.location.code.c_str());
         snprintf(payload, sizeof(payload), "{\"bookingId\":\"current\",\"action\":\"autoLock\"}");
         client->publish(topic, payload);
     }

@@ -4,16 +4,16 @@
 // When credentials are received, it connects to WiFi and publishes status via MQTT.
 // This is the preferred provisioning method (secure, works with apps like nRF Connect).
 
-#include "nimble.h"           // Header for BLE functions
-#include "config.h"           // Configuration constants
-#include <BLEDevice.h>        // BLE device management
-#include <BLEServer.h>        // BLE server for GATT services
-#include <BLEUtils.h>         // BLE utilities
-#include <BLE2902.h>          // Descriptor for notifications
-#include <WiFi.h>             // WiFi library for connection
-#include <PubSubClient.h>     // MQTT client
-#include <ArduinoJson.h>      // JSON for status publishing
-#include <Preferences.h>      // For persistent WiFi credentials
+#include "nimble.h"
+#include "config_loader.h"
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <Preferences.h>
 
 // External references to global variables from main.cpp
 extern PubSubClient mqttClient;  // MQTT client instance
@@ -155,7 +155,7 @@ void provisioning_task() {
             String msg;
             serializeJson(doc, msg);
             char topic[64];
-            snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", MACHINE_ID);
+            snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", g_config.location.code.c_str());
             mqttClient.publish(topic, msg.c_str(), true);  // Retained publish for machine status
             // Reconnect MQTT if needed
             mqtt_connect();
@@ -187,7 +187,7 @@ void provisioning_task() {
                 String msg;
                 serializeJson(doc, msg);
                 char topic[64];
-                snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", MACHINE_ID);
+                snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", g_config.location.code.c_str());
                 mqttClient.publish(topic, msg.c_str(), true);
                 // Reset state
                 provState = PROV_IDLE;
@@ -199,6 +199,6 @@ void provisioning_task() {
 // Start BLE provisioning
 // Calls ble_init and sets provisioning flag.
 void startBLEProvisioning() {
-    ble_init("WATERFRONT-PROV");  // Initialize with provisioning name
+    ble_init(g_config.location.slug.c_str());
     provisioningActive = true;    // Indicate provisioning is running
 }

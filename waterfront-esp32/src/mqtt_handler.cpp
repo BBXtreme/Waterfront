@@ -44,10 +44,10 @@ extern WiFiClient wifiClient;
 
 // Initialize MQTT handler
 void mqtt_init() {
-    mqttClient.setServer(globalConfig.mqtt.broker.c_str(), globalConfig.mqtt.port);
+    mqttClient.setServer(g_config.mqtt.broker.c_str(), g_config.mqtt.port);
     mqttClient.setCallback(mqtt_callback);
     gate_init();  // Initialize gate control
-    ESP_LOGI("MQTT", "Initialized with broker %s:%d", globalConfig.mqtt.broker.c_str(), globalConfig.mqtt.port);
+    ESP_LOGI("MQTT", "Initialized with broker %s:%d", g_config.mqtt.broker.c_str(), g_config.mqtt.port);
 }
 
 // Attempt to connect to MQTT broker with last-will
@@ -55,7 +55,7 @@ bool mqtt_connect() {
     if (mqttClient.connected()) return true;
     ESP_LOGI("MQTT", "Connecting...");
     // Set last-will (PubSubClient syntax: connect(clientId, willTopic, willQoS, willRetain, willMessage))
-    if (mqttClient.connect("KayakClient", MQTT_LAST_WILL_TOPIC, MQTT_QOS_STATUS, MQTT_RETAIN_STATUS, MQTT_LAST_WILL_MESSAGE)) {
+    if (mqttClient.connect((g_config.mqtt.clientIdPrefix + "-client").c_str(), MQTT_LAST_WILL_TOPIC, MQTT_QOS_STATUS, MQTT_RETAIN_STATUS, MQTT_LAST_WILL_MESSAGE)) {
         ESP_LOGI("MQTT", "Connected");
         mqtt_subscribe();
         return true;
@@ -69,15 +69,15 @@ bool mqtt_connect() {
 void mqtt_subscribe() {
     char topic[96];
     // Subscribe to status wildcard for this location
-    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_STATUS_WILDCARD, globalConfig.location.slug.c_str(), globalConfig.location.code.c_str());
+    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_STATUS_WILDCARD, g_config.location.slug.c_str(), g_config.location.code.c_str());
     mqttClient.subscribe(topic, MQTT_QOS_STATUS);
     ESP_LOGI("MQTT", "Subscribed to %s", topic);
     // Subscribe to command wildcard for this location
-    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_COMMAND_WILDCARD, globalConfig.location.slug.c_str(), globalConfig.location.code.c_str());
+    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_COMMAND_WILDCARD, g_config.location.slug.c_str(), g_config.location.code.c_str());
     mqttClient.subscribe(topic, MQTT_QOS_COMMAND);
     ESP_LOGI("MQTT", "Subscribed to %s", topic);
     // Subscribe to config update
-    snprintf(topic, sizeof(topic), "/waterfront/%s/%s/config/update", globalConfig.location.slug.c_str(), globalConfig.location.code.c_str());
+    snprintf(topic, sizeof(topic), "/waterfront/%s/%s/config/update", g_config.location.slug.c_str(), g_config.location.code.c_str());
     mqttClient.subscribe(topic, MQTT_QOS_COMMAND);
     ESP_LOGI("MQTT", "Subscribed to %s", topic);
 }
@@ -95,7 +95,7 @@ void mqtt_publish_retained_status(int compartmentId, const char* jsonPayload) {
     String updatedPayload;
     serializeJson(doc, updatedPayload);
     char topic[96];
-    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_STATUS_FMT, globalConfig.location.slug.c_str(), globalConfig.location.code.c_str(), compartmentId);
+    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_STATUS_FMT, g_config.location.slug.c_str(), g_config.location.code.c_str(), compartmentId);
     mqttClient.publish(topic, updatedPayload.c_str(), MQTT_RETAIN_STATUS);
     ESP_LOGI("MQTT", "Published retained status to %s: %s", topic, updatedPayload.c_str());
 }
@@ -109,7 +109,7 @@ void mqtt_publish_ack(int compartmentId, const char* action) {
     snprintf(fullPayload, sizeof(fullPayload), "%s,\"crc\":%lu}", payload, crc);
     fullPayload[strlen(fullPayload) - 1] = '}';  // Fix JSON
     char topic[96];
-    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_ACK_FMT, globalConfig.location.slug.c_str(), globalConfig.location.code.c_str(), compartmentId);
+    snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_ACK_FMT, g_config.location.slug.c_str(), g_config.location.code.c_str(), compartmentId);
     mqttClient.publish(topic, fullPayload, MQTT_RETAIN_ACK);
     ESP_LOGI("MQTT", "Published ack to %s: %s", topic, fullPayload);
 }
@@ -121,14 +121,14 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     ESP_LOGI("MQTT", "Received on %s: %s at %lu", topic, msg.c_str(), millis());
 
     // Check if config update
-    std::string configTopic = "/waterfront/" + globalConfig.location.slug + "/" + globalConfig.location.code + "/config/update";
+    std::string configTopic = "/waterfront/" + g_config.location.slug + "/" + g_config.location.code + "/config/update";
     if (strcmp(topic, configTopic.c_str()) == 0) {
         ESP_LOGI("MQTT", "Config update received");
-        if (saveConfig(msg.c_str())) {
-            ESP_LOGI("MQTT", "Config saved, restarting ESP");
+        if (updateConfigFromJson(msg.c_str())) {
+            ESP_LOGI("MQTT", "Config updated, restarting ESP");
             ESP.restart();
         } else {
-            ESP_LOGE("MQTT", "Failed to save config");
+            ESP_LOGE("MQTT", "Failed to update config");
         }
         return;
     }
@@ -183,7 +183,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
             snprintf(fullPayload, sizeof(fullPayload), "%s,\"crc\":%lu}", payload, crc);
             fullPayload[strlen(fullPayload) - 1] = '}';  // Fix JSON
             char topic[96];
-            snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_ACK_FMT, globalConfig.location.slug.c_str(), globalConfig.location.code.c_str(), compartmentId);
+            snprintf(topic, sizeof(topic), MQTT_COMPARTMENT_ACK_FMT, g_config.location.slug.c_str(), g_config.location.code.c_str(), compartmentId);
             mqttClient.publish(topic, fullPayload, MQTT_RETAIN_ACK);
         }
     }

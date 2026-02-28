@@ -18,12 +18,7 @@ struct MqttConfig {
     int port;
     std::string username;
     std::string password;
-};
-
-struct WifiLteConfig {
-    std::string apn;
-    std::string simPin;
-    int rssiThreshold;
+    std::string clientIdPrefix;
 };
 
 struct LocationConfig {
@@ -31,41 +26,68 @@ struct LocationConfig {
     std::string code;
 };
 
+struct WifiProvisioningConfig {
+    std::string fallbackSsid;
+    std::string fallbackPass;
+};
+
+struct LteConfig {
+    std::string apn;
+    std::string simPin;
+    int rssiThreshold;
+    int dataUsageAlertLimitKb;
+};
+
 struct CompartmentConfig {
     int number;
     int servoPin;
     int limitOpenPin;
     int limitClosePin;
-    int sensorPin;
+    int ultrasonicTriggerPin;
+    int ultrasonicEchoPin;
+    int weightSensorPin;
 };
 
-// Global config struct (central place for ALL config)
-struct Config {
-    MqttConfig mqtt;
-    WifiLteConfig wifiLte;
-    LocationConfig location;
-    std::vector<CompartmentConfig> compartments;
+struct SystemConfig {
     int maxCompartments;
     bool debugMode;
     int gracePeriodSec;
+    int batteryLowThresholdPercent;
+    float solarVoltageMin;
+};
+
+struct OtherConfig {
+    int offlinePinTtlSec;
+    int depositHoldAmountFallback;
+};
+
+// Global config struct (central place for ALL config)
+struct GlobalConfig {
+    MqttConfig mqtt;
+    LocationConfig location;
+    WifiProvisioningConfig wifiProvisioning;
+    LteConfig lte;
+    std::vector<CompartmentConfig> compartments;
+    SystemConfig system;
+    OtherConfig other;
 };
 
 // Global config instance
-extern Config globalConfig;
+extern GlobalConfig g_config;
 
 // Function to load config from LittleFS, with validation and fallback
 bool loadConfig();
 
 // Function to save config to LittleFS (for remote update), with validation
-bool saveConfig(const std::string& jsonStr);
+bool saveConfig();
+
+// Function to update config from JSON payload, validate, save, reload
+bool updateConfigFromJson(const std::string& jsonPayload);
 
 // Function to get default config (static struct)
-Config getDefaultConfig();
-
-// Function to create default config.json file if missing
-bool createDefaultConfigFile();
+GlobalConfig getDefaultConfig();
 
 // Function to validate config (pins 0-39, etc.)
-bool validateConfig(const Config& cfg);
+bool validateConfig(const GlobalConfig& cfg);
 
 #endif // CONFIG_LOADER_H

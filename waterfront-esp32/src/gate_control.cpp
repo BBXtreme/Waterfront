@@ -6,7 +6,7 @@
 // Added state machine with timeouts for stuck gates.
 
 #include "gate_control.h"
-#include "config.h"
+#include "config_loader.h"
 #include <Servo.h>
 
 // Pin definitions for compartments (adjust in config.h if needed)
@@ -34,16 +34,15 @@ int retryCounts[MAX_COMPARTMENTS] = {0};
  */
 void gate_init() {
     // Initialize pins and servos for active compartments
-    for (int i = 0; i < MAX_COMPARTMENTS; i++) {
-        if (i == 0) {  // Compartment 1
-            pinMode(LIMIT_OPEN_PIN_1, INPUT_PULLUP);
-            pinMode(LIMIT_CLOSE_PIN_1, INPUT_PULLUP);
-            servos[i].attach(SERVO_PIN_1);
+    for (int i = 0; i < g_config.compartments.size(); i++) {
+        if (i < MAX_COMPARTMENTS) {
+            pinMode(g_config.compartments[i].limitOpenPin, INPUT_PULLUP);
+            pinMode(g_config.compartments[i].limitClosePin, INPUT_PULLUP);
+            servos[i].attach(g_config.compartments[i].servoPin);
             compartmentStates[i] = CLOSED;  // Start closed
         }
-        // Add more compartments as needed
     }
-    ESP_LOGI("GATE", "Initialized for %d compartments", MAX_COMPARTMENTS);
+    ESP_LOGI("GATE", "Initialized for %d compartments", g_config.compartments.size());
 }
 
 /**
@@ -52,7 +51,7 @@ void gate_init() {
  * @note Sets state to OPENING and starts servo movement.
  */
 void openCompartmentGate(int compartmentId) {
-    if (compartmentId < 1 || compartmentId > MAX_COMPARTMENTS) return;
+    if (compartmentId < 1 || compartmentId > g_config.compartments.size()) return;
     int idx = compartmentId - 1;
     if (compartmentStates[idx] == CLOSED || compartmentStates[idx] == ERROR) {
         compartmentStates[idx] = OPENING;
@@ -69,7 +68,7 @@ void openCompartmentGate(int compartmentId) {
  * @note Sets state to CLOSING and starts servo movement.
  */
 void closeCompartmentGate(int compartmentId) {
-    if (compartmentId < 1 || compartmentId > MAX_COMPARTMENTS) return;
+    if (compartmentId < 1 || compartmentId > g_config.compartments.size()) return;
     int idx = compartmentId - 1;
     if (compartmentStates[idx] == OPEN || compartmentStates[idx] == ERROR) {
         compartmentStates[idx] = CLOSING;
@@ -87,12 +86,10 @@ void closeCompartmentGate(int compartmentId) {
  * @note Checks limit switches for compartment 1.
  */
 const char* getCompartmentGateState(int compartmentId) {
-    if (compartmentId < 1 || compartmentId > MAX_COMPARTMENTS) return "unknown";
+    if (compartmentId < 1 || compartmentId > g_config.compartments.size()) return "unknown";
     int idx = compartmentId - 1;
-    if (idx == 0) {  // Compartment 1
-        if (digitalRead(LIMIT_OPEN_PIN_1)) return "open";
-        if (digitalRead(LIMIT_CLOSE_PIN_1)) return "closed";
-    }
+    if (digitalRead(g_config.compartments[idx].limitOpenPin)) return "open";
+    if (digitalRead(g_config.compartments[idx].limitClosePin)) return "closed";
     return "unknown";
 }
 
@@ -102,7 +99,7 @@ const char* getCompartmentGateState(int compartmentId) {
  */
 void gate_task() {
     unsigned long now = millis();
-    for (int i = 0; i < MAX_COMPARTMENTS; i++) {
+    for (int i = 0; i < g_config.compartments.size(); i++) {
         if (compartmentStates[i] == OPENING || compartmentStates[i] == CLOSING) {
             if (now - compartmentStartTimes[i] > GATE_MOVE_TIMEOUT_MS) {
                 // Timeout: retry or error
@@ -122,12 +119,12 @@ void gate_task() {
             } else {
                 // Check limit switches for completion
                 if (compartmentStates[i] == OPENING) {
-                    if (i == 0 && digitalRead(LIMIT_OPEN_PIN_1)) {
+                    if (digitalRead(g_config.compartments[i].limitOpenPin)) {
                         compartmentStates[i] = OPEN;
                         ESP_LOGI("GATE", "Compartment %d gate opened", i + 1);
                     }
                 } else if (compartmentStates[i] == CLOSING) {
-                    if (i == 0 && digitalRead(LIMIT_CLOSE_PIN_1)) {
+                    if (digitalRead(g_config.compartments[i].limitClosePin)) {
                         compartmentStates[i] = CLOSED;
                         ESP_LOGI("GATE", "Compartment %d gate closed", i + 1);
                     }

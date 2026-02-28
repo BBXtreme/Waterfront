@@ -107,23 +107,5 @@ Use these `#define` macros in `main/config.h` to keep pin assignments centralize
 #define DEEP_SLEEP_WAKE_GPIO    33      // example RTC pin for sensor interrupt wake
 ```
 
-
-
-## 4. Next Actions – Required Confirmation
-
-To finalize this document and proceed with code generation:
-
-1. **Board model** — Please provide exact model (e.g. "ESP32-DevKitC V4", "ESP32-S3-DevKitC-1-N8R2") with photo/link/markings if possible.
-2. **Sensor type** — Ultrasonic (HC-SR04?), magnetic reed switch, load cell + HX711, IR barrier? This may affect pin choice or additional components.
-3. **Lock hardware** — 12 V solenoid + relay module? Electronic cabinet lock? Power source details?
-4. **LTE modem** — Model (e.g. SIM7600G-H, SIM7000G)? Logic level (1.8 V / 3.3 V)? Will PWRKEY / RESET pins be controlled by ESP32?
-
-Once these are confirmed, we can:
-
-- Lock in final GPIOs
-- Update this document with your exact mapping
-- Generate initial code skeletons (main.cpp, relay_handler.cpp, etc.) using these pins
-
-## 5. Development Environment Note
-This pinout is used in a **PlatformIO + ESP-IDF** project.  
-Pin definitions are centralized in `waterfront-esp32/src/config.h` and respect the target (esp32 vs esp32s3).
+**Pins now loaded from /config.json – edit via MQTT or PlatformIO data upload**
+```

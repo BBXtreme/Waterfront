@@ -4,13 +4,13 @@
 // The server handles GET (form display) and POST (credential submission) requests.
 // After successful connection, it publishes status and restarts the ESP32.
 
-#include "webui_server.h"     // Header for web server functions
-#include "config.h"            // Configuration constants
-#include <WiFi.h>              // WiFi library for AP mode
-#include <WebServer.h>         // Arduino web server library
-#include <PubSubClient.h>      // MQTT client for status publishing
-#include <ArduinoJson.h>       // JSON for status messages
-#include <Preferences.h>       // For persistent WiFi credentials
+#include "webui_server.h"
+#include "config_loader.h"
+#include <WiFi.h>
+#include <WebServer.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <Preferences.h>
 
 // External references from main.cpp
 extern PubSubClient mqttClient;  // MQTT client instance
@@ -86,7 +86,7 @@ void provisioning_task() {
             String msg;
             serializeJson(doc, msg);
             char topic[64];
-            snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", MACHINE_ID);
+            snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", g_config.location.code.c_str());
             mqttClient.publish(topic, msg.c_str(), true);  // Retained publish for machine status
             // Reconnect MQTT if needed
             mqtt_connect();
@@ -119,7 +119,7 @@ void provisioning_task() {
                 String msg;
                 serializeJson(doc, msg);
                 char topic[64];
-                snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", MACHINE_ID);
+                snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", g_config.location.code.c_str());
                 mqttClient.publish(topic, msg.c_str(), true);
                 // Reset state
                 provState = PROV_IDLE;
@@ -131,8 +131,8 @@ void provisioning_task() {
 // Start SoftAP mode with provisioning SSID and password
 void start_softap() {
     // Configure AP with fixed SSID/password (for demo; randomize in production)
-    WiFi.softAP("WATERFRONT-PROV", "password123");
-    Serial.println("SoftAP started: WATERFRONT-PROV, password: password123");
+    WiFi.softAP(g_config.wifiProvisioning.fallbackSsid.c_str(), g_config.wifiProvisioning.fallbackPass.c_str());
+    Serial.printf("SoftAP started: %s, password: %s\n", g_config.wifiProvisioning.fallbackSsid.c_str(), g_config.wifiProvisioning.fallbackPass.c_str());
     // In production, blink LED or display password on hardware
 }
 

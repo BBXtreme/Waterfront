@@ -4,7 +4,7 @@
 // Used for gate control when the ESP32 cannot reach the broker.
 
 #include "offline_fallback.h"
-#include "config.h"
+#include "config_loader.h"
 #include <nvs.h>
 #include <ArduinoJson.h>
 

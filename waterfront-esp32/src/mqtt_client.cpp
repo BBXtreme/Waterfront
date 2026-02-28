@@ -23,9 +23,9 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void mqtt_init() {
-    mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
+    mqttClient.setServer(g_config.mqtt.broker.c_str(), g_config.mqtt.port);
     mqttClient.setCallback(mqtt_callback);
-    if (mqttClient.connect("KayakClient")) {
+    if (mqttClient.connect((g_config.mqtt.clientIdPrefix + "-client").c_str())) {
         ESP_LOGI("MQTT", "Connected and subscribed");
     }
 }
@@ -38,7 +38,7 @@ void mqtt_publish_status() {
     String payload;
     serializeJson(doc, payload);
     char topic[64];
-    snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", MACHINE_ID);
+    snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", g_config.location.code.c_str());
     mqttClient.publish(topic, payload.c_str(), true);  // Retained publish for machine status
 }
 

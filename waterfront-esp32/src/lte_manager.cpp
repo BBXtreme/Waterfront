@@ -4,7 +4,7 @@
 // Power management is included to conserve battery in solar-powered setups.
 
 #include "lte_manager.h"
-#include "config.h"
+#include "config_loader.h"
 #include <TinyGsmClient.h>
 #include <HardwareSerial.h>
 #include <PubSubClient.h>
@@ -19,27 +19,27 @@ TinyGsmClient lteClient(modem);
 
 // Initialize LTE modem
 void lte_init() {
-    SerialAT.begin(LTE_MODEM_BAUD, SERIAL_8N1, LTE_MODEM_RX_PIN, LTE_MODEM_TX_PIN);
-    pinMode(LTE_MODEM_PWRKEY_PIN, OUTPUT);
-    digitalWrite(LTE_MODEM_PWRKEY_PIN, LOW);
+    SerialAT.begin(115200, SERIAL_8N1, 16, 17);  // Use config pins if needed
+    pinMode(25, OUTPUT);  // PWRKEY
+    digitalWrite(25, LOW);
     ESP_LOGI("LTE", "Initialized (powered off)");
 }
 
 // Power up and connect modem
 void lte_power_up() {
-    digitalWrite(LTE_MODEM_PWRKEY_PIN, HIGH);
+    digitalWrite(25, HIGH);
     delay(1000);
-    digitalWrite(LTE_MODEM_PWRKEY_PIN, LOW);
+    digitalWrite(25, LOW);
     delay(10000);
     modem.restart();
-    modem.gprsConnect(LTE_APN, "", "");
+    modem.gprsConnect(g_config.lte.apn.c_str(), "", "");
     ESP_LOGI("LTE", "Powered up and connected to GPRS");
 }
 
 // Power down modem
 void lte_power_down() {
     modem.poweroff();
-    digitalWrite(LTE_MODEM_PWRKEY_PIN, LOW);
+    digitalWrite(25, LOW);
     ESP_LOGI("LTE", "Powered down");
 }
 
@@ -47,7 +47,7 @@ void lte_power_down() {
 void lte_switch_to_lte() {
     lte_power_up();
     mqttClient.setClient(lteClient);
-    if (mqttClient.connect(SLOT_ID)) {
+    if (mqttClient.connect((g_config.mqtt.clientIdPrefix + "-lte").c_str())) {
         ESP_LOGI("LTE", "MQTT switched to LTE");
     } else {
         ESP_LOGE("LTE", "MQTT connect failed over LTE");
