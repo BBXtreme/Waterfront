@@ -92,3 +92,10 @@ Example payload:
 ```
 
 Note: This topic allows runtime configuration changes (MQTT broker, compartment pins, debug mode, etc.) without firmware re-flash. Used by admin dashboard.
+
+## Security Notes
+
+- **Authentication**: Username/password required (generate with `mosquitto_passwd -c /mosquitto/config/passwd mqttuser`).
+- **TLS**: Enabled on port 8883 with CA/cert/key files. For self-signed certs (dev): Use openssl commands in mosquitto.conf comments. Production: Use Let's Encrypt.
+- **Client Certs**: Optional (require_certificate false).
+- **WebSocket**: Also secured with auth on port 9001.

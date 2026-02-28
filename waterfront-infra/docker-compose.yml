@@ -6,9 +6,12 @@ services:
     container_name: mqtt-broker
     ports:
       - "1883:1883"         # MQTT plain
+      - "8883:8883"         # MQTT TLS
       - "9001:9001"         # WebSocket (optional for browser clients)
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./data:/mosquitto/data
       - ./log:/mosquitto/log
+      - ./certs:/mosquitto/config/certs  # Mount certs directory
+      - ./passwd:/mosquitto/config/passwd  # Mount password file
     restart: unless-stopped
