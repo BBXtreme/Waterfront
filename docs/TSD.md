@@ -47,8 +47,9 @@ This TSD now fully aligns with **RentalBuddy** (self-service 24/7 unmanned renta
 | ESP32 Firmware        | Arduino/ESP-IDF + ArduinoJson + PubSubClient                 | + Return sensor logic + deposit-release handling             |
 | WiFi Provisioning     | ESP-IDF WiFi Provisioning Component (BLE or SoftAP) + optional ESPAsyncWebServer for captive portal | Enables runtime WiFi SSID/password change without re-flashing. BLE preferred for low power & security. |
 | Cellular Connectivity | LTE modem module (e.g., SIM7600/SIM7500, Quectel EC21, or integrated like Walter board) via UART/SPI | Provides fallback when WiFi is unavailable. Prefer LTE-M / NB-IoT for low power/data usage in vending/IoT. |
-| Cellular Driver       | TinyGSM library (Arduino) or ESP-IDF modem driver            | Handles AT commands, PDP context, MQTT over cellular. Supports SIM7600, SIM800, Quectel, etc. |
+| Cellular Driver       | TinyGSM library (Arduino) or ESP-IDF modem driver            | Handles AT commands, PDP context, MQTT over cellular. Supports SIM7600, SIM800, etc. |
 | Connectivity Manager  | Custom state machine (WiFi → LTE failover)                   | Monitors RSSI/link status; switches transparently; reports via MQTT telemetry. |
+| MQTT Security         | Username/password authentication and TLS encryption (MQTTS) | Secure communication over WiFi/LTE with broker requiring auth and TLS on port 8883. |
 
 All configuration (MQTT broker/port, location slug/code, compartment pins, debug mode, grace periods, etc.) is now loaded at runtime from /config.json on LittleFS. This file can be updated remotely via MQTT topic waterfront/{location}/{locationCode}/config/update without re-flashing.
 
@@ -125,9 +126,7 @@ Example config.json structure (loaded from LittleFS at runtime):
 - Security:
   - BLE: Use secure pairing (just-works or numeric comparison).
   - SoftAP: WPA2-PSK with generated random password shown on device LED/display or in admin log.
-  - Rate-limit / timeout provisioning mode to prevent abuse.
-
-Runtime changes to MQTT broker, compartment pins, or other settings are applied by publishing a new JSON payload to the config update topic. The ESP32 validates schema, saves to LittleFS, and reloads globals (restart optional).
+- Runtime changes to MQTT broker, compartment pins, or other settings are applied by publishing a new JSON payload to the config update topic. The ESP32 validates schema, saves to LittleFS, and reloads globals (restart optional).
 
 **4.4 Cellular Connectivity & Failover**
 
@@ -187,7 +186,6 @@ Implemented: return_sensor.cpp, deposit_logic.cpp, lte_manager.cpp, nimble.cpp (
    - Wire modem (UART + control pins).
    - Integrate TinyGSM library + basic connection test.
    - Implement simple failover state machine (WiFi primary → LTE secondary).
-   - Extend status publish with connection type/RSSI.
    - Test: Disable WiFi → verify unlock command still arrives via LTE.
 8. **Add runtime WiFi provisioning** (critical for production usability)
    - Implement BLE provisioning first (copy from ESP-IDF examples: wifi_prov_scheme_ble).
@@ -223,16 +221,43 @@ To ensure fast, successful implementation by a beginner using Claude/Grok, cloni
 - When implementing FR-OPER-01, start with Espressif's official WiFi provisioning examples (BLE or SoftAP). Use AI prompts like: "Add ESP-IDF BLE WiFi provisioning to existing MQTT project – include provisioning start on first boot or GPIO button press. Save credentials to NVS. Restart WiFi station mode after success."
 - When adding LTE (FR-CONN-01), start with a simple AT-command-based modem (e.g., SIM7600 via UART). Use libraries like TinyGSM. Test failover by turning off WiFi router and verifying MQTT still works over cellular. Monitor data usage to avoid bill shock.
 
-Example config.json structure (loaded from LittleFS at runtime):
+## 9. Security Requirements
 
-```json
-{
-  "mqtt": {"broker": "192.168.178.50", "port": 1883},
-  "location": {"slug": "bremen", "code": "harbor-01"},
-  "compartments": [
-    {"number":1, "servoPin":12, "limitOpenPin":13, "limitClosePin":14},
-    ...
-  ],
-  "debugMode": true
-}
-```
+- **SEC-001**: Encrypt MQTT traffic (TLS).
+- **SEC-002**: Authenticate admin users.
+- **SEC-003**: Validate payment webhooks.
+
+## 10. Performance Requirements
+
+- **PERF-001**: Handle 100 concurrent bookings.
+- **PERF-002**: ESP32 deep sleep for battery life.
+
+## 11. Testing Requirements
+
+- **TEST-001**: Unit tests for ESP32 logic.
+- **TEST-002**: Integration tests for MQTT flow.
+- **TEST-003**: E2E tests for booking flow.
+
+## 12. Risks and Mitigations
+
+- **RISK-001**: MQTT connection loss → Mitigate with QoS 1 and offline queues.
+- **RISK-002**: Payment failures → Mitigate with webhooks and retries.
+- **RISK-003**: Hardware failures → Mitigate with sensor redundancy.
+- **RISK-004**: Hard-coded configuration → Mitigated by runtime loading from /config.json on LittleFS with MQTT remote update. Reduces re-flash needs and enables admin-driven changes for new locations/compartments.
+
+## 13. Deployment Plan
+
+- **DEP-001**: Supabase for backend.
+- **DEP-002**: Vercel for PWA.
+- **DEP-003**: PlatformIO for ESP32 flashing.
+
+## 14. Maintenance Plan
+
+- **MAINT-001**: Monitor logs in Supabase.
+- **MAINT-002**: Update firmware via OTA.
+
+## 15. Appendices
+
+- **APP-001**: Wireframes for PWA.
+- **APP-002**: ESP32 pinout diagram.
+- **APP-003**: MQTT payload examples.

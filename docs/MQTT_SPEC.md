@@ -93,6 +93,11 @@ Example payload:
 
 Note: This topic allows runtime configuration changes (MQTT broker, compartment pins, debug mode, etc.) without firmware re-flash. Used by admin dashboard.
 
+## Security & Authentication
+
+- **Broker Configuration**: The Mosquitto broker requires username/password authentication (allow_anonymous false) and enforces TLS encryption on port 8883 for secure connections.
+- **ESP32 Client Setup**: The ESP32 uses `mqttClient.connect(clientId, username, password)` for authentication. If `useTLS=true` in config.json, it enables TLS with `setSecure(true)` for MQTTS connections over WiFi or LTE.
+
 ## Security Notes
 
 - **Authentication**: Username/password required (generate with `mosquitto_passwd -c /mosquitto/config/passwd mqttuser`).
