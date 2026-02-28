@@ -13,7 +13,6 @@
 #include <PubSubClient.h>
 #include <Client.h>
 #include <ArduinoJson.h>
-#include <string>
 #include <cstring>
 
 // Mock Client for PubSubClient
@@ -56,8 +55,8 @@ public:
     void loop() override {}
 
     // Test inspection
-    std::string lastPublishedTopic;
-    std::string lastPublishedPayload;
+    String lastPublishedTopic;
+    String lastPublishedPayload;
     bool lastPublishedRetained = false;
     int publishCount = 0;
 
@@ -115,7 +114,7 @@ TEST_CASE("Simulate Retained Status Payload and Verify Ack Publish", "[mqtt]") {
     REQUIRE(mockMqttClient.lastPublishedTopic == "waterfront/locations/bremen-harbor-01/compartments/1/ack");
     REQUIRE(mockMqttClient.lastPublishedRetained == false);  // Acks not retained
     // Check payload contains action
-    REQUIRE(mockMqttClient.lastPublishedPayload.find("\"action\":\"gate_opened\"") != std::string::npos);
+    REQUIRE(mockMqttClient.lastPublishedPayload.indexOf("\"action\":\"gate_opened\"") != -1);
 }
 
 // Test command payload simulation
@@ -137,7 +136,7 @@ TEST_CASE("Simulate Command Payload and Verify Ack", "[mqtt]") {
     // Verify ack published
     REQUIRE(mockMqttClient.publishCount == 1);
     REQUIRE(mockMqttClient.lastPublishedTopic == "waterfront/locations/bremen-harbor-01/compartments/1/ack");
-    REQUIRE(mockMqttClient.lastPublishedPayload.find("\"action\":\"gate_opened\"") != std::string::npos);
+    REQUIRE(mockMqttClient.lastPublishedPayload.indexOf("\"action\":\"gate_opened\"") != -1);
 }
 
 // Test CRC validation failure
