@@ -3396,3 +3396,49 @@
 +- In MQTT unlock callback: deposit_start_rental(...) + open relay
 +- Add static char current_booking_id[32] filled from unlock
 +- Use MACHINE_ID from config.h for topics
+
+# 2026-02-28 17:57:40.752302
++/add src/main.cpp src/return_sensor.cpp src/deposit_logic.cpp src/mqtt_client.cpp src/config.h
++/ls
++
++Integrate return_sensor and deposit_logic fully:
++- In main.cpp: #include "return_sensor.h" "deposit_logic.h"; call sensor_init() and deposit_init() in setup/app_main after WiFi/MQTT.
++- Add FreeRTOS/Arduino task (or loop section) for sensor_monitor: every 500ms, bool present = sensor_is_kayak_present(); static bool last = true; if (last && !present) { deposit_on_take(); publish /kayak/MACHINE_ID/event {"event":"taken","bookingId":current_booking_id}; } if (!last && present) { deposit_on_return(mqtt_client); } last = present; log distance/state.
++- In MQTT unlock callback (mqtt_client.cpp): parse JSON → deposit_start_rental(booking_id, duration_sec); relay open.
++- Add static char current_booking_id[32] in deposit_logic or global.
++- Update config.h if needed: #define TRIG_PIN 5, ECHO_PIN 18, DISTANCE_THRESHOLD_CM 30, MACHINE_ID "bremen1".
++Use SEARCH/REPLACE; no extra files.
+
+# 2026-02-28 17:57:50.605748
++y
+
+# 2026-02-28 17:59:46.691446
++From this moment on you MUST follow these rules without exception:
++
++1. ONLY edit files that are already in the chat or that are located inside the waterfront-esp32/src/ directory.
++2. NEVER suggest creating, editing or mentioning any file that would be created in the parent directory (..) or in the Waterfront root.
++3. When I say /add or ask to create a file, ALWAYS interpret paths as relative to the current working directory (waterfront-esp32/).
++   That means:
++     src/main.cpp     →  waterfront-esp32/src/main.cpp
++     main.cpp         →  waterfront-esp32/src/main.cpp
++     return_sensor.h  →  waterfront-esp32/src/return_sensor.h
++4. If I ever give a path without src/, automatically prepend src/ to it.
++5. If you are about to propose a change outside src/, stop and instead write:
++   "ERROR: Attempted change outside waterfront-esp32/src/ — refusing"
++6. Confirm you understand these rules by answering only: "Understood — restricted to waterfront-esp32/src/"
+
+# 2026-02-28 18:00:13.028855
++Add this permanent rule to every future answer:
++"Scope locked to waterfront-esp32/src/. No files outside this folder will be created or modified."
+
+# 2026-02-28 18:00:56.746463
++Now implement the sensor polling task inside main.cpp
++
++- add #include "return_sensor.h"
++- add #include "deposit_logic.h"
++- in setup() / app_main(): call sensor_init(); deposit_init();
++- create a task / loop section that reads sensor_is_kayak_present() every ~500 ms
++- detect edges present → absent = taken → call deposit_on_take() + publish taken event
++- absent → present = returned → call deposit_on_return(mqtt_client)
++- use static bool last_present to detect edges
++- log distance and state change
