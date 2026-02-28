@@ -1,7 +1,7 @@
 {
   "mqtt": {
     "broker": "192.168.178.50",
-    "port": 1883,
+    "port": 8883,
     "username": "mqttuser",
     "password": "strongpass123",
     "clientIdPrefix": "waterfront",
