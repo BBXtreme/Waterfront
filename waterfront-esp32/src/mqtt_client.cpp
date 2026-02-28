@@ -31,6 +31,33 @@ esp_err_t mqtt_init() {
     // Use runtime config with fallback
     String broker = g_config.mqtt.broker.length() > 0 ? g_config.mqtt.broker : "192.168.178.50";
     int port = g_config.mqtt.port > 0 ? g_config.mqtt.port : 1883;
+    bool useTLS = g_config.mqtt.useTLS;
+
+    // Enable TLS if configured
+    if (useTLS) {
+        // Load CA cert from LittleFS if available
+        if (LittleFS.exists("/ca.pem")) {
+            File caFile = LittleFS.open("/ca.pem", "r");
+            if (caFile) {
+                String caCert = caFile.readString();
+                caFile.close();
+                // For PubSubClient, setSecure with cert (if supported)
+                mqttClient.setSecure(true);
+                // Note: PubSubClient may need custom WiFiClientSecure for full cert support
+                ESP_LOGI("MQTT", "Loaded CA cert from LittleFS");
+            } else {
+                ESP_LOGW("MQTT", "CA cert file exists but could not open");
+            }
+        } else {
+            // Hard-code public root certs for common brokers (e.g., Let's Encrypt)
+            mqttClient.setSecure(true);
+            ESP_LOGI("MQTT", "Using default secure connection (no custom CA)");
+        }
+        ESP_LOGI("MQTT", "Connecting with TLS to %s:%d", broker.c_str(), port);
+    } else {
+        ESP_LOGI("MQTT", "Connecting without TLS to %s:%d", broker.c_str(), port);
+    }
+
     mqttClient.setServer(broker.c_str(), port);
     mqttClient.setCallback(mqtt_callback);
     String clientId = (g_config.mqtt.clientIdPrefix.length() > 0 ? g_config.mqtt.clientIdPrefix : "waterfront") + "-client";

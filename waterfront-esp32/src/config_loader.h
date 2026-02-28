@@ -15,6 +15,10 @@
 struct Mqtt {
     String broker;
     int port;
+    String username;
+    String password;
+    String clientIdPrefix;
+    bool useTLS;
 };
 
 struct Location {
@@ -22,20 +26,37 @@ struct Location {
     String code;
 };
 
-struct CompartmentPin {
+struct WifiProvisioningConfig {
+    String fallbackSsid;
+    String fallbackPass;
+};
+
+struct LteConfig {
+    String apn;
+    String simPin;
+    int rssiThreshold;
+    int dataUsageAlertLimitKb;
+};
+
+struct CompartmentConfig {
     int number;
     int servoPin;
     int limitOpenPin;
     int limitClosePin;
+    int ultrasonicTriggerPin;
+    int ultrasonicEchoPin;
+    int weightSensorPin;
 };
 
 // Global config struct (central place for ALL config)
 struct GlobalConfig {
     Mqtt mqtt;
     Location location;
-    int maxCompartments;
-    bool debugMode;
-    std::vector<CompartmentPin> compartments;
+    WifiProvisioningConfig wifiProvisioning;
+    LteConfig lte;
+    std::vector<CompartmentConfig> compartments;
+    SystemConfig system;
+    OtherConfig other;
 };
 
 // Global config instance
@@ -43,5 +64,17 @@ extern GlobalConfig g_config;
 
 // Function to load config from LittleFS, with validation and fallback
 bool loadConfig();
+
+// Function to save config to LittleFS (for remote update), with validation
+bool saveConfig();
+
+// Function to update config from JSON payload, validate, save, reload
+bool updateConfigFromJson(const std::string& jsonPayload);
+
+// Function to get default config (static struct)
+GlobalConfig getDefaultConfig();
+
+// Function to validate config (pins 0-39, etc.)
+bool validateConfig(const GlobalConfig& cfg);
 
 #endif // CONFIG_LOADER_H

@@ -62,6 +62,7 @@ bool loadConfig() {
         g_config.mqtt.username = mqtt["username"].as<String>();
         g_config.mqtt.password = mqtt["password"].as<String>();
         g_config.mqtt.clientIdPrefix = mqtt["clientIdPrefix"].as<String>();
+        g_config.mqtt.useTLS = mqtt["useTLS"] | false;
     }
 
     // Parse location
@@ -176,10 +177,11 @@ bool updateConfigFromJson(const std::string& jsonPayload) {
 GlobalConfig getDefaultConfig() {
     GlobalConfig def;
     def.mqtt.broker = "192.168.178.50";
-    def.mqtt.port = 1883;
+    def.mqtt.port = 8883;
     def.mqtt.username = "";
     def.mqtt.password = "";
     def.mqtt.clientIdPrefix = "waterfront";
+    def.mqtt.useTLS = true;
     def.location.slug = "bremen";
     def.location.code = "harbor-01";
     def.wifiProvisioning.fallbackSsid = "WATERFRONT-DEFAULT";
