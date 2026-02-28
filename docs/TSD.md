@@ -236,4 +236,3 @@ Example config.json structure (loaded from LittleFS at runtime):
   "debugMode": true
 }
 ```
-```
