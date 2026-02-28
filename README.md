@@ -24,6 +24,26 @@ Users book online → pay → receive PIN/QR → arrive at solar-powered locker 
 | Admin dashboard (bookings, telemetry) | 🚧 Planned | Supabase + real-time           |
 | Offline-tolerant PWA                  | 🟡 Partial | QR/PIN caching                 |
 
+## WATERFRONT Documentation Index
+
+##### Core Specifications
+- [Technical Specification Document (TSD)](Technical%20Specification%20Document%20(TSD).md) — full system overview, flows, BTC/Lightning, edge cases
+- [Functional Specification Document (FSD)](Functional%20Specification%20Document%20(FSD).md) — requirements, architecture, data models
+
+##### ESP32 Firmware Preparation
+- [ESP32 Pinout Plan and Diagram](ESP32%20Pinout%20Plan%20and%20Diagram.md) — GPIO assignments + wiring
+- [ESP32 Project Plan – Nodestark Adaptation](ESP32%20Project%20Plan%20-%20Waterfront%20Firmware%20Code%20Development.md) — step-by-step adaptation roadmap
+- [ESP32 Firmware – Test Checklist](ESP32%20Firmware%20-%20Test%20Checklist.md) — phased verification
+
+##### Integration & Architecture
+- [HARDWARE_BASELINE](HARDWARE_BASELINE.md) — confirmed board, sensors, modem, power
+- [MQTT_SPEC](MQTT_SPEC.md) — topics, payloads, QoS
+- [REST-MQTT-Architecture](REST-MQTT-Architecture.md) — backend → MQTT → ESP32 flow
+
+##### UI/UX Specs
+- [APP Admin - Layout Spec](APP%20Admin%20-%20Layout%20Spec.md)
+- [APP Booking - PWA Layout Spec](APP%20Booking%20-%20PWA%20Layout%20Spec.md)
+
 ## Tech Stack
 
 - **Frontend / PWA** — Next.js 15+, TypeScript, Tailwind CSS, shadcn/ui, Vercel deployment
@@ -107,11 +127,29 @@ docker compose up -d
 
 ### 5. Build & Flash ESP32 Firmware
 
-Open waterfront-esp32 folder in VS Code (with PlatformIO extension).
+The ESP32 controller uses **PlatformIO + ESP-IDF framework** (not Arduino core).
 
-- Build: PlatformIO → Build
-- Upload: PlatformIO → Upload
-- Monitor: PlatformIO → Serial Monitor
+#### Prerequisites
+- Install **VS Code** + **PlatformIO IDE** extension
+- (Optional but recommended) Also install **ESP-IDF** extension by Espressif for menuconfig & advanced debugging
+
+#### Steps
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/BBXtreme/Waterfront.git
+   cd Waterfront/waterfront-esp32
+
+
+
+##### Build / Upload / Monitor:
+
+- **Build**: Click PlatformIO → Build (checkmark icon) or run pio run in terminal
+
+- **Upload / Flash**: Click PlatformIO → Upload (right arrow icon) or pio run -t upload
+
+- **Serial Monitor**: Click PlatformIO → Serial Monitor (plug icon) or pio device monitor
+
+  
 
 ## Environment Variables
 

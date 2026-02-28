@@ -123,3 +123,7 @@ Once these are confirmed, we can:
 - Lock in final GPIOs
 - Update this document with your exact mapping
 - Generate initial code skeletons (main.cpp, relay_handler.cpp, etc.) using these pins
+
+## 5. Development Environment Note
+This pinout is used in a **PlatformIO + ESP-IDF** project.  
+Pin definitions are centralized in `waterfront-esp32/src/config.h` and respect the target (esp32 vs esp32s3).

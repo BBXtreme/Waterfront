@@ -3,6 +3,8 @@
 **Project phase**: Pre-development / firmware skeleton  
 **Date**: 2026-02-28
 
+**Development toolchain:** PlatformIO (VS Code) + ESP-IDF framework
+
 ## 1. ESP32 Board
 - Model: [please fill: e.g. ESP32-DevKitC V4, ESP32-S3-DevKitC-1-N8R2, custom PCB?]
 - PSRAM: yes / no

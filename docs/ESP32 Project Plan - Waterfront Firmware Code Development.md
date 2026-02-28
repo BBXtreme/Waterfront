@@ -86,7 +86,10 @@ waterfront-kayak-esp32/                  # New root project name (fork or new fr
 - **AI Prompt Example**: "Provide a beginner setup guide for cloning and branching the Nodestark/mdb-esp32-cashless repo in VS Code for ESP32 development."
 - **Testing/Tips**: Build and upload a simple "Hello World" sketch via Serial Monitor. Tip: If using ESP-IDF, follow Espressif docs for environment setup; avoid MDB folders initially.
 
+**Environment Decision (Feb 2026)**: Use **PlatformIO + ESP-IDF framework** instead of pure ESP-IDF or Arduino.  This provides faster setup, library management, and daily workflow while keeping full IDF capabilities.
+
 #### Task 1.5: Hardware Pinout Planning
+
 - **Goal**: Define and document ESP32 GPIO assignments for relay, sensors, LTE, etc., to avoid conflicts in firmware.
 - **Estimated Time**: 1 hour.
 - **Steps**:
