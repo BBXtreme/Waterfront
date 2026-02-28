@@ -86,6 +86,17 @@ waterfront-kayak-esp32/                  # New root project name (fork or new fr
 - **AI Prompt Example**: "Provide a beginner setup guide for cloning and branching the Nodestark/mdb-esp32-cashless repo in VS Code for ESP32 development."
 - **Testing/Tips**: Build and upload a simple "Hello World" sketch via Serial Monitor. Tip: If using ESP-IDF, follow Espressif docs for environment setup; avoid MDB folders initially.
 
+#### Task 1.5: Hardware Pinout Planning
+- **Goal**: Define and document ESP32 GPIO assignments for relay, sensors, LTE, etc., to avoid conflicts in firmware.
+- **Estimated Time**: 1 hour.
+- **Steps**:
+  1. Review provided "ESP32 Pinout Plan and Diagram.md" (in docs folder).
+  2. Confirm board model and peripherals (e.g., ultrasonic sensor, SIM7600 modem).
+  3. Customize table with your exact GPIOs; add wiring photos if available.
+  4. Commit: `git add docs/ESP32\ Pinout\ Plan.md && git commit -m "Added pinout diagram for WATERFRONT ESP32 controller"`.
+- **AI Prompt Example**: "Generate a customized ESP32 pinout table and wiring diagrams for kayak rental controller: Relay on GPIO 23, ultrasonic on 5/18, LTE UART on 16/17, based on DevKitC board."
+- **Testing/Tips**: Cross-check with board datasheet; test individual pins with blink sketch before full integration. Tip: Use #define in config.h to make pins configurable.
+
 #### Task 2: Remove MDB-Specific Folders and Code
 - **Goal**: Strip out vending/MDB-related components to simplify for kayak lock control (focus on MQTT and GPIO).
 - **Estimated Time**: 1-2 hours.
