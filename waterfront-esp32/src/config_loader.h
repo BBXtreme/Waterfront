@@ -78,16 +78,4 @@ extern GlobalConfig g_config;
 // Function to load config from LittleFS, with validation and fallback
 bool loadConfig();
 
-// Function to save config to LittleFS (for remote update), with validation
-bool saveConfig();
-
-// Function to update config from JSON payload, validate, save, reload
-bool updateConfigFromJson(const std::string& jsonPayload);
-
-// Function to get default config (static struct)
-GlobalConfig getDefaultConfig();
-
-// Function to validate config (pins 0-39, etc.)
-bool validateConfig(const GlobalConfig& cfg);
-
 #endif // CONFIG_LOADER_H
