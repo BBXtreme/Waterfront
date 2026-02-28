@@ -11,22 +11,47 @@
 #include "mqtt_handler.h"
 #include "mqtt_topics.h"
 #include "config.h"
+#include <PubSubClient.h>
+#include <Client.h>
 
-// Mock PubSubClient for testing (simple test double)
-class MockPubSubClient {
+// Mock Client for PubSubClient
+class MockClient : public Client {
 public:
-    bool connected() { return true; }
-    bool connect(const char* id, const char* willTopic, uint8_t willQos, bool willRetain, const char* willMessage) { return true; }
-    bool subscribe(const char* topic, uint8_t qos) { return true; }
-    bool publish(const char* topic, const char* payload, bool retained) {
+    virtual int connect(IPAddress ip, uint16_t port) override { return 1; }
+    virtual int connect(const char *host, uint16_t port) override { return 1; }
+    virtual size_t write(uint8_t) override { return 1; }
+    virtual size_t write(const uint8_t *buf, size_t size) override { return size; }
+    virtual int available() override { return 0; }
+    virtual int read() override { return -1; }
+    virtual int read(uint8_t *buf, size_t size) override { return -1; }
+    virtual int peek() override { return -1; }
+    virtual void flush() override {}
+    virtual void stop() override {}
+    virtual uint8_t connected() override { return 1; }
+    virtual operator bool() override { return true; }
+};
+
+// Mock PubSubClient inheriting properly
+class MockPubSubClient : public PubSubClient {
+public:
+    MockPubSubClient() : PubSubClient(mockClient) {}
+    bool connect(const char* id, const char* willTopic, uint8_t willQos, bool willRetain, const char* willMessage) override {
+        lastPublishedTopic = "";
+        lastPublishedPayload = "";
+        lastPublishedRetained = false;
+        publishCount = 0;
+        return true;
+    }
+    bool subscribe(const char* topic, uint8_t qos) override { return true; }
+    bool publish(const char* topic, const char* payload, bool retained) override {
         lastPublishedTopic = topic;
         lastPublishedPayload = payload;
         lastPublishedRetained = retained;
         publishCount++;
         return true;
     }
-    void setCallback(void (*callback)(char*, byte*, unsigned int)) { this->callback = callback; }
-    void loop() {}  // No-op for tests
+    void setCallback(void (*callback)(char*, byte*, unsigned int)) override { this->callback = callback; }
+    void loop() override {}
 
     // Test inspection
     std::string lastPublishedTopic;
@@ -36,13 +61,14 @@ public:
 
 private:
     void (*callback)(char*, byte*, unsigned int) = nullptr;
+    MockClient mockClient;
 };
 
-// Global mock instance (replace real mqttClient in tests)
+// Global mock instance
 MockPubSubClient mockMqttClient;
 
 // Override extern mqttClient for tests
-PubSubClient& mqttClient = reinterpret_cast<PubSubClient&>(mockMqttClient);
+PubSubClient& mqttClient = mockMqttClient;
 
 // Test retained status payload simulation
 TEST_CASE("Simulate Retained Status Payload and Verify Ack Publish", "[mqtt]") {
