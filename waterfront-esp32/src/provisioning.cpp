@@ -19,5 +19,5 @@ void startBLEProvisioning() {
 void startSoftAPProvisioning() {
     start_softap();           // Start AP mode
     start_rest_server();     // Start web server
-    provisioningActive = true;  // Indicate provisioning is running
+    provisioningActive = true;  // Indicate provisioning active
 }

@@ -47,7 +47,7 @@ void lte_power_down() {
 void lte_switch_to_lte() {
     lte_power_up();
     mqttClient.setClient(lteClient);
-    if (mqttClient.connect(MACHINE_ID)) {
+    if (mqttClient.connect(SLOT_ID)) {
         ESP_LOGI("LTE", "MQTT switched to LTE");
     } else {
         ESP_LOGE("LTE", "MQTT connect failed over LTE");

@@ -20,16 +20,12 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
         ESP_LOGI("MQTT", "JSON parse failed");
         return;
     }
-    const char* bookingId = doc["bookingId"];
-    const char* pin = doc["pin"];
-    ESP_LOGI("Unlock request", "booking %s pin %s", bookingId, pin);
 }
 
 void mqtt_init() {
     mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
     mqttClient.setCallback(mqtt_callback);
     if (mqttClient.connect("KayakClient")) {
-        mqttClient.subscribe(MQTT_SUBSCRIBE_TOPIC);
         ESP_LOGI("MQTT", "Connected and subscribed");
     }
 }
@@ -42,5 +38,5 @@ void mqtt_publish_status() {
     doc["connType"] = "wifi";
     String payload;
     serializeJson(doc, payload);
-    mqttClient.publish(MQTT_PUBLISH_TOPIC, payload.c_str());
+    mqttClient.publish("waterfront/slots/" SLOT_ID "/status", payload.c_str());
 }

@@ -19,14 +19,19 @@
 // Acknowledgments: from ESP32 back to backend (not retained)
 #define MQTT_SLOT_ACK_TOPIC MQTT_BASE_TOPIC "/slots/%d/ack"  // Confirmation messages
 
+// Events: from ESP32 to backend
+#define MQTT_SLOT_EVENT_TOPIC MQTT_BASE_TOPIC "/slots/%d/event"  // Taken/returned events
+
 // QoS settings
 #define MQTT_QOS_STATUS 1  // QoS 1 for status (at least once)
 #define MQTT_QOS_COMMAND 1  // QoS 1 for commands
 #define MQTT_QOS_ACK 1  // QoS 1 for acks
+#define MQTT_QOS_EVENT 1  // QoS 1 for events
 
 // Retained flags
 #define MQTT_RETAIN_STATUS true  // Status topics are retained
 #define MQTT_RETAIN_COMMAND false  // Commands not retained
 #define MQTT_RETAIN_ACK false  // Acks not retained
+#define MQTT_RETAIN_EVENT false  // Events not retained
 
 #endif // MQTT_TOPICS_H

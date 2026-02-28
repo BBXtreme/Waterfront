@@ -47,7 +47,7 @@ void sensor_monitor_task(void *pvParameters) {
                 deposit_on_return(&mqttClient);
                 // Publish event
                 char topic[64];
-                snprintf(topic, sizeof(topic), "/kayak/%s/event", MACHINE_ID);
+                snprintf(topic, sizeof(topic), "waterfront/slots/%s/event", SLOT_ID);
                 char payload[128];
                 snprintf(payload, sizeof(payload), "{\"event\":\"returned\",\"bookingId\":\"%s\"}", current_booking_id);
                 mqttClient.publish(topic, payload);
@@ -57,7 +57,7 @@ void sensor_monitor_task(void *pvParameters) {
                 deposit_on_take();
                 // Publish event
                 char topic[64];
-                snprintf(topic, sizeof(topic), "/kayak/%s/event", MACHINE_ID);
+                snprintf(topic, sizeof(topic), "waterfront/slots/%s/event", SLOT_ID);
                 char payload[128];
                 snprintf(payload, sizeof(payload), "{\"event\":\"taken\",\"bookingId\":\"%s\"}", current_booking_id);
                 mqttClient.publish(topic, payload);

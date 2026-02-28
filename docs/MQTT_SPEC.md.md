@@ -9,22 +9,32 @@ QoS: 1 or 2 for commands, 0 for telemetry
 ## Topics
 
 Inbound (backend → ESP32)
-- `/kayak/{machineId}/unlock`          QoS 1   JSON payload
+- `waterfront/slots/{slotId}/status`          QoS 1   JSON payload (retained)
+- `waterfront/slots/{slotId}/command`         QoS 1   JSON payload
 
 Outbound (ESP32 → backend)
-- `/kayak/{machineId}/status`          QoS 0   periodic + on change
-- `/kayak/{machineId}/event`           QoS 1   taken / returned / error
+- `waterfront/slots/{slotId}/status`          QoS 0   periodic + on change
+- `waterfront/slots/{slotId}/event`           QoS 1   taken / returned / error
+- `waterfront/slots/{slotId}/ack`             QoS 1   acknowledgments
 
 ## Payload Schemas (JSON)
 
-Unlock command example:
+Status (retained) example:
 ```json
 {
-  "bookingId": "bk_abc123",
-  "pin": "7482",
-  "durationSeconds": 7200,
-  "timestamp": "2026-02-28T11:43:00Z"
+  "slotId": 1,
+  "booked": true,
+  "bookingId": "BKG-20260228-001",
+  "startTime": "2026-03-01T10:00:00Z",
+  "endTime": "2026-03-01T12:00:00Z",
+  "customerName": "Marco Rossi",
+  "gateState": "locked"
 }
+```
+
+Command example:
+```json
+"open_gate"
 ```
 
 Status telemetry (periodic, ~every 5 min):
@@ -33,7 +43,7 @@ JSON
 
 ```
 {
-  "machineId": "bremen-harbor-01",
+  "slotId": 1,
   "kayakPresent": true,
   "locked": true,
   "batteryPercent": 87,
@@ -51,10 +61,19 @@ JSON
 
 ```
 {
-  "machineId": "bremen-harbor-01",
+  "slotId": 1,
   "event": "taken" | "returned" | "error",
   "timestamp": "2026-02-28T11:43:00Z",
   "details": { "distanceCm": 12 }   // optional sensor data
+}
+```
+
+Ack example:
+```json
+{
+  "slotId": 1,
+  "action": "gate_opened",
+  "timestamp": 1234567890
 }
 ```
 

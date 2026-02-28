@@ -21,8 +21,6 @@
 #define WIFI_PASS "default_pass"          // Default WiFi password; replace with actual password
 #define MQTT_SERVER "broker.emqx.io"      // MQTT broker server address (public broker for testing)
 #define MQTT_PORT 1883                    // MQTT port (1883 for non-TLS, 8883 for TLS)
-#define MQTT_SUBSCRIBE_TOPIC "/kayak/test/unlock"  // Topic to subscribe for unlock commands
-#define MQTT_PUBLISH_TOPIC "/kayak/test/status"    // Topic to publish status updates
 
 // BLE settings (from nimble.h and bleprph.h)
 // These are related to Bluetooth Low Energy (BLE) functionality for provisioning.
@@ -39,11 +37,8 @@
 #define PROVISIONING_BUTTON_PIN 4         // GPIO pin for provisioning button (debounced long-press)
 #define STATUS_LED_PIN 2                  // GPIO pin for status LED (blinks during provisioning)
 #define RELAY_PIN 23                      // GPIO pin for relay control (lock solenoid)
-#define MACHINE_ID "bremen-harbor-01"      // Unique machine ID for MQTT topics and identification
+#define SLOT_ID "bremen-harbor-01"         // Unique slot ID for MQTT topics and identification
 #define MQTT_BROKER "broker.emqx.io"      // MQTT broker address (consistent with MQTT_SERVER)
-#define MQTT_UNLOCK_TOPIC "/kayak/" MACHINE_ID "/unlock"  // Full unlock topic with machine ID
-#define MQTT_STATUS_TOPIC "/kayak/" MACHINE_ID "/status"  // Full status topic with machine ID
-#define MQTT_PROVISION_TOPIC "/kayak/" MACHINE_ID "/provision/start"  // Provisioning trigger topic
 #define RELAY_PULSE_DURATION_MS 1500      // Duration to pulse relay for unlock (in milliseconds)
 #define SENSOR_POLL_INTERVAL_MS 10000     // Interval to poll sensors (in milliseconds)
 

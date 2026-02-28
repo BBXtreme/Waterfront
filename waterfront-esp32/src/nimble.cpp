@@ -58,7 +58,7 @@ class ProvisioningCallbacks : public BLECharacteristicCallbacks {
             doc["ip"] = WiFi.localIP().toString();
             String msg;
             serializeJson(doc, msg);
-            mqttClient.publish(MQTT_STATUS_TOPIC, msg.c_str());
+            mqttClient.publish("waterfront/slots/" SLOT_ID "/status", msg.c_str());
         }
     }
 };
@@ -136,5 +136,5 @@ void ble_set_device_name(const char* deviceName) {
 // Calls ble_init and sets provisioning flag.
 void startBLEProvisioning() {
     ble_init("WATERFRONT-PROV");  // Initialize with provisioning name
-    provisioningActive = true;    // Indicate provisioning is active
+    provisioningActive = true;    // Indicate provisioning is running
 }
