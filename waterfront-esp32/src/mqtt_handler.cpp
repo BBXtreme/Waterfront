@@ -162,6 +162,9 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
         return;
     }
 
+    // Log full JSON for debugging
+    ESP_LOGV("MQTT", "Full JSON after CRC validation: %s", cleanMsg.c_str());
+
     // Parse topic to extract compartmentId using sscanf for efficiency
     int compartmentId = -1;
     char locationType[16], locationCode[32];

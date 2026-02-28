@@ -52,4 +52,8 @@
 #define LTE_MODEM_MODEL "SIM7600"          // Modem model (SIM7600 or SIM7000 for LTE support)
 #define WIFI_FAILOVER_TIMEOUT_MS 30000     // Timeout in ms to wait for WiFi before switching to LTE
 
+// Debug settings
+#define DEBUG_MODE 1                       // Enable debug mode (1 = enabled, 0 = disabled)
+#define DEBUG_PUBLISH_INTERVAL_MS 5000     // Interval to publish debug traces in ms
+
 #endif // CONFIG_H

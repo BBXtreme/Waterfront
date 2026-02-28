@@ -84,6 +84,27 @@ void sensor_monitor_task(void *pvParameters) {
 }
 
 /**
+ * @brief FreeRTOS task for publishing debug traces if DEBUG_MODE is enabled.
+ * @param pvParameters Unused parameter for FreeRTOS task.
+ * @note Publishes debug information periodically to MQTT for monitoring.
+ */
+void debug_task(void *pvParameters) {
+#if DEBUG_MODE
+    while (1) {
+        // Publish debug trace
+        char topic[64];
+        snprintf(topic, sizeof(topic), "waterfront/machine/%s/debug", MACHINE_ID);
+        char payload[256];
+        snprintf(payload, sizeof(payload), "{\"uptime\":%lu,\"freeHeap\":%d,\"wifiRSSI\":%d,\"mqttConnected\":%d}",
+                 millis(), ESP.getFreeHeap(), WiFi.RSSI(), mqttClient.connected());
+        mqttClient.publish(topic, payload, false);
+        ESP_LOGI(TAG, "Published debug trace: %s", payload);
+        vTaskDelay(pdMS_TO_TICKS(DEBUG_PUBLISH_INTERVAL_MS));
+    }
+#endif
+}
+
+/**
  * @brief Main application entry point.
  * @note Initializes NVS, event loop, components, and starts tasks. Runs main loop for periodic polling.
  */
@@ -118,6 +139,14 @@ void app_main() {
     if (task_ret != pdPASS) {
         global_error_handler(ESP_FAIL, "Failed to create sensor monitor task");
     }
+
+    // Create debug task if DEBUG_MODE is enabled
+#if DEBUG_MODE
+    task_ret = xTaskCreate(debug_task, "debug_task", 4096, NULL, 1, NULL);
+    if (task_ret != pdPASS) {
+        global_error_handler(ESP_FAIL, "Failed to create debug task");
+    }
+#endif
 
     ESP_LOGI(TAG, "All components initialized. Entering main loop.");
 
