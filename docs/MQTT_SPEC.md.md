@@ -16,6 +16,7 @@ Outbound (ESP32 → backend)
 - `waterfront/slots/{slotId}/status`          QoS 0   periodic + on change
 - `waterfront/slots/{slotId}/event`           QoS 1   taken / returned / error
 - `waterfront/slots/{slotId}/ack`             QoS 1   acknowledgments
+- `waterfront/machine/{machineId}/status`     QoS 0   machine telemetry (retained)
 
 ## Payload Schemas (JSON)
 
@@ -74,6 +75,15 @@ Ack example:
   "slotId": 1,
   "action": "gate_opened",
   "timestamp": 1234567890
+}
+```
+
+Machine status example:
+```json
+{
+  "wifiState": "connected",
+  "ssid": "MyNetwork",
+  "ip": "192.168.1.100"
 }
 ```
 
