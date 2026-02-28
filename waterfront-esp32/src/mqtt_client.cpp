@@ -34,11 +34,17 @@ void mqtt_publish_status() {
     DynamicJsonDocument doc(256);
     doc["state"] = "idle";
     doc["battery"] = 92;
-    doc["kayakPresent"] = true;
     doc["connType"] = "wifi";
     String payload;
     serializeJson(doc, payload);
     char topic[64];
     snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", MACHINE_ID);
     mqttClient.publish(topic, payload.c_str(), true);  // Retained publish for machine status
+}
+
+// New function for publishing slot-specific status (e.g., booked, gateState)
+void mqtt_publish_slot_status(int slotId, const char* jsonPayload) {
+    char topic[64];
+    snprintf(topic, sizeof(topic), "waterfront/slots/%d/status", slotId);
+    mqttClient.publish(topic, jsonPayload, true);  // Retained publish for slot status
 }

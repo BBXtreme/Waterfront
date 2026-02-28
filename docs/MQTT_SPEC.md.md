@@ -13,14 +13,23 @@ Inbound (backend → ESP32)
 - `waterfront/slots/{slotId}/command`         QoS 1   JSON payload
 
 Outbound (ESP32 → backend)
-- `waterfront/slots/{slotId}/status`          QoS 0   periodic + on change
+- `waterfront/machine/{machineId}/status`     QoS 0   machine telemetry (retained) – provisioning, IP, conn type, battery etc.
+- `waterfront/slots/{slotId}/status`          QoS 0   slot telemetry (retained) – booked, gateState, bookingId etc.
 - `waterfront/slots/{slotId}/event`           QoS 1   taken / returned / error
 - `waterfront/slots/{slotId}/ack`             QoS 1   acknowledgments
-- `waterfront/machine/{machineId}/status`     QoS 0   machine telemetry (retained)
 
 ## Payload Schemas (JSON)
 
-Status (retained) example:
+Machine status (retained) example:
+```json
+{
+  "state": "idle",
+  "battery": 92,
+  "connType": "wifi"
+}
+```
+
+Slot status (retained) example:
 ```json
 {
   "slotId": 1,
@@ -36,24 +45,6 @@ Status (retained) example:
 Command example:
 ```json
 "open_gate"
-```
-
-Status telemetry (periodic, ~every 5 min):
-
-JSON
-
-```
-{
-  "slotId": 1,
-  "kayakPresent": true,
-  "locked": true,
-  "batteryPercent": 87,
-  "connection": "wifi",           // or "lte" or "offline"
-  "rssi": -58,
-  "lastEvent": "returned",
-  "uptimeMinutes": 1456,
-  "timestamp": "2026-02-28T11:43:00Z"
-}
 ```
 
 Event (on take/return/error):
@@ -75,15 +66,6 @@ Ack example:
   "slotId": 1,
   "action": "gate_opened",
   "timestamp": 1234567890
-}
-```
-
-Machine status example:
-```json
-{
-  "wifiState": "connected",
-  "ssid": "MyNetwork",
-  "ip": "192.168.1.100"
 }
 ```
 
