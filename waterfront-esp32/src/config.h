@@ -21,7 +21,7 @@
 #define STATUS_LED_PIN 2           // LED for status/provisioning indication
 #define RELAY_PIN 23               // For lock control
 #define MACHINE_ID "bremen-harbor-01"  // Unique ID
-#define MQTT_BROKER "your-mqtt-broker.com"  // Replace with actual
+#define MQTT_BROKER "broker.emqx.io"  // Consistent with MQTT_SERVER
 #define MQTT_UNLOCK_TOPIC "/kayak/" MACHINE_ID "/unlock"
 #define MQTT_STATUS_TOPIC "/kayak/" MACHINE_ID "/status"
 #define MQTT_PROVISION_TOPIC "/kayak/" MACHINE_ID "/provision/start"

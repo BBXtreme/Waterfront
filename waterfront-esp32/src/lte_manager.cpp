@@ -15,6 +15,9 @@ TinyGsmClient lteClient(modem);
 // Connectivity state (extern from main)
 extern ConnectivityState currentConn;
 
+// Extern reconnectMQTT from main
+extern void reconnectMQTT();
+
 void initLTE() {
   SerialAT.begin(LTE_MODEM_BAUD, SERIAL_8N1, LTE_MODEM_RX_PIN, LTE_MODEM_TX_PIN);
   pinMode(LTE_MODEM_PWRKEY_PIN, OUTPUT);

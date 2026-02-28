@@ -31,7 +31,7 @@ TaskHandle_t mqttTaskHandle;
 void setup() {
   Serial.begin(115200);
   Serial.println("WATERFRONT-ESP32: Hello from Waterfront ESP32 Kayak Controller!");
-  printf("Build successful - base ESP-IDF setup ready for MQTT integration.\n");
+  Serial.println("Build successful - base ESP-IDF setup ready for MQTT integration.");
 
   pinMode(PROVISIONING_BUTTON_PIN, INPUT_PULLUP);
   pinMode(STATUS_LED_PIN, OUTPUT);
