@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 #include "config.h"
 #include "provisioning.h"
+#include "webui_server.h"
 
 // Global MQTT client
 PubSubClient mqttClient(wifiClient);
@@ -45,7 +46,8 @@ void setup() {
 void loop() {
   checkProvisioningButton();
   if (provisioningActive) {
-    // Handle provisioning in loop if needed
+    // Handle SoftAP server if active
+    server.handleClient();
   }
   delay(100);
 }
