@@ -148,8 +148,10 @@ TEST_CASE("Start Rental Timer", "[deposit]") {
     // Start rental for 2 hours
     startRental(1, 7200);
 
-    // Verify timer added (check activeTimers size if accessible, or assume via behavior)
-    REQUIRE(true);  // Placeholder; in real test, expose activeTimers or check via checkOverdue
+    // Verify timer added
+    REQUIRE(activeTimers.size() == 1);
+    REQUIRE(activeTimers[0].compartmentId == 1);
+    REQUIRE(activeTimers[0].durationSec == 7200);
 }
 
 // Test check overdue (no overdue)
@@ -170,7 +172,7 @@ TEST_CASE("Check Overdue - No Overdue", "[deposit]") {
     checkOverdue();
 
     // Verify no action (timers still active)
-    REQUIRE(true);  // Placeholder
+    REQUIRE(activeTimers.size() == 1);
 }
 
 // Test check overdue (overdue)
@@ -179,6 +181,7 @@ TEST_CASE("Check Overdue - Overdue", "[deposit]") {
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
     g_config.system.gracePeriodSec = 3600;  // 1 hour
+    g_config.location.code = "harbor-01";
 
     // Call init
     deposit_init();
@@ -190,6 +193,10 @@ TEST_CASE("Check Overdue - Overdue", "[deposit]") {
     // Call check_overdue
     checkOverdue();
 
-    // Verify timer removed (overdue handling)
-    REQUIRE(true);  // Placeholder
+    // Verify auto-lock publish
+    REQUIRE(mockMqttClient.publishCount == 1);
+    REQUIRE(mockMqttClient.lastPublishedTopic == "waterfront/locations/harbor-01/returnConfirm");
+    REQUIRE(mockMqttClient.lastPublishedPayload.contains("\"action\":\"autoLock\""));
+    // Verify timer removed
+    REQUIRE(activeTimers.size() == 0);
 }

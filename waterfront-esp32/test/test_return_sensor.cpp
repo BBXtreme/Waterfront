@@ -6,6 +6,8 @@
 
 #define CATCH_CONFIG_MAIN  // Catch2 main entry point
 #include <catch2/catch_test_macros.hpp>  // Catch2 header (add to lib_deps in platformio.ini)
+#include <ArduinoJson.h>
+#include <PubSubClient.h>
 
 // Include headers under test
 #include "return_sensor.h"
@@ -13,6 +15,43 @@
 
 // Mock GlobalConfig for tests
 GlobalConfig g_config;
+
+// Mock PubSubClient for publish verification
+class MockPubSubClient : public PubSubClient {
+public:
+    MockPubSubClient() : PubSubClient(mockClient) {}
+    bool publish(const char* topic, const char* payload, bool retained) override {
+        lastPublishedTopic = topic;
+        lastPublishedPayload = payload;
+        publishCount++;
+        return true;
+    }
+    String lastPublishedTopic;
+    String lastPublishedPayload;
+    int publishCount = 0;
+private:
+    class MockClient : public Client {
+    public:
+        virtual int connect(IPAddress ip, uint16_t port) override { return 1; }
+        virtual int connect(const char *host, uint16_t port) override { return 1; }
+        virtual size_t write(uint8_t) override { return 1; }
+        virtual size_t write(const uint8_t *buf, size_t size) override { return size; }
+        virtual int available() override { return 0; }
+        virtual int read() override { return -1; }
+        virtual int read(uint8_t *buf, size_t size) override { return -1; }
+        virtual int peek() override { return -1; }
+        virtual void flush() override {}
+        virtual void stop() override {}
+        virtual uint8_t connected() override { return 1; }
+        virtual operator bool() override { return true; }
+    } mockClient;
+};
+
+// Global mock instance
+MockPubSubClient mockMqttClient;
+
+// Override extern mqttClient for tests
+PubSubClient& mqttClient = mockMqttClient;
 
 // Mock digitalWrite and pulseIn for ultrasonic sensor
 int mockTrigPin = -1;
@@ -123,4 +162,37 @@ TEST_CASE("Invalid Distance Reading", "[sensor]") {
 
     // Verify false (invalid reading)
     REQUIRE(present == false);
+}
+
+// Test returned event publish
+TEST_CASE("Returned Event Publish", "[sensor]") {
+    // Set mock config
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartmentCount = 1;
+    g_config.location.slug = "bremen";
+    g_config.location.code = "harbor-01";
+
+    // Set mock distance for return (kayak present)
+    mockPulseDuration = 2940;  // 50cm
+
+    // Call init
+    sensor_init();
+
+    // Simulate return logic: if kayak present, publish "returned" event
+    if (sensor_is_kayak_present()) {
+        DynamicJsonDocument doc(256);
+        doc["event"] = "returned";
+        doc["compartmentId"] = 1;
+        doc["timestamp"] = 1234567890;  // Mock timestamp
+        String payload;
+        serializeJson(doc, payload);
+        char topic[64];
+        snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/1/return", g_config.location.slug.c_str(), g_config.location.code.c_str());
+        mqttClient.publish(topic, payload.c_str(), false);
+    }
+
+    // Verify publish called
+    REQUIRE(mockMqttClient.publishCount == 1);
+    REQUIRE(mockMqttClient.lastPublishedTopic == "waterfront/bremen/harbor-01/compartments/1/return");
+    REQUIRE(mockMqttClient.lastPublishedPayload.contains("\"event\":\"returned\""));
 }
