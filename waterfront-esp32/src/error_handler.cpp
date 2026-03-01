@@ -34,6 +34,17 @@ void fatal_error(const char* msg, esp_err_t code) {
         ESP_LOGI("FATAL", "Published fatal error to debug topic");
     }
 
+    // Publish to alert topic
+    DynamicJsonDocument alertDoc(256);
+    alertDoc["error"] = msg;
+    alertDoc["code"] = code;
+    String alertPayload;
+    serializeJson(alertDoc, alertPayload);
+    char alertTopic[96];
+    snprintf(alertTopic, sizeof(alertTopic), "waterfront/%s/%s/alert", g_config.location.slug.c_str(), g_config.location.code.c_str());
+    mqttClient.publish(alertTopic, alertPayload.c_str(), false);
+    ESP_LOGI("FATAL", "Published alert to %s", alertTopic);
+
     delay(5000);
     esp_restart();
 }
