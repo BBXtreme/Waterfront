@@ -96,6 +96,25 @@ void debug_task(void *pvParameters) {
     }
 }
 
+// Function to read battery level (ADC)
+int readBatteryLevel() {
+    // Assume ADC pin from config (e.g., GPIO 34)
+    // Add voltage divider for battery > 3.3V
+    int adcValue = analogRead(34);  // Example pin
+    // Convert to percentage (calibrate based on hardware)
+    int batteryPercent = map(adcValue, 0, 4095, 0, 100);
+    return batteryPercent;
+}
+
+// Function to enter deep sleep
+void enterDeepSleep() {
+    ESP_LOGI("MAIN", "Entering deep sleep due to low battery");
+    // Configure wake sources: timer (15 min) or GPIO (button)
+    esp_sleep_enable_timer_wakeup(15 * 60 * 1000000);  // 15 minutes
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, 0);  // Wake on GPIO 0 low
+    esp_deep_sleep_start();
+}
+
 void setup() {
     Serial.begin(115200);
     ESP_LOGI("MAIN", "WATERFRONT starting...");
@@ -157,6 +176,16 @@ void loop() {
 
     // Other loop tasks
     // ...
+
+    // Check battery level periodically
+    static unsigned long lastBatteryCheck = 0;
+    if (millis() - lastBatteryCheck > 60000) {  // Every minute
+        int batteryLevel = readBatteryLevel();
+        if (batteryLevel < g_config.system.batteryLowThresholdPercent) {
+            enterDeepSleep();
+        }
+        lastBatteryCheck = millis();
+    }
 
     // Reset watchdog every loop iteration
     esp_task_wdt_reset();

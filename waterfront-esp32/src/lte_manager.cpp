@@ -70,3 +70,26 @@ int lte_get_signal() {
 bool lte_is_connected() {
     return modem.isGprsConnected();
 }
+
+// Read solar voltage (ADC)
+float readSolarVoltage() {
+    // Assume ADC pin from config (e.g., GPIO 35)
+    int adcValue = analogRead(35);  // Example pin
+    // Convert to voltage (calibrate based on divider)
+    float voltage = (adcValue / 4095.0) * 3.3 * (10.0 / 3.3);  // Example divider 10k/3.3k
+    return voltage;
+}
+
+// Check if LTE should be disabled due to low solar
+bool shouldDisableLTE() {
+    float solarVoltage = readSolarVoltage();
+    return solarVoltage < g_config.system.solarVoltageMin;
+}
+
+// Power down modem if WiFi connected and idle, or low solar
+void lte_power_management() {
+    if (WiFi.status() == WL_CONNECTED && !mqttClient.connected() && shouldDisableLTE()) {
+        lte_power_down();
+        ESP_LOGI("LTE", "Powered down due to WiFi connected and low solar voltage");
+    }
+}
