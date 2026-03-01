@@ -136,46 +136,6 @@ void debug_task(void *pvParameters) {
     }
 }
 
-// Function to read battery level: Reads ADC and maps to percentage.
-// Assumes voltage divider for battery > 3.3V.
-// Edge cases: ADC read failure, invalid values.
-int readBatteryLevel() {
-    int adcValue = analogRead(34);  // ADC pin for battery
-    if (adcValue < 0 || adcValue > 4095) {
-        ESP_LOGE("MAIN", "Invalid ADC value for battery: %d", adcValue);
-        return 0;  // Fallback
-    }
-    // Map ADC (0-4095) to percentage (0-100), calibrate as needed
-    int batteryPercent = map(adcValue, 0, 4095, 0, 100);
-    return batteryPercent;
-}
-
-// Function to read solar voltage: Reads ADC and calculates voltage.
-// Assumes 10k/3.3k divider for solar panel.
-// Edge cases: ADC read failure, invalid values.
-float readSolarVoltage() {
-    int adcValue = analogRead(34);  // ADC pin for solar (same as battery in example)
-    if (adcValue < 0 || adcValue > 4095) {
-        ESP_LOGE("MAIN", "Invalid ADC value for solar: %d", adcValue);
-        return 0.0f;  // Fallback
-    }
-    // Calculate voltage: ADC * (3.3V / 4095) * divider ratio
-    float voltage = (adcValue / 4095.0) * 3.3 * (10.0 / 3.3);
-    return voltage;
-}
-
-// Function to enter deep sleep: Configures wake sources and enters sleep.
-// Wakes on timer (60s) or GPIO 0 low.
-// Edge cases: already in sleep, wake source conflicts.
-void enterDeepSleep() {
-    ESP_LOGI("MAIN", "Entering deep sleep due to low power conditions");
-    // Enable timer wakeup for 60 seconds
-    esp_sleep_enable_timer_wakeup(60 * 1000000);
-    // Enable GPIO wakeup on pin 0 low
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, 0);
-    esp_deep_sleep_start();  // Enter deep sleep
-}
-
 // Setup function: Initializes hardware, loads config, sets up tasks and OTA.
 // Edge cases: LittleFS mount failure, config load failure, task creation failure.
 void setup() {
@@ -215,15 +175,6 @@ void setup() {
     ArduinoOTA.onStart([]() {
         String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
         ESP_LOGI("OTA", "Start updating %s", type.c_str());
-        // Save current FW_VERSION to NVS before OTA
-        Preferences preferences;
-        if (preferences.begin("ota", false)) {
-            preferences.putString("prev_version", FW_VERSION);
-            preferences.end();
-            ESP_LOGI("OTA", "Saved previous FW version to NVS: %s", FW_VERSION);
-        } else {
-            ESP_LOGE("OTA", "Failed to begin NVS for OTA save");
-        }
         // Publish OTA start event
         if (mqttClient.connected()) {
             DynamicJsonDocument doc(256);
@@ -241,15 +192,6 @@ void setup() {
     });
     ArduinoOTA.onEnd([]() {
         ESP_LOGI("OTA", "End");
-        // Clear saved version on successful OTA
-        Preferences preferences;
-        if (preferences.begin("ota", false)) {
-            preferences.remove("prev_version");
-            preferences.end();
-            ESP_LOGI("OTA", "Cleared previous FW version from NVS after successful update");
-        } else {
-            ESP_LOGE("OTA", "Failed to begin NVS for OTA clear");
-        }
         // Publish OTA end event
         if (mqttClient.connected()) {
             DynamicJsonDocument doc(256);
@@ -294,18 +236,11 @@ void setup() {
         else if (error == OTA_CONNECT_ERROR) ESP_LOGE("OTA", "Connect Failed");
         else if (error == OTA_RECEIVE_ERROR) ESP_LOGE("OTA", "Receive Failed");
         else if (error == OTA_END_ERROR) ESP_LOGE("OTA", "End Failed");
-        // Publish error event with previous version for rollback info
+        // Publish error event
         if (mqttClient.connected()) {
-            Preferences preferences;
-            String prevVersion = "";
-            if (preferences.begin("ota", true)) {  // Read-only
-                prevVersion = preferences.getString("prev_version", "");
-                preferences.end();
-            }
             DynamicJsonDocument doc(256);
             doc["event"] = "ota_error";
             doc["error_code"] = error;
-            doc["prev_version"] = prevVersion;
             doc["timestamp"] = millis();
             String payload;
             serializeJson(doc, payload);
@@ -371,6 +306,28 @@ void loop() {
         if (solarVoltage < 0.0f || solarVoltage > 10.0f) {
             ESP_LOGE("MAIN", "Invalid solar voltage: %f", solarVoltage);
             solarVoltage = 5.0f;  // Fallback
+        }
+        // Publish alert if low power
+        if (batteryPercent < g_config.system.batteryLowThresholdPercent || solarVoltage < g_config.system.solarVoltageMin) {
+            if (mqttClient.connected()) {
+                DynamicJsonDocument doc(256);
+                doc["alert"] = "low_power";
+                doc["batteryPercent"] = batteryPercent;
+                doc["solarVoltage"] = solarVoltage;
+                doc["timestamp"] = millis();
+                String payload;
+                serializeJson(doc, payload);
+                char topic[96];
+                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/alert", g_config.location.slug.c_str(), g_config.location.code.c_str());
+                if (len < sizeof(topic)) {
+                    mqttClient.publish(topic, payload.c_str(), false);
+                    ESP_LOGW("MAIN", "Published low power alert");
+                } else {
+                    ESP_LOGE("MAIN", "Alert topic too long, skipping publish");
+                }
+            } else {
+                ESP_LOGW("MAIN", "MQTT not connected, skipping low power alert");
+            }
         }
         // Enter deep sleep if battery low or solar low
         if (batteryPercent < g_config.system.batteryLowThresholdPercent || solarVoltage < g_config.system.solarVoltageMin) {
