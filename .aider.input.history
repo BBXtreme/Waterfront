@@ -5960,3 +5960,39 @@
 
 # 2026-03-01 14:31:00.461204
 +/commit
+
+# 2026-03-01 14:31:41.260295
++review if Add watchdog + error handler improvments to code was done and commited properly
+
+# 2026-03-01 14:32:13.259469
++review changes to code if perfect, debug and test if necessary
+
+# 2026-03-01 14:32:35.280675
++any changes?
+
+# 2026-03-01 14:33:05.698794
++Harden MQTT TLS with CA cert and add remote error alerting.
++
++1. In mqtt_client.cpp: load CA cert from LittleFS, setCACert, setSecure(true).
++2. In error_handler: publish to /alert topic before restart.
++
++Show diffs for mqtt_client.cpp + error_handler.cpp.
++Commit: "security: full TLS CA cert loading + remote error alerting". confirm successfull comit
+
+# 2026-03-01 14:33:08.547479
++all
+
+# 2026-03-01 14:33:47.699858
++always show diff from now on
+
+# 2026-03-01 14:33:56.413627
++Harden MQTT TLS with CA cert and add remote error alerting.
++
++1. In mqtt_client.cpp: load CA cert from LittleFS, setCACert, setSecure(true).
++2. In error_handler: publish to /alert topic before restart.
++
++Show diffs for mqtt_client.cpp + error_handler.cpp.
++Commit: "security: full TLS CA cert loading + remote error alerting"
+
+# 2026-03-01 14:34:35.865383
++/commit
