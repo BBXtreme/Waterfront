@@ -10,6 +10,7 @@
 #define CONFIG_LOADER_H
 
 #include <Arduino.h>
+#include <vector>
 
 // Structs for configuration
 struct Mqtt {
