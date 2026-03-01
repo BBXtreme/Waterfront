@@ -1,4 +1,5 @@
  /**
  * @file config_loader.h
  * @brief Header for runtime configuration loading from LittleFS JSON.
- * @author BBXtreme +
+ * @author BBXtreme + Grok
+ * @date 2026
