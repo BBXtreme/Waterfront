@@ -3,7 +3,8 @@
  * @brief Main entry point for WATERFRONT ESP32 Kayak Rental Controller.
  * @author BBXtreme + Grok
  * @date 2026-02-28
- * @note Initializes LittleFS, loads config.
+ * @note Initializes LittleFS, loads config, sets up tasks for MQTT, OTA, factory reset, and power management.
+ *       Main loop handles MQTT, OTA, LTE power management, and periodic power checks for deep sleep.
  */
 
 #include <Arduino.h>
@@ -25,16 +26,17 @@
 // Firmware version define
 const char* FW_VERSION = "0.9.2-beta";
 
-// Factory reset task
+// Factory reset task: Monitors GPIO 0 for long press to trigger factory reset.
+// Resets config and NVS, publishes event, and restarts ESP32.
 void factory_reset_task(void *pvParameters) {
     const int RESET_BUTTON_PIN = 0;  // GPIO 0 (boot button)
-    const unsigned long RESET_HOLD_TIME_MS = 5000;  // 5 seconds
-    pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);
+    const unsigned long RESET_HOLD_TIME_MS = 5000;  // 5 seconds hold time
+    pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);  // Pull-up for active low
     unsigned long pressStartTime = 0;
     bool buttonPressed = false;
 
     while (1) {
-        esp_task_wdt_reset();  // Reset watchdog at start of loop
+        esp_task_wdt_reset();  // Reset watchdog to prevent timeout
         int buttonState = digitalRead(RESET_BUTTON_PIN);
         if (buttonState == LOW) {  // Button pressed (active low)
             if (!buttonPressed) {
@@ -42,9 +44,9 @@ void factory_reset_task(void *pvParameters) {
                 buttonPressed = true;
                 ESP_LOGI("MAIN", "Reset button pressed, hold for 5 seconds to trigger factory reset");
             } else if (millis() - pressStartTime > RESET_HOLD_TIME_MS) {
-                // Factory reset triggered
+                // Factory reset triggered after 5s hold
                 ESP_LOGW("MAIN", "Factory reset triggered by long-press on GPIO 0");
-                // Publish to MQTT debug topic
+                // Publish event to MQTT for remote monitoring
                 DynamicJsonDocument doc(256);
                 doc["event"] = "factory_reset";
                 doc["timestamp"] = millis();
@@ -53,102 +55,106 @@ void factory_reset_task(void *pvParameters) {
                 char topic[96];
                 snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
                 mqttClient.publish(topic, payload.c_str(), false);
-                // Remove config and erase NVS
+                // Remove config file and erase NVS for clean reset
                 LittleFS.remove("/config.json");
                 nvs_flash_erase();
                 ESP_LOGI("MAIN", "Config removed and NVS erased, restarting...");
-                delay(1000);
+                delay(1000);  // Brief delay before restart
                 esp_restart();
             }
         } else {
-            buttonPressed = false;
+            buttonPressed = false;  // Reset state on release
         }
-        vTaskDelay(pdMS_TO_TICKS(100));  // Check every 100ms
+        vTaskDelay(pdMS_TO_TICKS(100));  // Check every 100ms for responsiveness
     }
 }
 
-// Overdue check task
+// Overdue check task: Periodically checks for overdue rentals and triggers auto-lock.
 void overdue_check_task(void *pvParameters) {
     while (1) {
-        esp_task_wdt_reset();  // Reset watchdog at start of loop
-        checkOverdue();
+        esp_task_wdt_reset();  // Reset watchdog
+        checkOverdue();  // Check and handle overdue rentals
         vTaskDelay(pdMS_TO_TICKS(10000));  // Check every 10 seconds
     }
 }
 
-// Debug task for remote health telemetry
+// Debug task: Publishes health telemetry every 60s if debug mode is enabled.
+// Includes uptime, heap, firmware version, battery, tasks, and reconnects.
 void debug_task(void *pvParameters) {
     while (1) {
-        esp_task_wdt_reset();  // Reset watchdog at start of loop
+        esp_task_wdt_reset();  // Reset watchdog
         if (g_config.debugMode) {
-            // Publish debug telemetry
+            // Collect telemetry data
             DynamicJsonDocument doc(512);
             doc["uptime"] = millis() / 1000;  // Uptime in seconds
-            doc["heapFree"] = ESP.getFreeHeap();
-            doc["fwVersion"] = FW_VERSION;
-            doc["batteryPercent"] = readBatteryLevel();
-            doc["tasks"] = uxTaskGetNumberOfTasks();
-            doc["reconnects"] = getMqttReconnectCount();
+            doc["heapFree"] = ESP.getFreeHeap();  // Free heap memory
+            doc["fwVersion"] = FW_VERSION;  // Firmware version
+            doc["batteryPercent"] = readBatteryLevel();  // Battery percentage
+            doc["tasks"] = uxTaskGetNumberOfTasks();  // Number of active tasks
+            doc["reconnects"] = getMqttReconnectCount();  // MQTT reconnect count
             String payload;
             serializeJson(doc, payload);
+            // Publish to debug topic
             char topic[96];
             snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
             mqttClient.publish(topic, payload.c_str(), false);  // Not retained
             ESP_LOGI("DEBUG", "Published debug telemetry: %s", payload.c_str());
         }
-        vTaskDelay(pdMS_TO_TICKS(60000));  // Every 60 seconds (60000 ms)
+        vTaskDelay(pdMS_TO_TICKS(60000));  // Every 60 seconds
     }
 }
 
-// Function to read battery level (ADC)
+// Function to read battery level: Reads ADC and maps to percentage.
+// Assumes voltage divider for battery > 3.3V.
 int readBatteryLevel() {
-    // Assume ADC pin from config (e.g., GPIO 34)
-    // Add voltage divider for battery > 3.3V
-    int adcValue = analogRead(34);  // Example pin
-    // Convert to percentage (calibrate based on hardware)
+    int adcValue = analogRead(34);  // ADC pin for battery
+    // Map ADC (0-4095) to percentage (0-100), calibrate as needed
     int batteryPercent = map(adcValue, 0, 4095, 0, 100);
     return batteryPercent;
 }
 
-// Function to read solar voltage
+// Function to read solar voltage: Reads ADC and calculates voltage.
+// Assumes 10k/3.3k divider for solar panel.
 float readSolarVoltage() {
-    // Assume ADC pin from config (e.g., GPIO 34)
-    int adcValue = analogRead(34);  // Example pin
-    // Convert to voltage (calibrate based on divider)
-    float voltage = (adcValue / 4095.0) * 3.3 * (10.0 / 3.3);  // Example divider 10k/3.3k
+    int adcValue = analogRead(34);  // ADC pin for solar (same as battery in example)
+    // Calculate voltage: ADC * (3.3V / 4095) * divider ratio
+    float voltage = (adcValue / 4095.0) * 3.3 * (10.0 / 3.3);
     return voltage;
 }
 
-// Function to enter deep sleep
+// Function to enter deep sleep: Configures wake sources and enters sleep.
+// Wakes on timer (60s) or GPIO 0 low.
 void enterDeepSleep() {
     ESP_LOGI("MAIN", "Entering deep sleep due to low power conditions");
-    // Configure wake sources: timer (60 s) or GPIO (button)
-    esp_sleep_enable_timer_wakeup(60 * 1000000);  // 60 seconds
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, 0);  // Wake on GPIO 0 low
-    esp_deep_sleep_start();
+    // Enable timer wakeup for 60 seconds
+    esp_sleep_enable_timer_wakeup(60 * 1000000);
+    // Enable GPIO wakeup on pin 0 low
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, 0);
+    esp_deep_sleep_start();  // Enter deep sleep
 }
 
+// Setup function: Initializes hardware, loads config, sets up tasks and OTA.
 void setup() {
     Serial.begin(115200);
     ESP_LOGI("MAIN", "WATERFRONT starting...");
 
-    // Initialize task watchdog timer for stability (12s timeout)
-    esp_task_wdt_init(12, true);  // 12s timeout, panic/restart on timeout
-    esp_task_wdt_add(NULL);       // Subscribe main task
+    // Initialize watchdog timer for stability (12s timeout)
+    esp_task_wdt_init(12, true);
+    esp_task_wdt_add(NULL);  // Add main task to watchdog
 
-    // Initialize LittleFS early
+    // Initialize LittleFS for config storage
     if (!LittleFS.begin()) {
         fatal_error("LittleFS mount failed");
     } else {
         ESP_LOGI("MAIN", "LittleFS mounted");
     }
 
-    // Load runtime config
+    // Load configuration from JSON, fallback to defaults
     if (!loadConfig()) {
         ESP_LOGW("MAIN", "Using defaults");
     }
 
-    // Initialize compartment manager (now uses loaded config)
+    // Initialize compartment manager with loaded config
     compartment_init();
 
     // Initialize MQTT handler
@@ -157,13 +163,13 @@ void setup() {
     // Initialize deposit logic
     deposit_init();
 
-    // Initialize OTA
+    // Initialize OTA with callbacks for remote monitoring
     ArduinoOTA.setHostname((g_config.mqtt.clientIdPrefix + "-ota").c_str());
-    ArduinoOTA.setPassword("admin");  // Set a password for security
+    ArduinoOTA.setPassword("admin");  // Password for security
     ArduinoOTA.onStart([]() {
         String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
         ESP_LOGI("OTA", "Start updating %s", type.c_str());
-        // Publish OTA start to MQTT
+        // Publish OTA start event
         DynamicJsonDocument doc(256);
         doc["event"] = "ota_start";
         doc["type"] = type;
@@ -176,7 +182,7 @@ void setup() {
     });
     ArduinoOTA.onEnd([]() {
         ESP_LOGI("OTA", "End");
-        // Publish OTA end to MQTT
+        // Publish OTA end event
         DynamicJsonDocument doc(256);
         doc["event"] = "ota_end";
         doc["timestamp"] = millis();
@@ -188,7 +194,7 @@ void setup() {
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
         ESP_LOGI("OTA", "Progress: %u%%", (progress / (total / 100)));
-        // Publish OTA progress to MQTT (throttle to every 10%)
+        // Publish progress every 10% to avoid spam
         static unsigned int lastProgress = 0;
         unsigned int percent = progress / (total / 100);
         if (percent >= lastProgress + 10) {
@@ -206,12 +212,13 @@ void setup() {
     });
     ArduinoOTA.onError([](ota_error_t error) {
         ESP_LOGE("OTA", "Error[%u]: ", error);
+        // Log specific errors
         if (error == OTA_AUTH_ERROR) ESP_LOGE("OTA", "Auth Failed");
         else if (error == OTA_BEGIN_ERROR) ESP_LOGE("OTA", "Begin Failed");
         else if (error == OTA_CONNECT_ERROR) ESP_LOGE("OTA", "Connect Failed");
         else if (error == OTA_RECEIVE_ERROR) ESP_LOGE("OTA", "Receive Failed");
         else if (error == OTA_END_ERROR) ESP_LOGE("OTA", "End Failed");
-        // Publish OTA error to MQTT
+        // Publish error event
         DynamicJsonDocument doc(256);
         doc["event"] = "ota_error";
         doc["error_code"] = error;
@@ -237,7 +244,7 @@ void setup() {
         fatal_error("Failed to create overdue task");
     }
 
-    // Create debug task if debugMode enabled
+    // Create debug task if debug mode enabled
     if (g_config.debugMode) {
         task_ret = xTaskCreate(debug_task, "debug", 4096, NULL, 1, NULL);  // Low priority
         if (task_ret != pdPASS) {
@@ -247,28 +254,28 @@ void setup() {
         }
     }
 
-    // Other initializations (WiFi, sensors, etc.)
-    // ...
+    // Other initializations (WiFi, sensors, etc.) can be added here
 }
 
+// Main loop: Handles MQTT, OTA, LTE power, and power checks.
 void loop() {
-    // MQTT loop
+    // Process MQTT messages
     mqtt_loop();
 
-    // Handle OTA
+    // Handle OTA updates
     ArduinoOTA.handle();
 
-    // LTE power management
+    // Manage LTE power based on conditions
     lte_power_management();
 
-    // Other loop tasks
-    // ...
+    // Other loop tasks can be added here
 
-    // Check power conditions periodically
+    // Periodic power check for deep sleep
     static unsigned long lastPowerCheck = 0;
     if (millis() - lastPowerCheck > 60000) {  // Every minute
         int batteryPercent = readBatteryLevel();
         float solarVoltage = readSolarVoltage();
+        // Enter deep sleep if battery low or solar low
         if (batteryPercent < g_config.system.batteryLowThresholdPercent || solarVoltage < g_config.system.solarVoltageMin) {
             enterDeepSleep();
         }
