@@ -5,12 +5,19 @@
 // Run tests with PlatformIO: pio test
 
 #define CATCH_CONFIG_MAIN  // Catch2 main entry point
-#include <catch2/catch_test_macros.hpp>  // Catch2 header (add to lib_deps in platformio.ini)
+#include <catch2/catch_test_macros.hpp>  // Catch2 header (add to lib_deps in platformio.ini: "catchorg/Catch2@^3.4.0")
 
 // Include headers under test
 #include "compartment_manager.h"
 #include "config_loader.h"
 #include <ArduinoJson.h>
+
+// Mock GlobalConfig for tests
+GlobalConfig g_config;
+void loadConfig() { // Mock load
+    g_config.compartments.push_back({1, 12, 13, 14, 15, 16, 17});
+    g_config.compartments.push_back({2, 15, 16, 17, 18, 19, 20});
+}
 
 // Mock LittleFS for config loading
 class MockLittleFS {

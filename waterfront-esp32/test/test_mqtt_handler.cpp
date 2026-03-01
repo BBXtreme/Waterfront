@@ -15,6 +15,14 @@
 #include <ArduinoJson.h>
 #include <cstring>
 
+// Mock GlobalConfig for tests
+#include "config_loader.h"
+GlobalConfig g_config;
+void loadConfig() { // Mock load
+    g_config.location.slug = "bremen";
+    g_config.location.code = "harbor-01";
+}
+
 // Mock Client for PubSubClient
 class MockClient : public Client {
 public:
@@ -95,6 +103,9 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 
 // Test retained status payload simulation
 TEST_CASE("Simulate Retained Status Payload and Verify Ack Publish", "[mqtt]") {
+    // Load mock config
+    loadConfig();
+
     // Reset mock state
     mockMqttClient.publishCount = 0;
     mockMqttClient.lastPublishedTopic = "";
@@ -119,6 +130,9 @@ TEST_CASE("Simulate Retained Status Payload and Verify Ack Publish", "[mqtt]") {
 
 // Test command payload simulation
 TEST_CASE("Simulate Command Payload and Verify Ack", "[mqtt]") {
+    // Load mock config
+    loadConfig();
+
     // Reset mock state
     mockMqttClient.publishCount = 0;
     mockMqttClient.lastPublishedTopic = "";
@@ -141,6 +155,9 @@ TEST_CASE("Simulate Command Payload and Verify Ack", "[mqtt]") {
 
 // Test CRC validation failure
 TEST_CASE("CRC Validation Failure", "[mqtt]") {
+    // Load mock config
+    loadConfig();
+
     // Reset mock state
     mockMqttClient.publishCount = 0;
 

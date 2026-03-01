@@ -11,6 +11,13 @@
 #include "gate_control.h"
 #include <Servo.h>
 
+// Mock GlobalConfig for tests
+#include "config_loader.h"
+GlobalConfig g_config;
+void loadConfig() { // Mock load
+    g_config.compartments.push_back({1, 12, 13, 14, 15, 16, 17});
+}
+
 // Mock Servo class
 class MockServo : public Servo {
 public:
@@ -39,6 +46,9 @@ unsigned long mockMillis = 0;
 
 // Test gate initialization
 TEST_CASE("Gate Initialization", "[gate]") {
+    // Load mock config
+    loadConfig();
+
     // Reset mocks
     for (int i = 0; i < MAX_COMPARTMENTS; i++) {
         mockServos[i].attachedPin = -1;
@@ -54,6 +64,9 @@ TEST_CASE("Gate Initialization", "[gate]") {
 
 // Test open gate state transition
 TEST_CASE("Open Gate State Transition", "[gate]") {
+    // Load mock config
+    loadConfig();
+
     // Reset mocks
     mockMillis = 0;
     mockServos[0].lastWriteAngle = -1;
@@ -76,6 +89,9 @@ TEST_CASE("Open Gate State Transition", "[gate]") {
 
 // Test close gate state transition
 TEST_CASE("Close Gate State Transition", "[gate]") {
+    // Load mock config
+    loadConfig();
+
     // Reset mocks
     mockMillis = 0;
     mockServos[0].lastWriteAngle = -1;
@@ -89,6 +105,9 @@ TEST_CASE("Close Gate State Transition", "[gate]") {
 
 // Test get gate state
 TEST_CASE("Get Gate State", "[gate]") {
+    // Load mock config
+    loadConfig();
+
     // Call get state for compartment 1
     const char* state = getCompartmentGateState(1);
 

@@ -10,10 +10,7 @@
 #include <Servo.h>
 
 // Pin definitions for compartments (adjust in config.h if needed)
-#define SERVO_PIN_1 12  // GPIO for servo on compartment 1
-#define LIMIT_OPEN_PIN_1 13  // Limit switch for open position
-#define LIMIT_CLOSE_PIN_1 14  // Limit switch for closed position
-// Add more for additional compartments as needed
+// Note: Pins are now loaded from g_config.compartments[idx].servoPin, etc.
 
 // Servo objects (array for MAX_COMPARTMENTS)
 #define MAX_COMPARTMENTS 10
