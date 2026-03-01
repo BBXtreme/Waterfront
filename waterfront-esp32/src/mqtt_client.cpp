@@ -63,6 +63,7 @@ esp_err_t mqtt_init() {
             ESP_LOGE("MQTT", "CA cert path empty – skipping TLS");
             tlsEnabled = false;
         } else {
+            ESP_LOGI("MQTT", "Attempting to load CA cert from %s", g_config.mqtt.caCertPath.c_str());
             // Load CA cert from LittleFS
             File ca = LittleFS.open(g_config.mqtt.caCertPath, "r");
             if (!ca) {
@@ -79,6 +80,7 @@ esp_err_t mqtt_init() {
                     ESP_LOGI("MQTT", "Loaded CA cert, size=%d", caStr.length());
                     // Load client cert/key if paths provided
                     if (g_config.mqtt.clientCertPath.length() > 0) {
+                        ESP_LOGI("MQTT", "Attempting to load client cert from %s", g_config.mqtt.clientCertPath.c_str());
                         File cert = LittleFS.open(g_config.mqtt.clientCertPath, "r");
                         File key = LittleFS.open(g_config.mqtt.clientKeyPath, "r");
                         if (!cert || !key) {
