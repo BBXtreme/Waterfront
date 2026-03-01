@@ -340,7 +340,7 @@ GlobalConfig getDefaultConfig() {
     ESP_LOGI("CONFIG", "Generating default config");
     GlobalConfig def;
     def.version = "1.0";
-    def.mqtt.broker = "192.168.178.50";
+    def.mqtt.broker = "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud";
     def.mqtt.port = 8883;
     def.mqtt.username = "mqttuser";
     def.mqtt.password = "strongpass123";

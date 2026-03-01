@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "mqtt": {
-    "broker": "192.168.178.50",
+    "broker": "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud",
     "port": 8883,
     "username": "mqttuser",
     "password": "strongpass123",
