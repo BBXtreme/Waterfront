@@ -146,11 +146,20 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
         ESP_LOGI("MQTT", "OTA update received: %s", msg.c_str());
         // Assume msg is the URL
         t_httpUpdate_return ret = ESPhttpUpdate.update(msg);
-        if (ret == HTTP_UPDATE_OK) {
-            ESP_LOGI("OTA", "Update successful, restarting");
-            ESP.restart();
-        } else {
-            ESP_LOGE("OTA", "Update failed: %d", ret);
+        switch (ret) {
+            case HTTP_UPDATE_FAILED:
+                ESP_LOGE("OTA", "Update failed: %s", ESPhttpUpdate.getLastErrorString().c_str());
+                break;
+            case HTTP_UPDATE_NO_UPDATES:
+                ESP_LOGI("OTA", "No updates available");
+                break;
+            case HTTP_UPDATE_OK:
+                ESP_LOGI("OTA", "Update successful, restarting");
+                ESP.restart();
+                break;
+            default:
+                ESP_LOGE("OTA", "Unknown update result: %d", ret);
+                break;
         }
         return;
     }
