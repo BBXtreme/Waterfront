@@ -17,8 +17,50 @@
 #include <esp_ota_ops.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <nvs_flash.h>
 
 // Include other headers as needed
+
+// Factory reset task
+void factory_reset_task(void *pvParameters) {
+    const int RESET_BUTTON_PIN = 0;  // GPIO 0 (boot button)
+    const unsigned long RESET_HOLD_TIME_MS = 5000;  // 5 seconds
+    pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);
+    unsigned long pressStartTime = 0;
+    bool buttonPressed = false;
+
+    while (1) {
+        int buttonState = digitalRead(RESET_BUTTON_PIN);
+        if (buttonState == LOW) {  // Button pressed (active low)
+            if (!buttonPressed) {
+                pressStartTime = millis();
+                buttonPressed = true;
+            } else if (millis() - pressStartTime > RESET_HOLD_TIME_MS) {
+                // Factory reset triggered
+                ESP_LOGW("MAIN", "Factory reset triggered by long-press on GPIO 0");
+                // Publish to MQTT debug topic
+                DynamicJsonDocument doc(256);
+                doc["event"] = "factory_reset";
+                doc["timestamp"] = millis();
+                String payload;
+                serializeJson(doc, payload);
+                char topic[96];
+                snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+                mqttClient.publish(topic, payload.c_str(), false);
+                // Remove config and erase NVS
+                LittleFS.remove("/config.json");
+                nvs_flash_erase();
+                ESP_LOGI("MAIN", "Config removed and NVS erased, restarting...");
+                delay(1000);
+                esp_restart();
+            }
+        } else {
+            buttonPressed = false;
+        }
+        esp_task_wdt_reset();  // Reset watchdog
+        vTaskDelay(pdMS_TO_TICKS(100));  // Check every 100ms
+    }
+}
 
 // Overdue check task
 void overdue_check_task(void *pvParameters) {
@@ -58,8 +100,8 @@ void setup() {
     Serial.begin(115200);
     ESP_LOGI("MAIN", "WATERFRONT starting...");
 
-    // Initialize task watchdog timer for stability
-    esp_task_wdt_init(15, true);  // 15s timeout, panic/restart on timeout
+    // Initialize task watchdog timer for stability (12s timeout)
+    esp_task_wdt_init(12, true);  // 12s timeout, panic/restart on timeout
     esp_task_wdt_add(NULL);       // Subscribe main task
 
     // Initialize LittleFS early
@@ -83,8 +125,14 @@ void setup() {
     // Initialize deposit logic
     deposit_init();
 
+    // Create factory reset task
+    BaseType_t task_ret = xTaskCreate(factory_reset_task, "factory_reset", 2048, NULL, 5, NULL);
+    if (task_ret != pdPASS) {
+        fatal_error("Failed to create factory reset task");
+    }
+
     // Create overdue check task
-    BaseType_t task_ret = xTaskCreate(overdue_check_task, "overdue", 2048, NULL, 4, NULL);
+    task_ret = xTaskCreate(overdue_check_task, "overdue", 2048, NULL, 4, NULL);
     if (task_ret != pdPASS) {
         fatal_error("Failed to create overdue task");
     }
