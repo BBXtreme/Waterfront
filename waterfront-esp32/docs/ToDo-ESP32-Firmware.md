@@ -129,16 +129,16 @@ This document outlines the remaining tasks to complete the ESP32 firmware for th
 
 ## Progress Tracking
 
-- [x] Basic MQTT connect/subscribe/publish
-- [x] Relay control for gates
-- [x] Ultrasonic sensor for presence
-- [x] BLE provisioning skeleton
-- [x] SoftAP provisioning skeleton
-- [x] LTE modem integration skeleton
-- [x] Config loading from LittleFS
-- [x] Watchdog for stability
-- [x] Unit tests with Catch2
-- [x] CI with GitHub Actions
+- [ ] Basic MQTT connect/subscribe/publish
+- [ ] Relay control for gates
+- [ ] Ultrasonic sensor for presence
+- [ ] BLE provisioning skeleton
+- [ ] SoftAP provisioning skeleton
+- [ ] LTE modem integration skeleton
+- [ ] Config loading from LittleFS
+- [ ] Watchdog for stability
+- [ ] Unit tests with Catch2
+- [ ] CI with GitHub Actions
 - [ ] OTA hardening (rollback, signatures)
 - [ ] Deposit auto-release
 - [ ] Production provisioning

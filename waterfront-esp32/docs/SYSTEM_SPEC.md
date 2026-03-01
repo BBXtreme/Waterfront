@@ -52,3 +52,99 @@ All settings are in `/config.json` on the ESP32's storage. This file is in JSON 
 - **other**: Extra options like offline PIN time.
 
 ### Example Config
+
+  {                                        
+
+"**mqtt**": {                                                                      
+
+"broker": "192.168.178.50",                           
+
+ "port": 8883,                                  
+
+"username": "mqttuser",                             
+
+"password": "strongpass123",                           
+
+"clientIdPrefix": "waterfront",                         
+
+"useTLS": true,                                 
+
+"caCertPath": "/ca.pem"                             
+
+},                                        
+
+"**location**": {                                  
+
+"slug": "bremen",                                
+
+"code": "harbor-01"                               
+
+},                                        
+
+"**wifiProvisioning**": {                              
+
+"fallbackSsid": "WATERFRONT-DEFAULT",                      
+
+ "fallbackPass": "defaultpass123"                         
+
+},                                        
+
+"**lte**": {                                     
+
+"apn": "internet.t-mobile.de",                          
+
+"rssiThreshold": -70                               
+
+},                                        
+
+"**ble**": {                                     
+
+"serviceUuid": "12345678-1234-1234-1234-123456789abc"              
+
+},                                        
+
+"**compartments**": [                                
+
+{                                        
+
+ "number": 1,                                  
+
+ "servoPin": 12,                                
+
+ "limitOpenPin": 13,                              
+
+ "limitClosePin": 14,                              
+
+ "ultrasonicTriggerPin": 15,                          
+
+ "ultrasonicEchoPin": 16,                            
+
+ "weightSensorPin": 17                             
+
+}                                        
+
+],                                        
+
+"**system**": {                                   
+
+"maxCompartments": 10,                              
+
+"debugMode": true,                                
+
+"gracePeriodSec": 3600,                             
+
+"batteryLowThresholdPercent": 20,                        
+
+"solarVoltageMin": 3.0                              
+
+ },                                        
+
+"**other**": {                                    
+
+"offlinePinTtlSec": 86400,                            
+
+"depositHoldAmountFallback": 50                         
+
+}                                        
+
+} 

@@ -107,7 +107,7 @@ pnpm dev
 Bash
 
 ```
-cd ../supabase-local
+cd ../supabase-local 
 supabase init     # only first time
 supabase start
 ```
