@@ -8,4 +8,9 @@
 struct MqttConfig {
   String broker;
   int port;
-  String
+  String username;
+  String password;
+  bool useTLS;
+  String caCertPath;
+  String clientCertPath;
+  String clientKeyPath
