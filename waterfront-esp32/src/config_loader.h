@@ -21,6 +21,8 @@ struct Mqtt {
     String clientIdPrefix;
     bool useTLS;
     String caCertPath;
+    String clientCertPath;
+    String clientKeyPath;
 };
 
 struct Location {

@@ -6,7 +6,9 @@
     "password": "strongpass123",
     "clientIdPrefix": "waterfront",
     "useTLS": true,
-    "caCertPath": "/ca.pem"
+    "caCertPath": "/ca.pem",
+    "clientCertPath": "",
+    "clientKeyPath": ""
   },
   "location": {
     "slug": "bremen",

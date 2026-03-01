@@ -64,6 +64,8 @@ bool loadConfig() {
         g_config.mqtt.clientIdPrefix = mqtt["clientIdPrefix"].as<String>();
         g_config.mqtt.useTLS = mqtt["useTLS"] | false;
         g_config.mqtt.caCertPath = mqtt["caCertPath"].as<String>();
+        g_config.mqtt.clientCertPath = mqtt["clientCertPath"].as<String>();
+        g_config.mqtt.clientKeyPath = mqtt["clientKeyPath"].as<String>();
     }
 
     // Parse location
@@ -193,6 +195,8 @@ GlobalConfig getDefaultConfig() {
     def.mqtt.clientIdPrefix = "waterfront";
     def.mqtt.useTLS = true;
     def.mqtt.caCertPath = "/ca.pem";
+    def.mqtt.clientCertPath = "";
+    def.mqtt.clientKeyPath = "";
     def.location.slug = "bremen";
     def.location.code = "harbor-01";
     def.wifiProvisioning.fallbackSsid = "WATERFRONT-DEFAULT";

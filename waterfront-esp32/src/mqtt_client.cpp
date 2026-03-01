@@ -35,26 +35,24 @@ esp_err_t mqtt_init() {
 
     // Enable TLS if configured
     if (useTLS) {
-        // Load CA cert from LittleFS if available
-        if (LittleFS.exists(g_config.mqtt.caCertPath)) {
-            File caFile = LittleFS.open(g_config.mqtt.caCertPath, "r");
-            if (caFile) {
-                String caCert = caFile.readString();
-                caFile.close();
-                mqttClient.setCACert(caCert.c_str());
-                mqttClient.setSecure(true);
-                ESP_LOGI("MQTT", "Loaded CA cert from LittleFS");
-            } else {
-                ESP_LOGW("MQTT", "CA cert file exists but could not open");
-            }
+        File ca = LittleFS.open(g_config.mqtt.caCertPath, "r");
+        if (ca) {
+            mqttClient.setCACert(ca.readString().c_str());
+            ESP_LOGI("MQTT", "Loaded CA cert from %s", g_config.mqtt.caCertPath.c_str());
         } else {
-            // Hard-code public root certs for common brokers (e.g., Let's Encrypt)
-            mqttClient.setSecure(true);
-            ESP_LOGI("MQTT", "Using default secure connection (no custom CA)");
+            ESP_LOGE("MQTT", "CA cert missing – insecure TLS");
         }
-        ESP_LOGI("MQTT", "Connecting with TLS to %s:%d", broker.c_str(), port);
-    } else {
-        ESP_LOGI("MQTT", "Connecting without TLS to %s:%d", broker.c_str(), port);
+
+        if (g_config.mqtt.clientCertPath.length() > 0) {
+            File cert = LittleFS.open(g_config.mqtt.clientCertPath, "r");
+            File key = LittleFS.open(g_config.mqtt.clientKeyPath, "r");
+            if (cert && key) {
+                mqttClient.setCertificate(cert.readString().c_str(), key.readString().c_str());
+                ESP_LOGI("MQTT", "Loaded client cert from %s and key from %s", g_config.mqtt.clientCertPath.c_str(), g_config.mqtt.clientKeyPath.c_str());
+            } else {
+                ESP_LOGE("MQTT", "Client cert/key missing – using server auth only");
+            }
+        }
     }
 
     mqttClient.setServer(broker.c_str(), port);
