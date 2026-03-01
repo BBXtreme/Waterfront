@@ -11,6 +11,9 @@ PubSubClient mqttClient(espClient);
 // Extern global config
 extern GlobalConfig g_config;
 
+// MQTT reconnect counter
+static int mqttReconnectCount = 0;
+
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     String message = "";
     for (unsigned int i = 0; i < length; i++) {
@@ -101,9 +104,16 @@ void mqtt_loop_task(void *pvParameters) {
         if (!mqttClient.connected()) {
             if (mqtt_init() != ESP_OK) {
                 fatal_error("MQTT reconnect failed");
+            } else {
+                mqttReconnectCount++;  // Increment on successful reconnect
             }
         }
         mqttClient.loop();
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
+}
+
+// Function to get MQTT reconnect count
+int getMqttReconnectCount() {
+    return mqttReconnectCount;
 }

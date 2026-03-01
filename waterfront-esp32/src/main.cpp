@@ -84,7 +84,9 @@ void debug_task(void *pvParameters) {
             doc["uptime"] = millis() / 1000;  // Uptime in seconds
             doc["heapFree"] = ESP.getFreeHeap();
             doc["fwVersion"] = FW_VERSION;
+            doc["batteryPercent"] = readBatteryLevel();
             doc["tasks"] = uxTaskGetNumberOfTasks();
+            doc["reconnects"] = getMqttReconnectCount();
             String payload;
             serializeJson(doc, payload);
             char topic[96];
