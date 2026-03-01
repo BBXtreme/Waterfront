@@ -18,6 +18,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <nvs_flash.h>
+#include <ArduinoOTA.h>
 
 // Include other headers as needed
 
@@ -155,6 +156,30 @@ void setup() {
     // Initialize deposit logic
     deposit_init();
 
+    // Initialize OTA
+    ArduinoOTA.setHostname((g_config.mqtt.clientIdPrefix + "-ota").c_str());
+    ArduinoOTA.setPassword("admin");  // Set a password for security
+    ArduinoOTA.onStart([]() {
+        String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
+        ESP_LOGI("OTA", "Start updating %s", type.c_str());
+    });
+    ArduinoOTA.onEnd([]() {
+        ESP_LOGI("OTA", "End");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        ESP_LOGI("OTA", "Progress: %u%%", (progress / (total / 100)));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+        ESP_LOGE("OTA", "Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR) ESP_LOGE("OTA", "Auth Failed");
+        else if (error == OTA_BEGIN_ERROR) ESP_LOGE("OTA", "Begin Failed");
+        else if (error == OTA_CONNECT_ERROR) ESP_LOGE("OTA", "Connect Failed");
+        else if (error == OTA_RECEIVE_ERROR) ESP_LOGE("OTA", "Receive Failed");
+        else if (error == OTA_END_ERROR) ESP_LOGE("OTA", "End Failed");
+    });
+    ArduinoOTA.begin();
+    ESP_LOGI("OTA", "OTA initialized");
+
     // Create factory reset task
     BaseType_t task_ret = xTaskCreate(factory_reset_task, "factory_reset", 2048, NULL, 5, NULL);
     if (task_ret != pdPASS) {
@@ -184,6 +209,9 @@ void setup() {
 void loop() {
     // MQTT loop
     mqtt_loop();
+
+    // Handle OTA
+    ArduinoOTA.handle();
 
     // LTE power management
     lte_power_management();
