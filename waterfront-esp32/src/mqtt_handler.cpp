@@ -24,6 +24,7 @@
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <HTTPUpdate.h>
+#include <Preferences.h>
 
 // CRC32 implementation (simple polynomial)
 uint32_t computeCRC32(const char* data, size_t length) {
@@ -150,6 +151,12 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     std::string otaTopic = "waterfront/" + g_config.location.slug + "/" + g_config.location.code + "/ota/update";
     if (strcmp(topic, otaTopic.c_str()) == 0) {
         ESP_LOGI("MQTT", "OTA update received: %s", msg.c_str());
+        // Save current version to NVS before update
+        Preferences prefs;
+        prefs.begin("ota", false);
+        prefs.putString("prev_version", FW_VERSION);
+        prefs.putBool("attempted", true);
+        prefs.end();
         // Assume msg is the URL
         t_httpUpdate_return ret = httpUpdate.update(msg);
         DynamicJsonDocument otaDoc(256);
