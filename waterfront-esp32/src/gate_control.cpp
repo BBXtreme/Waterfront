@@ -31,7 +31,7 @@ int retryCounts[MAX_COMPARTMENTS] = {0};
  */
 void gate_init() {
     // Initialize pins and servos for active compartments
-    for (int i = 0; i < g_config.compartments.size(); i++) {
+    for (int i = 0; i < g_config.compartmentCount; i++) {
         if (i < MAX_COMPARTMENTS) {
             pinMode(g_config.compartments[i].limitOpenPin, INPUT_PULLUP);
             pinMode(g_config.compartments[i].limitClosePin, INPUT_PULLUP);
@@ -39,7 +39,7 @@ void gate_init() {
             compartmentStates[i] = CLOSED;  // Start closed
         }
     }
-    ESP_LOGI("GATE", "Initialized for %d compartments", g_config.compartments.size());
+    ESP_LOGI("GATE", "Initialized for %d compartments", g_config.compartmentCount);
 }
 
 /**
@@ -48,7 +48,7 @@ void gate_init() {
  * @note Sets state to OPENING and starts servo movement.
  */
 void openCompartmentGate(int compartmentId) {
-    if (compartmentId < 1 || compartmentId > g_config.compartments.size()) return;
+    if (compartmentId < 1 || compartmentId > g_config.compartmentCount) return;
     int idx = compartmentId - 1;
     if (compartmentStates[idx] == CLOSED || compartmentStates[idx] == ERROR) {
         compartmentStates[idx] = OPENING;
@@ -65,7 +65,7 @@ void openCompartmentGate(int compartmentId) {
  * @note Sets state to CLOSING and starts servo movement.
  */
 void closeCompartmentGate(int compartmentId) {
-    if (compartmentId < 1 || compartmentId > g_config.compartments.size()) return;
+    if (compartmentId < 1 || compartmentId > g_config.compartmentCount) return;
     int idx = compartmentId - 1;
     if (compartmentStates[idx] == OPEN || compartmentStates[idx] == ERROR) {
         compartmentStates[idx] = CLOSING;
@@ -83,7 +83,7 @@ void closeCompartmentGate(int compartmentId) {
  * @note Checks limit switches for compartment 1.
  */
 const char* getCompartmentGateState(int compartmentId) {
-    if (compartmentId < 1 || compartmentId > g_config.compartments.size()) return "unknown";
+    if (compartmentId < 1 || compartmentId > g_config.compartmentCount) return "unknown";
     int idx = compartmentId - 1;
     if (digitalRead(g_config.compartments[idx].limitOpenPin)) return "open";
     if (digitalRead(g_config.compartments[idx].limitClosePin)) return "closed";
@@ -96,7 +96,7 @@ const char* getCompartmentGateState(int compartmentId) {
  */
 void gate_task() {
     unsigned long now = millis();
-    for (int i = 0; i < g_config.compartments.size(); i++) {
+    for (int i = 0; i < g_config.compartmentCount; i++) {
         if (compartmentStates[i] == OPENING || compartmentStates[i] == CLOSING) {
             if (now - compartmentStartTimes[i] > GATE_MOVE_TIMEOUT_MS) {
                 // Timeout: retry or error

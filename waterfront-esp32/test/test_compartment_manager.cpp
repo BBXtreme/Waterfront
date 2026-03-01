@@ -15,8 +15,9 @@
 // Mock GlobalConfig for tests
 GlobalConfig g_config;
 void loadConfig() { // Mock load
-    g_config.compartments.push_back({1, 12, 13, 14, 15, 16, 17});
-    g_config.compartments.push_back({2, 15, 16, 17, 18, 19, 20});
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartments[1] = {2, 15, 16, 17, 18, 19, 20};
+    g_config.compartmentCount = 2;
 }
 
 // Mock LittleFS for config loading
@@ -116,7 +117,7 @@ TEST_CASE("Compartment Name Generation", "[compartment]") {
 // Test empty config fallback
 TEST_CASE("Empty Config Fallback", "[compartment]") {
     // Clear compartments
-    g_config.compartments.clear();
+    g_config.compartmentCount = 0;
 
     // Call load
     load_compartments();

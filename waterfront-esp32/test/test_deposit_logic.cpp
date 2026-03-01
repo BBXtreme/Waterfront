@@ -15,7 +15,8 @@
 // Mock GlobalConfig for tests
 GlobalConfig g_config;
 void loadConfig() { // Mock load
-    g_config.compartments.push_back({1, 12, 13, 14, 15, 16, 17});
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartmentCount = 1;
     g_config.system.gracePeriodSec = 3600;  // 1 hour
 }
 

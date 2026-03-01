@@ -3,7 +3,7 @@
  * @brief Manages compartments using std::vector<Compartment> loaded from runtime config.
  * @author BBXtreme + Grok
  * @date 2026-02-28
- * @note Loads compartment data from runtime config (LittleFS), provides access.
+ * @note Loads compartment data from runtime config, provides access.
  */
 
 // compartment_manager.cpp - Compartment management with std::vector
@@ -33,12 +33,12 @@ std::vector<Compartment> compartments;
 // Load compartments from runtime config
 void load_compartments() {
     compartments.clear();
-    for (const auto& comp : g_config.compartments) {
+    for (int i = 0; i < g_config.compartmentCount; i++) {
         Compartment c;
-        c.id = comp.number;
-        c.servoPin = comp.servoPin;
-        c.limitOpenPin = comp.limitOpenPin;
-        c.limitClosePin = comp.limitClosePin;
+        c.id = g_config.compartments[i].number;
+        c.servoPin = g_config.compartments[i].servoPin;
+        c.limitOpenPin = g_config.compartments[i].limitOpenPin;
+        c.limitClosePin = g_config.compartments[i].limitClosePin;
         c.name = "Compartment " + std::to_string(c.id);
         compartments.push_back(c);
     }

@@ -21,13 +21,13 @@ bool validateConfig(const GlobalConfig& cfg) {
     if (cfg.system.gracePeriodSec < 0 || cfg.system.gracePeriodSec > 86400) return false;  // 0 to 24h
     if (cfg.system.batteryLowThresholdPercent < 0 || cfg.system.batteryLowThresholdPercent > 100) return false;
     if (cfg.system.solarVoltageMin < 0.0f || cfg.system.solarVoltageMin > 5.0f) return false;
-    for (const auto& comp : cfg.compartments) {
-        if (comp.servoPin < 0 || comp.servoPin > 39) return false;
-        if (comp.limitOpenPin < 0 || comp.limitOpenPin > 39) return false;
-        if (comp.limitClosePin < 0 || comp.limitClosePin > 39) return false;
-        if (comp.ultrasonicTriggerPin < 0 || comp.ultrasonicTriggerPin > 39) return false;
-        if (comp.ultrasonicEchoPin < 0 || comp.ultrasonicEchoPin > 39) return false;
-        if (comp.weightSensorPin < 0 || comp.weightSensorPin > 39) return false;
+    for (int i = 0; i < cfg.compartmentCount; i++) {
+        if (cfg.compartments[i].servoPin < 0 || cfg.compartments[i].servoPin > 39) return false;
+        if (cfg.compartments[i].limitOpenPin < 0 || cfg.compartments[i].limitOpenPin > 39) return false;
+        if (cfg.compartments[i].limitClosePin < 0 || cfg.compartments[i].limitClosePin > 39) return false;
+        if (cfg.compartments[i].ultrasonicTriggerPin < 0 || cfg.compartments[i].ultrasonicTriggerPin > 39) return false;
+        if (cfg.compartments[i].ultrasonicEchoPin < 0 || cfg.compartments[i].ultrasonicEchoPin > 39) return false;
+        if (cfg.compartments[i].weightSensorPin < 0 || cfg.compartments[i].weightSensorPin > 39) return false;
     }
     return true;
 }
@@ -103,8 +103,9 @@ bool loadConfig() {
     // Parse compartments
     if (doc.containsKey("compartments")) {
         JsonArray comps = doc["compartments"];
-        g_config.compartments.clear();
+        g_config.compartmentCount = 0;
         for (JsonObject comp : comps) {
+            if (g_config.compartmentCount >= MAX_COMPARTMENTS) break;
             CompartmentConfig c;
             c.number = comp["number"];
             c.servoPin = comp["servoPin"];
@@ -113,7 +114,7 @@ bool loadConfig() {
             c.ultrasonicTriggerPin = comp["ultrasonicTriggerPin"];
             c.ultrasonicEchoPin = comp["ultrasonicEchoPin"];
             c.weightSensorPin = comp["weightSensorPin"];
-            g_config.compartments.push_back(c);
+            g_config.compartments[g_config.compartmentCount++] = c;
         }
     }
 
@@ -209,9 +210,8 @@ GlobalConfig getDefaultConfig() {
     def.ble.ssidCharUuid = "87654321-4321-4321-4321-cba987654321";
     def.ble.passCharUuid = "87654321-4321-4321-4321-dba987654321";
     def.ble.statusCharUuid = "87654321-4321-4321-4321-eba987654321";
-    def.compartments = {
-        {1, 12, 13, 14, 15, 16, 17}
-    };
+    def.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    def.compartmentCount = 1;
     def.system.maxCompartments = 10;
     def.system.debugMode = true;
     def.system.gracePeriodSec = 3600;

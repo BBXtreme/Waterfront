@@ -13,7 +13,7 @@
 // Initialize sensor pins
 void sensor_init() {
     // Use pins from config for the first compartment (assuming single sensor for now)
-    if (!g_config.compartments.empty()) {
+    if (g_config.compartmentCount > 0) {
         pinMode(g_config.compartments[0].ultrasonicTriggerPin, OUTPUT);
         pinMode(g_config.compartments[0].ultrasonicEchoPin, INPUT);
         ESP_LOGI("SENSOR", "Ultrasonic sensor initialized on TRIG %d, ECHO %d", g_config.compartments[0].ultrasonicTriggerPin, g_config.compartments[0].ultrasonicEchoPin);
@@ -22,7 +22,7 @@ void sensor_init() {
 
 // Get distance in cm
 float sensor_get_distance() {
-    if (g_config.compartments.empty()) return -1.0f;
+    if (g_config.compartmentCount == 0) return -1.0f;
     int trigPin = g_config.compartments[0].ultrasonicTriggerPin;
     int echoPin = g_config.compartments[0].ultrasonicEchoPin;
 

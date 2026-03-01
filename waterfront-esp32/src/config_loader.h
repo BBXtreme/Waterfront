@@ -12,6 +12,9 @@
 #include <Arduino.h>
 #include <vector>
 
+// Max compartments
+const int MAX_COMPARTMENTS = 10;
+
 // Structs for configuration
 struct Mqtt {
     String broker;
@@ -79,7 +82,8 @@ struct GlobalConfig {
     WifiProvisioningConfig wifiProvisioning;
     LteConfig lte;
     BleConfig ble;
-    std::vector<CompartmentConfig> compartments;
+    CompartmentConfig compartments[MAX_COMPARTMENTS];
+    int compartmentCount;
     SystemConfig system;
     OtherConfig other;
 };
