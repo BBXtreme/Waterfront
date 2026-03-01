@@ -4,7 +4,7 @@
 // Mocks millis() and PubSubClient to simulate time and MQTT without ESP32.
 // Run tests with PlatformIO: pio test
 
-#define CATCH_CONFIG_MAIN  // Catch2 main entry point
+#define CATCH_CONFIG_RUNNER  // Catch2 runner for multiple test files
 #include <catch.hpp>  // Catch2 header (add to lib_deps in platformio.ini)
 
 // Include headers under test
