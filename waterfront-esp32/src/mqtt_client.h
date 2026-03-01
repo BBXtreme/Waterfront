@@ -14,6 +14,7 @@
 
 extern WiFiClient espClient;
 extern PubSubClient mqttClient;
+extern unsigned long lastMqttActivity;
 
 /**
  * @brief Initializes the MQTT client with server and callback.

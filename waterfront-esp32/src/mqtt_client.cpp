@@ -15,7 +15,11 @@ extern GlobalConfig g_config;
 // MQTT reconnect counter
 static int mqttReconnectCount = 0;
 
+// Last MQTT activity timestamp
+unsigned long lastMqttActivity = 0;
+
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
+    lastMqttActivity = millis();  // Update activity timestamp
     String message = "";
     for (unsigned int i = 0; i < length; i++) {
         message += (char)payload[i];

@@ -1,3 +1,8 @@
+#include <TinyGsmClient.h>
+#include <PubSubClient.h>
+#include "mqtt_client.h"
+#include "config_loader.h"
+
 TinyGsm modem(SerialAT);
 TinyGsmClient lteClient(modem);
 
@@ -35,7 +40,7 @@ void lte_switch_to_lte() {
 }
 
 void lte_switch_to_wifi() {
-    mqttClient.setClient(wifiClient);
+    mqttClient.setClient(espClient);
     ESP_LOGI("LTE", "MQTT switched back to WiFi");
     lte_power_down();
 }
@@ -62,8 +67,8 @@ bool shouldDisableLTE() {
 }
 
 void lte_power_management() {
-    if (WiFi.status() == WL_CONNECTED && mqttClient.connected()) {
+    if (WiFi.status() == WL_CONNECTED && mqttClient.connected() && (millis() - lastMqttActivity > 300000)) {  // 5 min idle
         lte_power_down();
-        ESP_LOGI("LTE", "Powered down due to WiFi connected and MQTT connected");
+        ESP_LOGI("LTE", "Powered down due to WiFi connected and idle > 5 min");
     }
 }
