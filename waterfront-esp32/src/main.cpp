@@ -162,12 +162,46 @@ void setup() {
     ArduinoOTA.onStart([]() {
         String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
         ESP_LOGI("OTA", "Start updating %s", type.c_str());
+        // Publish OTA start to MQTT
+        DynamicJsonDocument doc(256);
+        doc["event"] = "ota_start";
+        doc["type"] = type;
+        doc["timestamp"] = millis();
+        String payload;
+        serializeJson(doc, payload);
+        char topic[96];
+        snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+        mqttClient.publish(topic, payload.c_str(), false);
     });
     ArduinoOTA.onEnd([]() {
         ESP_LOGI("OTA", "End");
+        // Publish OTA end to MQTT
+        DynamicJsonDocument doc(256);
+        doc["event"] = "ota_end";
+        doc["timestamp"] = millis();
+        String payload;
+        serializeJson(doc, payload);
+        char topic[96];
+        snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+        mqttClient.publish(topic, payload.c_str(), false);
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
         ESP_LOGI("OTA", "Progress: %u%%", (progress / (total / 100)));
+        // Publish OTA progress to MQTT (throttle to every 10%)
+        static unsigned int lastProgress = 0;
+        unsigned int percent = progress / (total / 100);
+        if (percent >= lastProgress + 10) {
+            lastProgress = percent;
+            DynamicJsonDocument doc(256);
+            doc["event"] = "ota_progress";
+            doc["progress"] = percent;
+            doc["timestamp"] = millis();
+            String payload;
+            serializeJson(doc, payload);
+            char topic[96];
+            snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+            mqttClient.publish(topic, payload.c_str(), false);
+        }
     });
     ArduinoOTA.onError([](ota_error_t error) {
         ESP_LOGE("OTA", "Error[%u]: ", error);
@@ -176,6 +210,16 @@ void setup() {
         else if (error == OTA_CONNECT_ERROR) ESP_LOGE("OTA", "Connect Failed");
         else if (error == OTA_RECEIVE_ERROR) ESP_LOGE("OTA", "Receive Failed");
         else if (error == OTA_END_ERROR) ESP_LOGE("OTA", "End Failed");
+        // Publish OTA error to MQTT
+        DynamicJsonDocument doc(256);
+        doc["event"] = "ota_error";
+        doc["error_code"] = error;
+        doc["timestamp"] = millis();
+        String payload;
+        serializeJson(doc, payload);
+        char topic[96];
+        snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+        mqttClient.publish(topic, payload.c_str(), false);
     });
     ArduinoOTA.begin();
     ESP_LOGI("OTA", "OTA initialized");
