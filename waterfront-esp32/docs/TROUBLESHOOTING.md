@@ -1,108 +1,114 @@
 # WATERFRONT ESP32 Troubleshooting Guide
 
 ## Introduction
-This guide helps you fix common problems with the WATERFRONT system. If something isn't working, check here first. The system logs messages to help diagnose issues.
+If something goes wrong with WATERFRONT, don't panic! This guide helps fix common problems. The system logs messages to help you diagnose. Enable debug mode in config.json for more info.
+
+## How to Check for Problems
+1. Open the serial monitor in PlatformIO (shows ESP32 messages).
+2. Subscribe to MQTT topics like `waterfront/{location}/{code}/debug` and `waterfront/{location}/{code}/alert`.
+3. Look for error codes or messages starting with `[ERROR]` or `[WARN]`.
 
 ## Common Issues and Fixes
 
-### ESP32 Not Starting
-**Symptoms**: No lights, no messages in serial monitor.
-**Causes**: Power issues, bad firmware upload.
+### ESP32 Won't Start
+**Symptoms**: No lights, no serial messages.
+**Causes**: Bad power, faulty upload.
 **Fixes**:
-- Check the power supply (use 5V USB).
-- Verify the firmware was uploaded correctly (run `pio run --target upload` again).
-- Open the serial monitor in PlatformIO and look for error messages.
+1. Check USB cable and power (5V).
+2. Re-upload firmware: `pio run --target upload`.
+3. Try a different ESP32 board.
 
-### WiFi Connection Fails
-**Symptoms**: System can't connect to the internet.
-**Causes**: Wrong WiFi name/password, weak signal.
+### WiFi Won't Connect
+**Symptoms**: Can't reach internet.
+**Causes**: Wrong password, weak signal.
 **Fixes**:
-- Double-check the SSID and password in config.json.
-- Move the ESP32 closer to the router.
-- Use the provisioning mode to re-enter WiFi details (see Deployment Guide).
+1. Verify SSID/password in config.json.
+2. Move ESP32 closer to router.
+3. Use provisioning to re-enter WiFi (see Deployment Guide).
+4. Check serial for "WiFi connected" message.
 
-### MQTT Connection Fails
-**Symptoms**: System can't send/receive messages.
-**Causes**: Wrong broker address, missing certificates, bad credentials.
+### MQTT Won't Connect
+**Symptoms**: No messages sent/received.
+**Causes**: Wrong server, missing certs.
 **Fixes**:
-- Check the broker IP and port in config.json.
-- If using TLS, ensure certificates are uploaded and paths are correct.
-- Verify username and password match the MQTT broker settings.
+1. Check broker IP/port in config.json.
+2. For TLS, ensure `ca.pem` is uploaded.
+3. Verify username/password.
+4. Look for "MQTT connected" in serial.
 
-### Sensors Not Working
-**Symptoms**: Gates don't open, no distance readings.
-**Causes**: Wrong pin connections, sensor faults.
+### Gates Don't Move
+**Symptoms**: Servo motors don't turn.
+**Causes**: Wrong pins, no power.
 **Fixes**:
-- Check the pin numbers in config.json match the hardware wiring.
-- Ensure sensors are powered and connected properly.
-- For ultrasonic sensors, make sure nothing blocks the sound waves.
+1. Check pin numbers in config.json match wires.
+2. Ensure servos have power (5V).
+3. Test with simple command via MQTT.
+4. Check limit switches are connected.
 
-### OTA (Over-The-Air) Updates Fail
-**Symptoms**: Can't update software remotely.
-**Causes**: Network issues, wrong password.
+### Sensors Not Detecting
+**Symptoms**: No distance readings.
+**Causes**: Wiring issues, blocked sensors.
 **Fixes**:
-- Make sure the ESP32 is connected to WiFi.
-- Check the OTA password in the code (default is "admin").
-- Watch the MQTT progress messages for errors.
+1. Verify ultrasonic pins (Trig/Echo).
+2. Make sure sensors face open space.
+3. Check power to sensors.
+4. Serial logs show distance values.
 
-### Low Power Issues
-**Symptoms**: System shuts down unexpectedly.
-**Causes**: Battery/solar low, wrong thresholds.
+### OTA Updates Fail
+**Symptoms**: Software won't update.
+**Causes**: Network issues, wrong URL.
 **Fixes**:
-- Check battery and solar levels in MQTT debug messages.
-- Adjust thresholds in config.json (e.g., lower batteryLowThresholdPercent).
-- Monitor how often it enters deep sleep.
+1. Ensure WiFi connected.
+2. Check OTA password (default "admin").
+3. Verify firmware URL is correct.
+4. Watch MQTT for progress/errors.
 
-### Factory Reset Doesn't Work
-**Symptoms**: Holding the button doesn't reset.
-**Causes**: Wrong pin, button not pressed long enough.
+### Low Power Shutdowns
+**Symptoms**: Device turns off unexpectedly.
+**Causes**: Battery/solar low.
 **Fixes**:
-- Ensure you're holding GPIO 0 (usually the boot button).
-- Hold for exactly 5 seconds.
-- Check serial logs for confirmation.
+1. Check debug messages for battery %.
+2. Adjust thresholds in config.json.
+3. Charge battery or check solar panel.
+4. Monitor alerts for low power.
 
-### No Debug or Alert Messages
-**Symptoms**: No telemetry on MQTT.
-**Causes**: Debug mode disabled, MQTT disconnected.
+### Factory Reset Not Working
+**Symptoms**: Holding button does nothing.
+**Causes**: Wrong pin, short press.
 **Fixes**:
-- Set `"debugMode": true` in config.json.
-- Check MQTT connection.
-- Subscribe to `waterfront/{location}/{code}/debug` and `waterfront/{location}/{code}/alert`.
+1. Hold GPIO 0 for 5 full seconds.
+2. Check serial for "Factory reset" message.
+3. If not, re-upload firmware.
 
-### Alerts Not Triggering
-**Symptoms**: No alerts for low power or errors.
-**Causes**: Thresholds not met, MQTT issues.
+### No Debug/Alerts
+**Symptoms**: Missing health messages.
+**Causes**: Debug off, MQTT down.
 **Fixes**:
-- Verify thresholds in config.json.
-- Check MQTT broker for messages.
-- Look at serial logs for alert attempts.
+1. Set `"debugMode": true` in config.json.
+2. Check MQTT connection.
+3. Subscribe to topics manually.
 
-### CRC Validation Fails
+### CRC Errors
 **Symptoms**: Messages ignored.
-**Causes**: Payload corruption.
+**Causes**: Data corruption.
 **Fixes**:
-- Check network stability.
-- Ensure MQTT client is up to date.
-
-## How to Check Logs
-- Enable debug mode in config.json (`"debugMode": true`).
-- Open the serial monitor in PlatformIO.
-- Look for messages starting with tags like `[MAIN]`, `[MQTT]`, etc.
-- MQTT debug topic also shows logs remotely.
+1. Check network stability.
+2. Ensure MQTT client is updated.
+3. Restart device.
 
 ## Recovery Steps
-- **Factory Reset**: Hold GPIO 0 for 5 seconds to erase settings and restart.
-- **Re-upload Firmware**: If the system is bricked, use `pio run --target upload` to reinstall.
-- **Restore Config**: If config.json is lost, recreate it from the example in the Deployment Guide.
+1. **Soft Reset**: Power cycle the ESP32.
+2. **Factory Reset**: Hold GPIO 0 for 5s.
+3. **Re-upload**: If bricked, `pio run --target upload`.
+4. **Restore Config**: Recreate config.json from backup.
 
-## Getting Help
-- Check the serial logs for specific error codes.
-- Search for error messages online.
-- Open an issue on GitHub with logs and config details.
-- Ensure all prerequisites (like MQTT broker) are set up correctly.
+## Getting More Help
+- Check GitHub issues for similar problems.
+- Post logs and config in forums.
+- Ensure all hardware is compatible.
 
-## Prevention Tips
-- Always test after configuration changes.
-- Keep backups of config.json.
-- Monitor MQTT messages regularly.
-- Update firmware when new versions are available.
+## Prevention
+- Test after changes.
+- Monitor regularly.
+- Keep firmware updated.
+- Use strong passwords.

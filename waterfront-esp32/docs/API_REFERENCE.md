@@ -1,66 +1,111 @@
 # WATERFRONT ESP32 API Reference
 
 ## Introduction
-This guide explains how the WATERFRONT system communicates with other devices or servers using MQTT (a messaging protocol for IoT). Think of MQTT like sending emails between devices. The system sends and receives messages on specific "topics" (like email subjects).
+This guide explains how the WATERFRONT system talks to other devices using MQTT. MQTT is a simple way for devices to send messages over the internet, like texting but for machines.
+
+## What is MQTT?
+- **Topics**: Like chat rooms. Devices subscribe (listen) to topics and publish (send) to topics.
+- **Messages**: JSON text (easy to read) with data.
+- **Security**: Uses TLS encryption for safety.
+- **Reliability**: Messages are acknowledged, with checksums for accuracy.
 
 ## MQTT Topics
 
-### Incoming Commands (What the System Listens For)
-These are messages you can send to control the system remotely.
+### Commands You Send to the System
+These are messages you publish to control the WATERFRONT device.
 
-- `waterfront/{location}/{code}/command`: Commands to control the system.
-  - `{location}`: The location name, like "bremen".
-  - `{code}`: The location code, like "harbor-01".
-  - Example: `{"action": "open_gate", "compartment": 1}` - This tells the system to open the gate for compartment 1.
+- `waterfront/{location}/{code}/command`
+  - **Purpose**: Send general commands.
+  - **Example Topic**: `waterfront/bremen/harbor-01/command`
+  - **Example Payload**: `{"action": "open_gate", "compartment": 1}`
+  - **What It Does**: Opens gate for compartment 1.
 
-#### Supported Commands
-- `{"action": "open_gate", "compartment": 1}`: Opens the gate for a specific compartment.
-- `{"action": "close_gate", "compartment": 1}`: Closes the gate for a specific compartment.
-- `{"action": "query_state", "compartment": 1}`: Queries the gate state for a compartment.
-- `waterfront/{location}/{code}/config/update`: Updates the system's settings with new configuration.
-  - Payload: Full JSON config object.
-- `waterfront/{location}/{code}/ota/update`: Triggers an OTA update.
-  - Payload: URL of the firmware binary.
-- `waterfront/{location}/{code}/booking/paid`: Notifies of a paid booking.
-  - Payload: `{"bookingId": "bk_123", "compartmentId": 1, "durationSec": 3600}`.
-- `waterfront/{location}/{code}/compartments/+/command`: Commands for specific compartments.
-  - Examples: `"open_gate"`, `"close_gate"`, `"query_state"`.
-- `waterfront/{location}/{code}/compartments/+/status`: Retained status updates for compartments.
-  - Payload: `{"booked": true, "gateState": "locked", "crc": 1234567890}`.
+- `waterfront/{location}/{code}/config/update`
+  - **Purpose**: Update device settings.
+  - **Example Payload**: Full JSON config (see System Spec).
+  - **What It Does**: Saves new config and restarts device.
 
-### Outgoing Responses (What the System Sends Back)
-These are replies from the system after processing commands.
+- `waterfront/{location}/{code}/ota/update`
+  - **Purpose**: Update software.
+  - **Example Payload**: `"http://example.com/firmware.bin"`
+  - **What It Does**: Downloads and installs new firmware.
 
-- `waterfront/{location}/{code}/response`: Responses to commands.
-  - Example: `{"ack": true, "action": "open_gate", "compartment": 1, "status": "success", "timestamp": 1234567890}`
-    - `ack`: Acknowledgment (true if received).
-    - `status`: Result, like "success" or "error".
-    - `timestamp`: Time when the response was sent.
+- `waterfront/{location}/{code}/booking/paid`
+  - **Purpose**: Start a rental.
+  - **Example Payload**: `{"bookingId": "bk_123", "compartmentId": 1, "durationSec": 3600}`
+  - **What It Does**: Opens gate, starts timer for 1 hour rental.
 
-### Telemetry (Automatic Messages from the System)
-The system sends these messages regularly to report its status.
+- `waterfront/{location}/{code}/compartments/+/command`
+  - **Purpose**: Command specific compartments (+ is wildcard for any number).
+  - **Example Topic**: `waterfront/bremen/harbor-01/compartments/1/command`
+  - **Example Payload**: `"open_gate"`
+  - **What It Does**: Opens gate 1.
 
-- `waterfront/{location}/{code}/debug`: Health and status updates every 60 seconds.
-  - Payload: `{"uptime": 3600, "heapFree": 204800, "fwVersion": "0.9.2-beta", "batteryPercent": 85, "tasks": 5, "reconnects": 2}`
-    - `uptime`: Seconds since boot.
-    - `heapFree`: Free heap memory in bytes.
-    - `fwVersion`: Current firmware version.
-    - `batteryPercent`: Battery level as percentage.
-    - `tasks`: Number of active FreeRTOS tasks.
-    - `reconnects`: MQTT reconnect count.
-- `waterfront/{location}/{code}/alert`: Error and alert messages.
-  - Payload: `{"alert": "low_power", "batteryPercent": 15, "solarVoltage": 2.5, "timestamp": 1234567890}` or `{"error": "fatal", "code": "ESP_FAIL", "timestamp": 1234567890}`.
-- `waterfront/machine/{code}/status`: Overall machine status.
-  - Payload: `{"state": "idle", "battery": 92, "connType": "wifi"}`.
-- `waterfront/slots/{id}/status`: Status of individual compartments (slots).
-  - Payload: `{"slotId": 1, "state": "open", "booked": false}`.
-- `waterfront/locations/{code}/depositRelease`: Messages about releasing deposits.
-  - Payload: `{"bookingId": "bk_123", "release": true}`.
-- `waterfront/locations/{code}/returnConfirm`: Confirmations when items are returned.
-  - Payload: `{"bookingId": "bk_123", "action": "autoLock"}`.
-- `waterfront/{location}/{code}/ota/status`: OTA update status.
-  - Payload: `{"otaResult": "success", "firmwareVersion": "0.9.2-beta"}`.
+- `waterfront/{location}/{code}/compartments/+/status`
+  - **Purpose**: Send status updates (retained for sync).
+  - **Example Payload**: `{"booked": true, "gateState": "locked", "crc": 1234567890}`
 
-### Message Examples
+### Responses and Updates from the System
+These are messages the device sends back.
 
-#### Command: Open Gate
+- `waterfront/{location}/{code}/response`
+  - **Purpose**: Reply to commands.
+  - **Example Payload**: `{"ack": true, "action": "open_gate", "compartment": 1, "status": "success", "timestamp": 1234567890}`
+
+- `waterfront/{location}/{code}/compartments/+/ack`
+  - **Purpose**: Confirm actions.
+  - **Example Payload**: `{"compartmentId":1,"action":"gate_opened","timestamp":1234567890,"crc":987654321}`
+
+- `waterfront/{location}/{code}/debug`
+  - **Purpose**: Health reports every 60 seconds.
+  - **Example Payload**: `{"uptime":3600,"heapFree":204800,"fwVersion":"0.9.2-beta","batteryPercent":85,"tasks":5,"reconnects":2}`
+  - **Fields**:
+    - `uptime`: Seconds since start.
+    - `heapFree`: Free memory in bytes.
+    - `fwVersion`: Software version.
+    - `batteryPercent`: Battery level (0-100).
+    - `tasks`: Number of running tasks.
+    - `reconnects`: MQTT reconnection count.
+
+- `waterfront/{location}/{code}/alert`
+  - **Purpose**: Error alerts.
+  - **Example Payload**: `{"alert":"low_power","batteryPercent":15,"solarVoltage":2.5,"timestamp":1234567890}`
+
+- `waterfront/machine/{code}/status`
+  - **Purpose**: Device status.
+  - **Example Payload**: `{"state": "idle", "battery": 92, "connType": "wifi"}`
+
+- `waterfront/slots/{id}/status`
+  - **Purpose**: Compartment status.
+  - **Example Payload**: `{"slotId": 1, "state": "open", "booked": false}`
+
+- `waterfront/locations/{code}/depositRelease`
+  - **Purpose**: Release held deposits.
+  - **Example Payload**: `{"bookingId": "bk_123", "release": true}`
+
+- `waterfront/locations/{code}/returnConfirm`
+  - **Purpose**: Confirm returns.
+  - **Example Payload**: `{"bookingId": "bk_123", "action": "autoLock"}`
+
+- `waterfront/{location}/{code}/ota/status`
+  - **Purpose**: Update results.
+  - **Example Payload**: `{"otaResult": "success", "firmwareVersion": "0.9.2-beta"}`
+
+## Message Examples
+
+### Opening a Gate
+1. You send: Topic `waterfront/bremen/harbor-01/compartments/1/command`, Payload `"open_gate"`
+2. System responds: Topic `waterfront/bremen/harbor-01/compartments/1/ack`, Payload `{"compartmentId":1,"action":"gate_opened","timestamp":1234567890,"crc":987654321}`
+
+### Health Check
+- System sends every 60s: Topic `waterfront/bremen/harbor-01/debug`, Payload `{"uptime":3600,"heapFree":204800,"fwVersion":"0.9.2-beta","batteryPercent":85,"tasks":5,"reconnects":2}`
+
+### Low Power Alert
+- System sends: Topic `waterfront/bremen/harbor-01/alert`, Payload `{"alert":"low_power","batteryPercent":15,"solarVoltage":2.5,"timestamp":1234567890}`
+
+## Checksums
+All messages include a CRC32 checksum to ensure data integrity. If checksum fails, message is ignored.
+
+## Security
+- Uses TLS for encrypted connections.
+- Optional client certificates for extra security.
