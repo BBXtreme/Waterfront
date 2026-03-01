@@ -1,37 +1,36 @@
 # WATERFRONT ESP32 Kayak Rental Controller - System Specification
 
 ## Overview
-The WATERFRONT system is an ESP32-based controller for automated kayak rental bays. It manages compartment gates, deposit logic, sensor monitoring, and remote connectivity via MQTT with TLS support. The system includes power management, OTA updates, and provisioning features.
+The WATERFRONT system is a smart controller for kayak rental stations. It uses an ESP32 microcontroller to manage gates, detect kayaks, handle payments, and communicate securely. It's designed for outdoor use with solar power and cellular backup.
 
 ## Hardware Requirements
-- ESP32 microcontroller (e.g., ESP32-DevKitC)
-- Ultrasonic sensors (HC-SR04) for kayak presence detection
-- Servo motors for gate control
-- Limit switches for gate position feedback
-- LTE modem (optional, e.g., SIM7600) for cellular fallback
-- Solar panel and battery for power
-- ADC inputs for voltage monitoring
+- ESP32 board (like ESP32-DevKitC) - the brain of the system.
+- Ultrasonic sensors (e.g., HC-SR04) - to detect if a kayak is present.
+- Servo motors - to open and close gates.
+- Limit switches - to know when gates are fully open or closed.
+- LTE modem (optional) - for internet when WiFi isn't available.
+- Solar panel and battery - for power in remote locations.
+- ADC inputs - to measure battery and solar voltage.
 
 ## Software Architecture
-### Core Components
-- **Main Loop**: Handles MQTT, OTA, LTE power management, and periodic power checks
-- **MQTT Client**: Manages secure connections with TLS, client certs, and fallback
-- **Config Loader**: Loads/saves JSON config from LittleFS with validation
-- **Deposit Logic**: Manages rental timers, overdue detection, and auto-lock
-- **Return Sensor**: Ultrasonic distance measurement for kayak presence
-- **Gate Control**: Servo control with limit switch feedback
-- **LTE Manager**: Cellular fallback with power management
-- **Error Handler**: Fatal error logging and MQTT alerting
-- **OTA Handler**: Over-the-air updates with NVS versioning
-- **Provisioning**: BLE and SoftAP WiFi setup
+### Main Parts
+- **Main Loop**: Runs continuously, handles MQTT, OTA, LTE, and power checks.
+- **MQTT Client**: Sends and receives messages securely (with encryption).
+- **Config Loader**: Loads settings from a file on the ESP32.
+- **Deposit Logic**: Manages rental payments and timers.
+- **Return Sensor**: Measures distance to detect kayaks.
+- **Gate Control**: Moves servos to open/close gates.
+- **LTE Manager**: Handles cellular internet as backup.
+- **Error Handler**: Logs problems and sends alerts.
+- **OTA Handler**: Updates software remotely.
+- **Provisioning**: Sets up WiFi without coding.
 
-### Tasks
-- Factory Reset Task: Monitors GPIO 0 for long press
-- Overdue Check Task: Periodic overdue rental checks
-- Debug Task: Health telemetry publishing
-- MQTT Loop Task: Maintains MQTT connection
+### Background Tasks
+- Factory Reset Task: Listens for button press to reset.
+- Overdue Check Task: Looks for rentals that are late.
+- Debug Task: Sends status updates every minute.
 
 ## Configuration
-Stored in `/config.json` on LittleFS. Includes MQTT, location, WiFi provisioning, LTE, BLE, compartments, system settings.
+Settings are in `/config.json` on the ESP32's storage. It includes sections for MQTT, location, WiFi, LTE, BLE, compartments, and system options.
 
 ### Example Config

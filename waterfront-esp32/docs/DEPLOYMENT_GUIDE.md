@@ -1,40 +1,27 @@
 # WATERFRONT ESP32 Deployment Guide
 
-## Prerequisites
-- ESP32 development board
-- PlatformIO IDE
-- MQTT broker with TLS support
-- CA certificate for TLS
-- Optional: LTE modem, sensors, servos
+## What is Deployment?
+Deployment means setting up the WATERFRONT system in the real world, like at a kayak rental location. This guide walks you through installing, configuring, and starting the system step by step.
 
-## Installation
-1. Clone repository
-2. Install dependencies: `pio lib install`
-3. Configure platformio.ini for your board
-4. Build and upload: `pio run --target upload`
+## Prerequisites (What You Need First)
+- An ESP32 development board (a small computer for IoT projects).
+- PlatformIO IDE (a tool for programming the ESP32).
+- An MQTT broker (a server for messaging, like a central hub).
+- TLS certificates (for secure connections, if using encryption).
+- Optional: LTE modem, sensors, motors for full functionality.
 
-## Configuration
-1. Create config.json with your settings
-2. Upload config.json to LittleFS: `pio run --target uploadfs`
-3. Upload certs (ca.pem, etc.) to LittleFS
+## Step 1: Installation
+1. Download the project code from GitHub.
+2. Open it in PlatformIO (it's a free tool for coding ESP32).
+3. Install required libraries by running `pio lib install` in the terminal.
+4. Choose your ESP32 board in `platformio.ini` (e.g., ESP32-DevKitC).
+5. Build and upload the code: Run `pio run --target upload`.
 
-## Provisioning
-1. Power on ESP32
-2. Use BLE app (e.g., nRF Connect) to connect and send WiFi credentials
-3. Or connect to SoftAP and use web interface
-4. Device connects to WiFi and MQTT
+## Step 2: Configuration
+The system uses a file called `config.json` for settings. You need to create this file with your details.
 
-## Monitoring
-- Subscribe to MQTT debug topic for telemetry
-- Check serial logs for issues
-- Use OTA for updates
+1. Create a file named `config.json` with the settings below.
+2. Upload it to the ESP32's storage: Run `pio run --target uploadfs`.
+3. Also upload any certificates (like `ca.pem`) to the storage.
 
-## Maintenance
-- Regularly check battery and solar levels
-- Update firmware via OTA
-- Monitor error logs
-
-## Troubleshooting
-- If no WiFi, use SoftAP provisioning
-- If MQTT fails, check certs and broker settings
-- Factory reset via GPIO 0 long press
+### Example config.json
