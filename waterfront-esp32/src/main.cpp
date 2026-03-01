@@ -40,6 +40,7 @@ void factory_reset_task(void *pvParameters) {
             if (!buttonPressed) {
                 pressStartTime = millis();
                 buttonPressed = true;
+                ESP_LOGI("MAIN", "Reset button pressed, hold for 5 seconds to trigger factory reset");
             } else if (millis() - pressStartTime > RESET_HOLD_TIME_MS) {
                 // Factory reset triggered
                 ESP_LOGW("MAIN", "Factory reset triggered by long-press on GPIO 0");
