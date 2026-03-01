@@ -3,34 +3,30 @@
 - `waterfront/{location}/{code}/debug`: Health telemetry
 - `waterfront/{location}/{code}/alert`: Fatal errors
 - `waterfront/machine/{code}/status`: Machine status
-- `waterfront/slots/{id}/status`: Slot status
+- `waterfront/slots/{id}/status`: Compartment status
 - `waterfront/locations/{code}/depositRelease`: Deposit release
 - `waterfront/locations/{code}/returnConfirm`: Return confirmation
 
-## Power Management
-- Monitors battery and solar voltage every 60 seconds
-- Enters deep sleep if battery < threshold or solar < min
-- LTE modem powered down if WiFi connected and idle > 5 min
-- LTE modem powered down if solar voltage low
+## Installation
+1. Clone repository
+2. Install dependencies: `pio lib install`
+3. Configure platformio.ini for your board
+4. Build and upload: `pio run --target upload`
+5. Upload config.json and certs to LittleFS: `pio run --target uploadfs`
 
 ## Provisioning
-- BLE GATT service for WiFi credentials
-- SoftAP web server as fallback
-- Stores credentials in NVS
+1. Power on ESP32
+2. Use BLE app (e.g., nRF Connect) to connect and send WiFi credentials
+3. Or connect to SoftAP and use web interface
+4. Device connects to WiFi and MQTT
 
-## OTA Updates
-- ArduinoOTA with password protection
-- Saves current FW version to NVS before update
-- Publishes progress and errors to MQTT
-- Clears saved version on success
-
-## Error Handling
-- Fatal errors logged and published to MQTT
-- ESP restart on fatal errors
-- Watchdog on all tasks (12s timeout)
+## Monitoring
+- Subscribe to MQTT debug topic for telemetry
+- Check serial logs for issues
+- Use OTA for updates
 
 ## Testing
-- Unit tests with Catch2 for core functions
+- Unit tests: `pio test`
 - Mocks for hardware and network dependencies
 - Coverage for config, MQTT, deposit, sensor, LTE, error handling
 
@@ -40,43 +36,13 @@
 - OTA password protection
 - NVS for sensitive data
 
-## Performance
-- Low power consumption with deep sleep
-- Efficient MQTT reconnection
-- Minimal heap usage
+## Contributing
+- Follow ESP32 Arduino coding standards
+- Add unit tests for new features
+- Update documentation
 
-## Edge Cases Handled
-- Invalid config values
-- MQTT disconnection
-- Sensor failures
-- Power fluctuations
-- Provisioning timeouts
-- OTA failures
+## License
+[MIT License](LICENSE)
 
-## Future Enhancements
-- Multi-compartment support
-- Advanced sensor fusion
-- Cloud integration
-- Mobile app API
-
-## API Reference
-### MQTT Commands
-- Subscribe to `waterfront/{location}/{code}/command` for remote commands
-- Publish to `waterfront/{location}/{code}/response` for acknowledgments
-
-### REST API (SoftAP Provisioning)
-- GET `/`: Returns WiFi setup form
-- POST `/set`: Accepts SSID and password, attempts connection
-
-## Deployment Guide
-1. Flash ESP32 with firmware using PlatformIO
-2. Upload config.json and certs to LittleFS
-3. Power on and provision WiFi via BLE or SoftAP
-4. Monitor via MQTT topics
-
-## Troubleshooting
-- Check serial logs for errors
-- Verify config.json syntax
-- Ensure certs are uploaded to LittleFS
-- Monitor MQTT connection status
-- Use factory reset if unresponsive
+## Contact
+For issues or contributions, open a GitHub issue.
