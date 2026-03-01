@@ -1,0 +1,11 @@
+
+## CRC Checksums
+All outgoing messages include a CRC32 checksum for integrity. Incoming messages are validated against CRC.
+
+## TLS Security
+MQTT uses TLS with CA certificates for secure communication. Client certificates optional.
+
+## Rate Limits
+- Debug telemetry: Every 60 seconds.
+- Alerts: As events occur.
+- OTA progress: Every 10% during update.

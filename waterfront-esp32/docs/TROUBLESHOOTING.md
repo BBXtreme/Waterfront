@@ -61,6 +61,29 @@ This guide helps you fix common problems with the WATERFRONT system. If somethin
 - Hold for exactly 5 seconds.
 - Check serial logs for confirmation.
 
+### No Debug or Alert Messages
+**Symptoms**: No telemetry on MQTT.
+**Causes**: Debug mode disabled, MQTT disconnected.
+**Fixes**:
+- Set `"debugMode": true` in config.json.
+- Check MQTT connection.
+- Subscribe to `waterfront/{location}/{code}/debug` and `waterfront/{location}/{code}/alert`.
+
+### Alerts Not Triggering
+**Symptoms**: No alerts for low power or errors.
+**Causes**: Thresholds not met, MQTT issues.
+**Fixes**:
+- Verify thresholds in config.json.
+- Check MQTT broker for messages.
+- Look at serial logs for alert attempts.
+
+### CRC Validation Fails
+**Symptoms**: Messages ignored.
+**Causes**: Payload corruption.
+**Fixes**:
+- Check network stability.
+- Ensure MQTT client is up to date.
+
 ## How to Check Logs
 - Enable debug mode in config.json (`"debugMode": true`).
 - Open the serial monitor in PlatformIO.

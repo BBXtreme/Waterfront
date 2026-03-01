@@ -10,7 +10,8 @@ The WATERFRONT system is an ESP32-based controller for automated kayak rental ba
 - **Provisioning**: BLE and SoftAP WiFi setup
 - **Sensor Integration**: Ultrasonic presence detection, gate control
 - **Deposit Logic**: Rental timers, overdue auto-lock, MQTT sync
-- **Error Handling**: Fatal error logging and alerting
+- **Error Handling**: Fatal error logging and MQTT alerting
+- **Remote Alerting and Health Telemetry**: Publishes alerts for low power, errors, and debug info with uptime, heap, battery, reconnects
 - **Comprehensive Testing**: Unit tests with Catch2 for reliability
 
 ## Hardware Requirements
@@ -38,7 +39,7 @@ The WATERFRONT system is an ESP32-based controller for automated kayak rental ba
 ### Tasks
 - Factory Reset Task: Monitors GPIO 0 for long press
 - Overdue Check Task: Periodic overdue rental checks
-- Debug Task: Health telemetry publishing
+- Debug Task: Health telemetry publishing every 60s if debug mode enabled
 - MQTT Loop Task: Maintains MQTT connection
 
 ## Configuration

@@ -1,3 +1,31 @@
-This is a JSON message (a simple text format for data) telling the system to open the gate.
 
-#### Response: Gate Opened Successfully
+## MQTT Topics
+### Incoming Commands
+- `waterfront/{location}/{code}/command`: Commands to control the system.
+- `waterfront/{location}/{code}/config/update`: Update system configuration.
+- `waterfront/{location}/{code}/ota/update`: Trigger OTA update.
+- `waterfront/{location}/{code}/booking/paid`: Notify of paid booking.
+- `waterfront/{location}/{code}/compartments/+/command`: Commands for specific compartments (e.g., open_gate, close_gate, query_state).
+- `waterfront/{location}/{code}/compartments/+/status`: Retained status updates for compartments.
+
+### Outgoing Responses
+- `waterfront/{location}/{code}/response`: Responses to commands.
+- `waterfront/{location}/{code}/compartments/+/ack`: Acknowledgments for compartment actions.
+- `waterfront/{location}/{code}/debug`: Health telemetry every 60s (uptime, heap, fwVersion, battery, tasks, reconnects).
+- `waterfront/{location}/{code}/alert`: Alerts for errors, low power, etc.
+- `waterfront/machine/{code}/status`: Machine status updates.
+- `waterfront/slots/{id}/status`: Slot-specific status.
+- `waterfront/locations/{code}/depositRelease`: Deposit release notifications.
+- `waterfront/locations/{code}/returnConfirm`: Return confirmations.
+- `waterfront/{location}/{code}/ota/status`: OTA update status.
+
+## Testing
+Run unit tests with `pio test`. Tests cover config loading, MQTT handling, sensor logic, and more. Coverage is at least 90%.
+
+## Contributing
+- Follow the code style (Arduino-compatible).
+- Add unit tests for new features.
+- Update documentation for changes.
+
+## License
+[MIT License](LICENSE)
