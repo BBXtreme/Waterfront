@@ -22,7 +22,7 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
-#include <ESP32httpUpdate.h>
+#include <HTTPUpdate.h>
 
 // CRC32 implementation (simple polynomial)
 uint32_t computeCRC32(const char* data, size_t length) {
@@ -133,7 +133,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
         if (updateConfigFromJson(msg.c_str())) {
             ESP_LOGI("MQTT", "Config updated, restarting ESP");
             delay(5000);
-            ESP.restart();
+            esp_restart();
         } else {
             ESP_LOGE("MQTT", "Failed to update config");
         }
@@ -145,10 +145,10 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     if (strcmp(topic, otaTopic.c_str()) == 0) {
         ESP_LOGI("MQTT", "OTA update received: %s", msg.c_str());
         // Assume msg is the URL
-        t_httpUpdate_return ret = ESPhttpUpdate.update(msg);
+        t_httpUpdate_return ret = httpUpdate.update(msg);
         switch (ret) {
             case HTTP_UPDATE_FAILED:
-                ESP_LOGE("OTA", "Update failed: %s", ESPhttpUpdate.getLastErrorString().c_str());
+                ESP_LOGE("OTA", "Update failed: %s", httpUpdate.getLastErrorString().c_str());
                 break;
             case HTTP_UPDATE_NO_UPDATES:
                 ESP_LOGI("OTA", "No updates available");
