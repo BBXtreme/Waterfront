@@ -5810,3 +5810,70 @@
 +- Deep documentation sync across TSD.md, MQTT_SPEC, Pinout Plan, etc.
 +
 +Firmware now at 95%+ production-ready level for Bremen waterfront deployment.
+
+# 2026-03-01 10:27:31.914244
++Harden MQTT TLS in waterfront-esp32 with full client cert support and error handling.
++
++1. Add to config_loader.h: String clientCertPath = ""; String clientKeyPath = "";
++2. In config_loader.cpp: parse the two new fields.
++3. In mqtt_client.cpp connect(): load client cert/key if present, log clear error if CA missing.
++
++Show diffs for config_loader.h/cpp + mqtt_client.cpp.
++Commit: "security: full TLS client cert + robust fallback"
+
+# 2026-03-01 10:27:58.652895
++n
+
+# 2026-03-01 10:28:06.055231
++commit last pedits
+
+# 2026-03-01 10:28:30.047955
++edit and commit: Add deep sleep and solar power gating to waterfront-esp32.
++
++1. Add ADC read for solar/battery voltage.
++2. If voltage < g_config.solarVoltageMin → ESP.deepSleep(60e6);
++3. In lte_manager: full modem power-down when WiFi idle.
++
++Show diffs for main.cpp + lte_manager.cpp.
++Commit: "feat: deep sleep + solar voltage cutoff"
+
+# 2026-03-01 10:28:56.299778
++Expand test coverage and add remote error alerting.
++
++1. Add test_return_sensor.cpp and test_deposit_logic.cpp.
++2. In error_handler: publish to /alert topic before restart.
++
++Show diffs for new test files + error_handler.cpp.
++Commit: "test: expand coverage + remote error alerting"
+
+# 2026-03-01 10:29:26.123294
++n
+
+# 2026-03-01 10:29:42.037461
++analyze if all last prompts implementations are done prefectly and commited as well
+
+# 2026-03-01 10:32:59.440168
++but no commit message was provided by aider?
+
+# 2026-03-01 10:34:43.721160
++Verify and finalize centralized configuration in waterfront-esp32.
++
++1. Confirm src/config_loader.cpp and config_loader.h exist.
++2. If missing, create them with GlobalConfig struct (mqtt, location, compartments array, useTLS, caCertPath, etc.).
++3. In main.cpp: call loadConfig() after LittleFS.begin().
++4. Ensure all other files use g_config.* instead of hard-codes.
++
++Show list of changed files + diffs for main.cpp and config_loader.h.
++Commit: "feat: finalize centralized config loader with full runtime support"
+
+# 2026-03-01 10:35:05.412547
++y
+
+# 2026-03-01 10:38:44.941032
++n
+
+# 2026-03-01 10:38:57.514560
++commit all edits and implementation of last prompt
+
+# 2026-03-01 10:39:37.324921
++/commit
