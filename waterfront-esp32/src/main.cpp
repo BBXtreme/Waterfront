@@ -74,19 +74,16 @@ void overdue_check_task(void *pvParameters) {
     }
 }
 
-// Debug task for OTA-friendly logging
+// Debug task for remote health telemetry
 void debug_task(void *pvParameters) {
     while (1) {
         if (g_config.debugMode) {
             // Publish debug telemetry
             DynamicJsonDocument doc(512);
             doc["uptime"] = millis() / 1000;  // Uptime in seconds
-            doc["freeHeap"] = ESP.getFreeHeap();
-            doc["minFreeHeap"] = ESP.getMinFreeHeap();
-            doc["wifiRSSI"] = WiFi.RSSI();
-            doc["mqttConnected"] = mqttClient.connected();
-            doc["otaPartition"] = esp_ota_get_running_partition()->label;
-            doc["firmwareVersion"] = FW_VERSION;  // Firmware version
+            doc["heapFree"] = ESP.getFreeHeap();
+            doc["fwVersion"] = FW_VERSION;
+            doc["tasks"] = uxTaskGetNumberOfTasks();
             String payload;
             serializeJson(doc, payload);
             char topic[96];
@@ -95,7 +92,7 @@ void debug_task(void *pvParameters) {
             ESP_LOGI("DEBUG", "Published debug telemetry: %s", payload.c_str());
         }
         esp_task_wdt_reset();  // Reset watchdog
-        vTaskDelay(pdMS_TO_TICKS(1800000));  // Every 30 minutes (1800000 ms)
+        vTaskDelay(pdMS_TO_TICKS(60000));  // Every 60 seconds (60000 ms)
     }
 }
 
