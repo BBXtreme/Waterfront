@@ -165,7 +165,7 @@ bool saveConfig() {
     return true;
 }
 
-bool updateConfigFromJson(const String& jsonPayload) {
+bool updateConfigFromJson(const char* jsonPayload) {
     // Validate basic JSON
     DynamicJsonDocument doc(4096);
     DeserializationError error = deserializeJson(doc, jsonPayload);

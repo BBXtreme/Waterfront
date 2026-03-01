@@ -90,7 +90,7 @@ struct GlobalConfig {
 // Functions
 bool loadConfig();
 bool saveConfig();
-bool updateConfigFromJson(const String& jsonPayload);
+bool updateConfigFromJson(const char* jsonPayload);
 GlobalConfig getDefaultConfig();
 
 #endif // CONFIG_LOADER_H
