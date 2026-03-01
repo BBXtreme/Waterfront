@@ -5,7 +5,8 @@
     "username": "mqttuser",
     "password": "strongpass123",
     "clientIdPrefix": "waterfront",
-    "useTLS": true
+    "useTLS": true,
+    "caCertPath": "/ca.pem"
   },
   "location": {
     "slug": "bremen",

@@ -36,14 +36,13 @@ esp_err_t mqtt_init() {
     // Enable TLS if configured
     if (useTLS) {
         // Load CA cert from LittleFS if available
-        if (LittleFS.exists("/ca.pem")) {
-            File caFile = LittleFS.open("/ca.pem", "r");
+        if (LittleFS.exists(g_config.mqtt.caCertPath)) {
+            File caFile = LittleFS.open(g_config.mqtt.caCertPath, "r");
             if (caFile) {
                 String caCert = caFile.readString();
                 caFile.close();
-                // For PubSubClient, setSecure with cert (if supported)
+                mqttClient.setCACert(caCert.c_str());
                 mqttClient.setSecure(true);
-                // Note: PubSubClient may need custom WiFiClientSecure for full cert support
                 ESP_LOGI("MQTT", "Loaded CA cert from LittleFS");
             } else {
                 ESP_LOGW("MQTT", "CA cert file exists but could not open");

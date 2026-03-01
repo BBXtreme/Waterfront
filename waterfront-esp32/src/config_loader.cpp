@@ -63,6 +63,7 @@ bool loadConfig() {
         g_config.mqtt.password = mqtt["password"].as<String>();
         g_config.mqtt.clientIdPrefix = mqtt["clientIdPrefix"].as<String>();
         g_config.mqtt.useTLS = mqtt["useTLS"] | false;
+        g_config.mqtt.caCertPath = mqtt["caCertPath"].as<String>();
     }
 
     // Parse location
@@ -191,6 +192,7 @@ GlobalConfig getDefaultConfig() {
     def.mqtt.password = "strongpass123";
     def.mqtt.clientIdPrefix = "waterfront";
     def.mqtt.useTLS = true;
+    def.mqtt.caCertPath = "/ca.pem";
     def.location.slug = "bremen";
     def.location.code = "harbor-01";
     def.wifiProvisioning.fallbackSsid = "WATERFRONT-DEFAULT";
