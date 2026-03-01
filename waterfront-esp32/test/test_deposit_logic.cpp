@@ -5,7 +5,7 @@
 // Run tests with PlatformIO: pio test
 
 #define CATCH_CONFIG_MAIN  // Catch2 main entry point
-#include <catch2/catch_test_macros.hpp>  // Catch2 header (add to lib_deps in platformio.ini: "catchorg/Catch2@^3.4.0")
+#include <catch.hpp>  // Catch2 header (add to lib_deps in platformio.ini)
 
 // Include headers under test
 #include "deposit_logic.h"
@@ -143,6 +143,29 @@ TEST_CASE("Start Rental Timer", "[deposit]") {
     REQUIRE(activeTimers[0].durationSec == 7200);
 }
 
+// Test start rental timer with multiple compartments
+TEST_CASE("Start Rental Timer - Multiple", "[deposit]") {
+    // Set mock config
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartments[1] = {2, 18, 19, 20, 21, 22, 23};
+    g_config.compartmentCount = 2;
+    g_config.system.gracePeriodSec = 3600;  // 1 hour
+
+    // Call init
+    deposit_init();
+
+    // Start rentals for both compartments
+    startRental(1, 7200);
+    startRental(2, 3600);
+
+    // Verify timers added
+    REQUIRE(activeTimers.size() == 2);
+    REQUIRE(activeTimers[0].compartmentId == 1);
+    REQUIRE(activeTimers[0].durationSec == 7200);
+    REQUIRE(activeTimers[1].compartmentId == 2);
+    REQUIRE(activeTimers[1].durationSec == 3600);
+}
+
 // Test check overdue (no overdue)
 TEST_CASE("Check Overdue - No Overdue", "[deposit]") {
     // Set mock config
@@ -188,4 +211,47 @@ TEST_CASE("Check Overdue - Overdue", "[deposit]") {
     REQUIRE(mockMqttClient.lastPublishedPayload.contains("\"action\":\"autoLock\""));
     // Verify timer removed
     REQUIRE(activeTimers.size() == 0);
+}
+
+// Test check overdue with multiple timers
+TEST_CASE("Check Overdue - Multiple Timers", "[deposit]") {
+    // Set mock config
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartments[1] = {2, 18, 19, 20, 21, 22, 23};
+    g_config.compartmentCount = 2;
+    g_config.system.gracePeriodSec = 3600;  // 1 hour
+    g_config.location.code = "harbor-01";
+
+    // Call init
+    deposit_init();
+
+    // Start rentals
+    startRental(1, 7200);
+    startRental(2, 3600);
+    mockMillis = 10800000;  // 3 hours (both overdue)
+
+    // Call check_overdue
+    checkOverdue();
+
+    // Verify publishes for both
+    REQUIRE(mockMqttClient.publishCount == 2);
+    // Verify timers removed
+    REQUIRE(activeTimers.size() == 0);
+}
+
+// Test deposit on return without prior take
+TEST_CASE("Deposit On Return - No Prior Take", "[deposit]") {
+    // Set mock config
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartmentCount = 1;
+    g_config.system.gracePeriodSec = 3600;  // 1 hour
+
+    // Call init
+    deposit_init();
+
+    // Call on_return without take
+    deposit_on_return(&mqttClient);
+
+    // Verify no change
+    REQUIRE(deposit_is_held() == false);
 }
