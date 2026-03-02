@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import mqtt from 'mqtt';
+import mqtt, { ErrorWithReasonCode } from 'mqtt';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ function TestConnectionsPage() {
   
   // State for payment gateway tests
   const [stripeStatus, setStripeStatus] = useState<string>("Not Tested");
-  const [stripeResult, setStripeResult] = useState<string>("");
+  const [stripeResult, setStripeStatus] = useState<string>("");
   const [btcPayStatus, setBTCPayStatus] = useState<string>("Not Tested");
   const [btcPayResult, setBTCPayResult] = useState<string>("");
 
@@ -183,7 +183,7 @@ const debugMQTTConnection = async () => {
 
     client.on('connect', () => {
       console.log('MQTT connected successfully');
-      client.subscribe('/kayak/+/status', (err: Error | null) => {
+      client.subscribe('/kayak/+/status', (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Subscribe failed:', (err as Error).message);
         } else {
@@ -191,7 +191,7 @@ const debugMQTTConnection = async () => {
         }
       });
       // Publish a test message (optional)
-      client.publish('/kayak/test/debug', 'Hello from browser debug', (err: Error | null) => {
+      client.publish('/kayak/test/debug', 'Hello from browser debug', (err?: Error | ErrorWithReasonCode) => {
         if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
@@ -259,14 +259,14 @@ const debugLocalMQTT = async () => {
 
     client.on('connect', () => {
       console.log('MQTT connected successfully');
-      client.subscribe('/kayak/+/status', (err: Error | null) => {
+      client.subscribe('/kayak/+/status', (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
-      client.publish('/kayak/test/debug', 'Hello from browser debug', (err: Error | null) => {
+      client.publish('/kayak/test/debug', 'Hello from browser debug', (err?: Error | ErrorWithReasonCode) => {
         if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
@@ -316,14 +316,14 @@ const debugHivemqMQTT = async () => {
 
     client.on('connect', () => {
       console.log('MQTT connected successfully');
-      client.subscribe('/kayak/+/status', (err: Error | null) => {
+      client.subscribe('/kayak/+/status', (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
-      client.publish('/kayak/test/debug', 'Hello from browser debug', (err: Error | null) => {
+      client.publish('/kayak/test/debug', 'Hello from browser debug', (err?: Error | ErrorWithReasonCode) => {
         if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
@@ -373,14 +373,14 @@ const debugEmqxMQTT = async () => {
 
     client.on('connect', () => {
       console.log('MQTT connected successfully');
-      client.subscribe('/kayak/+/status', (err: Error | null) => {
+      client.subscribe('/kayak/+/status', (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
-      client.publish('/kayak/test/debug', 'Hello from browser debug', (err: Error | null) => {
+      client.publish('/kayak/test/debug', 'Hello from browser debug', (err?: Error | ErrorWithReasonCode) => {
         if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
@@ -437,14 +437,14 @@ const debugHivemqCloudMQTT = async () => {
 
     client.on('connect', () => {
       console.log('MQTT connected successfully');
-      client.subscribe('/kayak/+/status', (err: Error | null) => {
+      client.subscribe('/kayak/+/status', (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
-      client.publish('/kayak/test/debug', 'Hello from browser debug', (err: Error | null) => {
+      client.publish('/kayak/test/debug', 'Hello from browser debug', (err?: Error | ErrorWithReasonCode) => {
         if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
@@ -612,7 +612,7 @@ const debugVercelEnvironment = async () => {
       });
       setAttempts(0);
       // Subscribe to ack topic
-      client.subscribe('/kayak/test/ack', (err: Error | null) => {
+      client.subscribe('/kayak/test/ack', (err?: Error | ErrorWithReasonCode) => {
         if (err) console.error(`Subscribe error for ${broker}:`, (err as Error).message);
       });
     });
@@ -748,7 +748,7 @@ const debugVercelEnvironment = async () => {
         broker: 'local',
         timestamp: new Date().toISOString(),
       };
-      localClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err: Error | null) => {
+      localClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Publish failed:', (err as Error).message);
           toast.error("Failed", { description: (err as Error).message });
@@ -774,7 +774,7 @@ const debugVercelEnvironment = async () => {
         broker: 'hivemq',
         timestamp: new Date().toISOString(),
       };
-      hivemqClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err: Error | null) => {
+      hivemqClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Publish failed:', (err as Error).message);
           toast.error("Failed", { description: (err as Error).message });
@@ -800,7 +800,7 @@ const debugVercelEnvironment = async () => {
         broker: 'emqx',
         timestamp: new Date().toISOString(),
       };
-      emqxClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err: Error | null) => {
+      emqxClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Publish failed:', (err as Error).message);
           toast.error("Failed", { description: (err as Error).message });
@@ -826,7 +826,7 @@ const debugVercelEnvironment = async () => {
         broker: 'hivemq-cloud',
         timestamp: new Date().toISOString(),
       };
-      hivemqCloudClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err: Error | null) => {
+      hivemqCloudClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err?: Error | ErrorWithReasonCode) => {
         if (err) {
           console.error('Publish failed:', (err as Error).message);
           toast.error("Failed", { description: (err as Error).message });
