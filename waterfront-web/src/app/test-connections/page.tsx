@@ -79,7 +79,7 @@ function TestConnectionsPage() {
         setCloudUsername(u || '');
         setCloudPassword(p || '');
       } catch (e) {
-        console.error('Failed to parse saved credentials:', e);
+        console.error('Failed to parse saved credentials:', (e as Error).message);
       }
     }
     console.log('Hydration check: client theme class:', document.documentElement.className);
@@ -138,12 +138,12 @@ const debugSupabaseConnection = async () => {
       console.log('Bookings count:', bookingCount ?? 0);
       console.log('Bookings error:', bookingError);
     } catch (e) {
-      console.log('Bookings table check skipped (likely not created yet):', e.message);
+      console.log('Bookings table check skipped (likely not created yet):', (e as Error).message);
     }
 
     console.log('=== Supabase Deep Debug End ===');
   } catch (err) {
-    console.error('Supabase debug failed:', err);
+    console.error('Supabase debug failed:', (err as Error).message);
   }
 };
 
@@ -185,14 +185,14 @@ const debugMQTTConnection = async () => {
       console.log('MQTT connected successfully');
       client.subscribe('/kayak/+/status', (err) => {
         if (err) {
-          console.error('Subscribe failed:', err);
+          console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
       // Publish a test message (optional)
       client.publish('/kayak/test/debug', 'Hello from browser debug', (err) => {
-        if (err) console.error('Test publish failed:', err);
+        if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
       setTimeout(() => client.end(), 4000); // close after ~4s
@@ -203,7 +203,7 @@ const debugMQTTConnection = async () => {
     });
 
     client.on('error', (err) => {
-      console.error('MQTT error:', err.message || err);
+      console.error('MQTT error:', (err as Error).message);
       client.end();
     });
 
@@ -220,7 +220,7 @@ const debugMQTTConnection = async () => {
     }, 6000);
 
   } catch (err) {
-    console.error('MQTT debug init failed:', err);
+    console.error('MQTT debug init failed:', (err as Error).message);
   }
 };
 
@@ -261,13 +261,13 @@ const debugLocalMQTT = async () => {
       console.log('MQTT connected successfully');
       client.subscribe('/kayak/+/status', (err) => {
         if (err) {
-          console.error('Subscribe failed:', err);
+          console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
       client.publish('/kayak/test/debug', 'Hello from browser debug', (err) => {
-        if (err) console.error('Test publish failed:', err);
+        if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
       setTimeout(() => client.end(), 4000);
@@ -278,7 +278,7 @@ const debugLocalMQTT = async () => {
     });
 
     client.on('error', (err) => {
-      console.error('MQTT error:', err.message || err);
+      console.error('MQTT error:', (err as Error).message);
       client.end();
     });
 
@@ -294,7 +294,7 @@ const debugLocalMQTT = async () => {
     }, 6000);
 
   } catch (err) {
-    console.error('MQTT debug init failed:', err);
+    console.error('MQTT debug init failed:', (err as Error).message);
   }
 };
 
@@ -318,13 +318,13 @@ const debugHivemqMQTT = async () => {
       console.log('MQTT connected successfully');
       client.subscribe('/kayak/+/status', (err) => {
         if (err) {
-          console.error('Subscribe failed:', err);
+          console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
       client.publish('/kayak/test/debug', 'Hello from browser debug', (err) => {
-        if (err) console.error('Test publish failed:', err);
+        if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
       setTimeout(() => client.end(), 4000);
@@ -335,7 +335,7 @@ const debugHivemqMQTT = async () => {
     });
 
     client.on('error', (err) => {
-      console.error('MQTT error:', err.message || err);
+      console.error('MQTT error:', (err as Error).message);
       client.end();
     });
 
@@ -351,7 +351,7 @@ const debugHivemqMQTT = async () => {
     }, 6000);
 
   } catch (err) {
-    console.error('MQTT debug init failed:', err);
+    console.error('MQTT debug init failed:', (err as Error).message);
   }
 };
 
@@ -375,13 +375,13 @@ const debugEmqxMQTT = async () => {
       console.log('MQTT connected successfully');
       client.subscribe('/kayak/+/status', (err) => {
         if (err) {
-          console.error('Subscribe failed:', err);
+          console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
       client.publish('/kayak/test/debug', 'Hello from browser debug', (err) => {
-        if (err) console.error('Test publish failed:', err);
+        if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
       setTimeout(() => client.end(), 4000);
@@ -392,7 +392,7 @@ const debugEmqxMQTT = async () => {
     });
 
     client.on('error', (err) => {
-      console.error('MQTT error:', err.message || err);
+      console.error('MQTT error:', (err as Error).message);
       client.end();
     });
 
@@ -408,7 +408,7 @@ const debugEmqxMQTT = async () => {
     }, 6000);
 
   } catch (err) {
-    console.error('MQTT debug init failed:', err);
+    console.error('MQTT debug init failed:', (err as Error).message);
   }
 };
 
@@ -439,13 +439,13 @@ const debugHivemqCloudMQTT = async () => {
       console.log('MQTT connected successfully');
       client.subscribe('/kayak/+/status', (err) => {
         if (err) {
-          console.error('Subscribe failed:', err);
+          console.error('Subscribe failed:', (err as Error).message);
         } else {
           console.log('Subscribed to /kayak/+/status');
         }
       });
       client.publish('/kayak/test/debug', 'Hello from browser debug', (err) => {
-        if (err) console.error('Test publish failed:', err);
+        if (err) console.error('Test publish failed:', (err as Error).message);
         else console.log('Test message published');
       });
       setTimeout(() => client.end(), 4000);
@@ -456,7 +456,7 @@ const debugHivemqCloudMQTT = async () => {
     });
 
     client.on('error', (err) => {
-      console.error('MQTT error:', err.message || err);
+      console.error('MQTT error:', (err as Error).message);
       client.end();
     });
 
@@ -472,7 +472,7 @@ const debugHivemqCloudMQTT = async () => {
     }, 6000);
 
   } catch (err) {
-    console.error('MQTT debug init failed:', err);
+    console.error('MQTT debug init failed:', (err as Error).message);
   }
 };
 
@@ -613,7 +613,7 @@ const debugVercelEnvironment = async () => {
       setAttempts(0);
       // Subscribe to ack topic
       client.subscribe('/kayak/test/ack', (err) => {
-        if (err) console.error(`Subscribe error for ${broker}:`, err);
+        if (err) console.error(`Subscribe error for ${broker}:`, (err as Error).message);
       });
     });
 
@@ -630,12 +630,12 @@ const debugVercelEnvironment = async () => {
     });
 
     client.on('error', (error) => {
-      console.error(`MQTT WS error for ${broker}:`, error);
+      console.error(`MQTT WS error for ${broker}:`, (error as Error).message);
       setIsConnected(false);
-      let errorMessage = 'Connection error: ' + (error.message || error);
-      if (broker === 'hivemq' && error.message && (error.message.includes('lost') || error.message.includes('failed'))) {
+      let errorMessage = 'Connection error: ' + ((error as Error).message || error);
+      if (broker === 'hivemq' && (error as Error).message && ((error as Error).message.includes('lost') || (error as Error).message.includes('failed'))) {
         errorMessage = 'Connection failed – check network or try EMQX/HiveMQ Cloud';
-      } else if (broker === 'hivemq-cloud' && (error.message?.includes('Not authorized') || error.message?.includes('401') || error.message?.includes('403'))) {
+      } else if (broker === 'hivemq-cloud' && ((error as Error).message?.includes('Not authorized') || (error as Error).message?.includes('401') || (error as Error).message?.includes('403'))) {
         errorMessage = 'Authentication failed – check username/password';
       }
       setStatus({
@@ -750,15 +750,15 @@ const debugVercelEnvironment = async () => {
       };
       localClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
-          console.error('Publish failed:', err);
-          toast.error("Failed", { description: err.message });
+          console.error('Publish failed:', (err as Error).message);
+          toast.error("Failed", { description: (err as Error).message });
         } else {
           console.log('Test message published to local');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'local');
             toast.success("Message Sent", { description: `to local` });
           } catch (logErr) {
-            console.error('Supabase log failed:', logErr);
+            console.error('Supabase log failed:', (logErr as Error).message);
             toast.error("Log Failed", { description: 'Supabase log failed' });
           }
         }
@@ -776,15 +776,15 @@ const debugVercelEnvironment = async () => {
       };
       hivemqClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
-          console.error('Publish failed:', err);
-          toast.error("Failed", { description: err.message });
+          console.error('Publish failed:', (err as Error).message);
+          toast.error("Failed", { description: (err as Error).message });
         } else {
           console.log('Test message published to hivemq');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'hivemq');
             toast.success("Message Sent", { description: `to hivemq` });
           } catch (logErr) {
-            console.error('Supabase log failed:', logErr);
+            console.error('Supabase log failed:', (logErr as Error).message);
             toast.error("Log Failed", { description: 'Supabase log failed' });
           }
         }
@@ -802,15 +802,15 @@ const debugVercelEnvironment = async () => {
       };
       emqxClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
-          console.error('Publish failed:', err);
-          toast.error("Failed", { description: err.message });
+          console.error('Publish failed:', (err as Error).message);
+          toast.error("Failed", { description: (err as Error).message });
         } else {
           console.log('Test message published to emqx');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'emqx');
             toast.success("Message Sent", { description: `to emqx` });
           } catch (logErr) {
-            console.error('Supabase log failed:', logErr);
+            console.error('Supabase log failed:', (logErr as Error).message);
             toast.error("Log Failed", { description: 'Supabase log failed' });
           }
         }
@@ -828,15 +828,15 @@ const debugVercelEnvironment = async () => {
       };
       hivemqCloudClient.publish('/kayak/test/unlock', JSON.stringify(payloadObject), { qos: 1 }, async (err) => {
         if (err) {
-          console.error('Publish failed:', err);
-          toast.error("Failed", { description: err.message });
+          console.error('Publish failed:', (err as Error).message);
+          toast.error("Failed", { description: (err as Error).message });
         } else {
           console.log('Test message published to hivemq-cloud');
           try {
             await insertLog('/kayak/test/unlock', payloadObject, 'hivemq-cloud');
             toast.success("Message Sent", { description: `to hivemq-cloud` });
           } catch (logErr) {
-            console.error('Supabase log failed:', logErr);
+            console.error('Supabase log failed:', (logErr as Error).message);
             toast.error("Log Failed", { description: 'Supabase log failed' });
           }
         }
@@ -878,7 +878,7 @@ const debugVercelEnvironment = async () => {
       }
     } catch (error) {
       setStatus("Error");
-      setResult(`Failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setResult(`Failed: ${(error as Error).message || 'Unknown error'}`);
     }
   };
   
@@ -1247,7 +1247,7 @@ const debugVercelEnvironment = async () => {
                   <Badge
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      hivemqCloudStatus.status === "OK" || hivemqCloudStatus.status.includes("Connected") || hivemqCloudStatus.status.includes("Detected") || hivemqCloudStatus.status.includes("connected")
+                      hivemqCloudStatus.status === "OK" || hivemqCloudStatus.status.includes("Connected") || hivemqCloudStatus.includes("Detected") || hivemqCloudStatus.includes("connected")
                         ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
                         : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
