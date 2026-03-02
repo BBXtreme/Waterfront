@@ -5,12 +5,11 @@
 #include "error_handler.h"
 #include <LittleFS.h>
 
-// Adapted from original mqtt_event_handler in mdb-slave-esp32s3.c
-WiFiClient espClient;
-PubSubClient mqttClient(espClient);
+// ESP-IDF MQTT client handle
+esp_mqtt_client_handle_t mqttClient = nullptr;
 
-// Extern global config
-extern GlobalConfig g_config;
+// MQTT connection state
+bool mqttConnected = false;
 
 // MQTT reconnect counter for telemetry
 static int mqttReconnectCount = 0;
@@ -18,30 +17,50 @@ static int mqttReconnectCount = 0;
 // Last MQTT activity timestamp for idle detection
 unsigned long lastMqttActivity = 0;
 
-// MQTT callback: Processes incoming messages and updates activity timestamp.
-// Edge cases: null topic/payload, invalid JSON, unknown commands.
-void mqtt_callback(char* topic, byte* payload, unsigned int length) {
-    lastMqttActivity = millis();  // Track last activity for power management
-    if (!topic || !payload || length == 0) {
-        ESP_LOGW("MQTT", "Invalid callback parameters: topic=%p, payload=%p, length=%u", topic, payload, length);
-        return;
-    }
-    String message = "";
-    for (unsigned int i = 0; i < length; i++) {
-        message += (char)payload[i];
-    }
-    ESP_LOGI("MQTT", "Message received on %s: %s", topic, message.c_str());
+// MQTT event handler: Processes incoming events and updates activity timestamp.
+// Handles connect, disconnect, data, etc.
+// Edge cases: invalid data, unknown events.
+void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* data) {
+    esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t) data;
+    switch (event_id) {
+        case MQTT_EVENT_CONNECTED:
+            mqttConnected = true;
+            ESP_LOGI("MQTT", "Connected to MQTT broker");
+            break;
+        case MQTT_EVENT_DISCONNECTED:
+            mqttConnected = false;
+            ESP_LOGW("MQTT", "Disconnected from MQTT broker");
+            break;
+        case MQTT_EVENT_DATA:
+            lastMqttActivity = millis();  // Track last activity for power management
+            if (!event->topic || !event->data || event->data_len == 0) {
+                ESP_LOGW("MQTT", "Invalid event data: topic=%p, data=%p, len=%d", event->topic, event->data, event->data_len);
+                return;
+            }
+            String message = "";
+            for (int i = 0; i < event->data_len; i++) {
+                message += (char)event->data[i];
+            }
+            ESP_LOGI("MQTT", "Message received on %.*s: %s", event->topic_len, event->topic, message.c_str());
 
-    // Parse JSON payload for commands or updates
-    DynamicJsonDocument doc(1024);
-    DeserializationError error = deserializeJson(doc, message);
-    if (error) {
-        ESP_LOGW("MQTT", "JSON parse failed: %s", error.c_str());
-        return;
+            // Parse JSON payload for commands or updates
+            DynamicJsonDocument doc(1024);
+            DeserializationError error = deserializeJson(doc, message);
+            if (error) {
+                ESP_LOGW("MQTT", "JSON parse failed: %s", error.c_str());
+                return;
+            }
+            // Future: Handle specific commands like config updates or gate control
+            // For now, just log
+            ESP_LOGI("MQTT", "Parsed JSON successfully");
+            break;
+        case MQTT_EVENT_ERROR:
+            ESP_LOGE("MQTT", "MQTT error occurred");
+            break;
+        default:
+            ESP_LOGD("MQTT", "Unhandled MQTT event: %d", event_id);
+            break;
     }
-    // Future: Handle specific commands like config updates or gate control
-    // For now, just log
-    ESP_LOGI("MQTT", "Parsed JSON successfully");
 }
 
 // Parse broker URI to extract host, port, and TLS flag
@@ -91,9 +110,37 @@ esp_err_t mqtt_init() {
         vPortExitCritical(&g_configMutex);
     }
 
+    // Build full URI
+    String fullUri = (useTLS ? "mqtts://" : "mqtt://") + host + ":" + String(port);
+
+    // Configure MQTT client
+    esp_mqtt_client_config_t mqtt_config = {};
+    mqtt_config.uri = fullUri.c_str();
+
+    // Generate client ID
+    vPortEnterCritical(&g_configMutex);
+    String clientIdPrefix = g_config.mqtt.clientIdPrefix;
+    vPortExitCritical(&g_configMutex);
+    String clientId = (clientIdPrefix.length() > 0 ? clientIdPrefix : "waterfront") + "-client";
+    if (clientId.length() > 23) {  // MQTT client ID max 23 chars
+        clientId = clientId.substring(0, 23);
+        ESP_LOGW("MQTT", "Client ID truncated to %s", clientId.c_str());
+    }
+    mqtt_config.client_id = clientId.c_str();
+
+    // Set auth if provided
+    vPortEnterCritical(&g_configMutex);
+    String username = g_config.mqtt.username;
+    String password = g_config.mqtt.password;
+    vPortExitCritical(&g_configMutex);
+    if (username.length() > 0) {
+        mqtt_config.username = username.c_str();
+        mqtt_config.password = password.c_str();
+        ESP_LOGI("MQTT", "Using auth: user=%s", username.c_str());
+    }
+
+    // Configure TLS if enabled
     bool tlsEnabled = useTLS;
-    String caStr, certStr, keyStr;
-    bool caLoaded = false, certLoaded = false;
     if (tlsEnabled) {
         // Check CA cert path
         vPortEnterCritical(&g_configMutex);
@@ -110,13 +157,13 @@ esp_err_t mqtt_init() {
                 ESP_LOGE("MQTT", "CA cert file missing – skipping TLS");
                 tlsEnabled = false;
             } else {
-                caStr = ca.readString();
+                String caStr = ca.readString();
                 ca.close();  // Close file to free resources
                 if (caStr.length() == 0) {
                     ESP_LOGE("MQTT", "CA cert empty – skipping TLS");
                     tlsEnabled = false;
                 } else {
-                    caLoaded = true;
+                    mqtt_config.cert_pem = caStr.c_str();
                     ESP_LOGI("MQTT", "Loaded CA cert, size=%d", caStr.length());
                     // Load client cert/key if paths provided
                     vPortEnterCritical(&g_configMutex);
@@ -132,14 +179,15 @@ esp_err_t mqtt_init() {
                             cert.close();
                             key.close();
                         } else {
-                            certStr = cert.readString();
-                            keyStr = key.readString();
+                            String certStr = cert.readString();
+                            String keyStr = key.readString();
                             cert.close();
                             key.close();
                             if (certStr.length() == 0 || keyStr.length() == 0) {
                                 ESP_LOGE("MQTT", "Client cert/key empty – continuing without client cert");
                             } else {
-                                certLoaded = true;
+                                mqtt_config.client_cert_pem = certStr.c_str();
+                                mqtt_config.client_key_pem = keyStr.c_str();
                                 ESP_LOGI("MQTT", "Loaded client cert/key, cert size=%d, key size=%d", certStr.length(), keyStr.length());
                             }
                         }
@@ -151,71 +199,38 @@ esp_err_t mqtt_init() {
         }
     }
 
-    // Configure TLS if enabled
-    if (tlsEnabled) {
-        mqttClient.setCACert(caStr.c_str());
-        if (certLoaded) {
-            mqttClient.setCertificate(certStr.c_str(), keyStr.c_str());
-        }
-        // Skip verification if configured (for testing, false in prod)
-        vPortEnterCritical(&g_configMutex);
-        bool tlsSkipVerify = g_config.mqtt.tlsSkipVerify;
-        vPortExitCritical(&g_configMutex);
-        if (tlsSkipVerify) {
-            mqttClient.setInsecure();  // Skip certificate verification
-            ESP_LOGW("MQTT", "TLS certificate verification skipped (tlsSkipVerify=true)");
-        }
-        ESP_LOGI("MQTT", "TLS configured");
-    }
-
-    // Fallback to plain MQTT if TLS setup failed
-    if (!tlsEnabled && port == 8883) {
-        port = 1883;
-        ESP_LOGW("MQTT", "TLS disabled, falling back to port 1883");
-    }
-
-    // Set server and callback
-    mqttClient.setServer(host.c_str(), port);
-    mqttClient.setCallback(mqtt_callback);
-    ESP_LOGI("MQTT", "Server set to %s:%d", host.c_str(), port);
-
-    // Generate client ID
+    // Skip verification if configured (for testing, false in prod)
     vPortEnterCritical(&g_configMutex);
-    String clientIdPrefix = g_config.mqtt.clientIdPrefix;
+    bool tlsSkipVerify = g_config.mqtt.tlsSkipVerify;
     vPortExitCritical(&g_configMutex);
-    String clientId = (clientIdPrefix.length() > 0 ? clientIdPrefix : "waterfront") + "-client";
-    if (clientId.length() > 23) {  // MQTT client ID max 23 chars
-        clientId = clientId.substring(0, 23);
-        ESP_LOGW("MQTT", "Client ID truncated to %s", clientId.c_str());
+    if (tlsSkipVerify) {
+        mqtt_config.skip_cert_common_name_check = true;
+        ESP_LOGW("MQTT", "TLS certificate verification skipped (tlsSkipVerify=true)");
     }
 
-    // Attempt connection with or without auth
-    bool connected;
-    vPortEnterCritical(&g_configMutex);
-    String username = g_config.mqtt.username;
-    String password = g_config.mqtt.password;
-    vPortExitCritical(&g_configMutex);
-    if (username.length() > 0) {
-        connected = mqttClient.connect(clientId.c_str(), username.c_str(), password.c_str());
-        ESP_LOGI("MQTT", "Connecting with auth: user=%s", username.c_str());
-    } else {
-        connected = mqttClient.connect(clientId.c_str());
-        ESP_LOGI("MQTT", "Connecting without auth");
-    }
-    if (connected) {
-        ESP_LOGI("MQTT", "Connected and subscribed");
-        return ESP_OK;
-    } else {
-        ESP_LOGE("MQTT", "Failed to connect, state=%d", mqttClient.state());
+    // Initialize and start MQTT client
+    mqttClient = esp_mqtt_client_init(&mqtt_config);
+    if (!mqttClient) {
+        ESP_LOGE("MQTT", "Failed to initialize MQTT client");
         return ESP_FAIL;
     }
+
+    esp_mqtt_client_register_event(mqttClient, ESP_EVENT_ANY_ID, event_handler, NULL);
+    esp_err_t err = esp_mqtt_client_start(mqttClient);
+    if (err != ESP_OK) {
+        ESP_LOGE("MQTT", "Failed to start MQTT client: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    ESP_LOGI("MQTT", "MQTT client initialized and started");
+    return ESP_OK;
 }
 
 // mqtt_publish_status: Publishes machine status to MQTT.
 // Includes basic state info for monitoring.
 // Edge cases: MQTT not connected, invalid topic.
 void mqtt_publish_status() {
-    if (!mqttClient.connected()) {
+    if (!mqttConnected) {
         ESP_LOGW("MQTT", "Not connected, skipping status publish");
         return;
     }
@@ -234,15 +249,19 @@ void mqtt_publish_status() {
         ESP_LOGE("MQTT", "Status topic too long, skipping publish");
         return;
     }
-    mqttClient.publish(topic, payload.c_str(), true);  // Retained for status
-    ESP_LOGI("MQTT", "Published status to %s", topic);
+    int msg_id = esp_mqtt_client_publish(mqttClient, topic, payload.c_str(), 0, 1, 1);  // QoS 1, retain
+    if (msg_id < 0) {
+        ESP_LOGE("MQTT", "Failed to publish status");
+    } else {
+        ESP_LOGI("MQTT", "Published status to %s, msg_id=%d", topic, msg_id);
+    }
 }
 
 // mqtt_publish_slot_status: Publishes slot-specific status.
 // Used for individual compartment updates.
 // Edge cases: invalid slotId, MQTT not connected.
 void mqtt_publish_slot_status(int slotId, const char* jsonPayload) {
-    if (!mqttClient.connected()) {
+    if (!mqttConnected) {
         ESP_LOGW("MQTT", "Not connected, skipping slot status publish");
         return;
     }
@@ -259,8 +278,12 @@ void mqtt_publish_slot_status(int slotId, const char* jsonPayload) {
         ESP_LOGE("MQTT", "Slot status topic too long, skipping publish");
         return;
     }
-    mqttClient.publish(topic, jsonPayload, true);  // Retained
-    ESP_LOGI("MQTT", "Published slot %d status to %s", slotId, topic);
+    int msg_id = esp_mqtt_client_publish(mqttClient, topic, jsonPayload, 0, 1, 1);  // QoS 1, retain
+    if (msg_id < 0) {
+        ESP_LOGE("MQTT", "Failed to publish slot status");
+    } else {
+        ESP_LOGI("MQTT", "Published slot %d status to %s, msg_id=%d", slotId, topic, msg_id);
+    }
 }
 
 // mqtt_loop_task: Maintains MQTT connection in a separate task.
@@ -272,7 +295,7 @@ void mqtt_loop_task(void *pvParameters) {
     ESP_LOGI("MQTT", "MQTT loop task started");
     while (1) {
         esp_task_wdt_reset();  // Reset watchdog
-        if (!mqttClient.connected()) {
+        if (!mqttConnected) {
             ESP_LOGI("MQTT", "Disconnected, attempting reconnect");
             if (mqtt_init() != ESP_OK) {
                 ESP_LOGE("MQTT", "Reconnect failed, will retry");
@@ -282,8 +305,7 @@ void mqtt_loop_task(void *pvParameters) {
                 ESP_LOGI("MQTT", "Reconnected successfully, count=%d", mqttReconnectCount);
             }
         }
-        mqttClient.loop();  // Process incoming messages
-        vTaskDelay(pdMS_TO_TICKS(1000));  // Loop every second
+        vTaskDelay(pdMS_TO_TICKS(1000));  // Check every second
     }
 }
 

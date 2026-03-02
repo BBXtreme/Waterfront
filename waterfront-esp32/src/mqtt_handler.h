@@ -9,10 +9,12 @@
 #ifndef MQTT_HANDLER_H
 #define MQTT_HANDLER_H
 
+#include <mqtt_client.h>
+
 /**
  * @brief Initializes MQTT handler and gate control.
  */
-void mqtt_init();
+esp_err_t mqtt_init();
 
 /**
  * @brief Attempts to connect to MQTT broker with last-will.

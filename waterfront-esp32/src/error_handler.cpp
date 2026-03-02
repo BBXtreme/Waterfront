@@ -11,12 +11,13 @@
 #include <esp_log.h>
 #include <esp_system.h>
 #include <Arduino.h>
-#include <PubSubClient.h>
+#include <mqtt_client.h>
 #include <ArduinoJson.h>
 #include "config_loader.h"
 
 // Extern MQTT client for publishing alerts
-extern PubSubClient mqttClient;
+extern esp_mqtt_client_handle_t mqttClient;
+extern bool mqttConnected;
 
 // fatal_error function: Handles unrecoverable errors.
 // Logs the error, publishes to MQTT if connected, and restarts the ESP32.
@@ -30,7 +31,7 @@ void fatal_error(const char* msg, esp_err_t code) {
     ESP_LOGE("FATAL", "%s: %s (0x%x)", msg, esp_err_to_name(code), code);
 
     // Publish fatal error to debug topic if MQTT connected and debug mode enabled
-    if (mqttClient.connected() && g_config.debugMode) {
+    if (mqttConnected && g_config.debugMode) {
         DynamicJsonDocument doc(256);
         doc["error"] = msg;
         doc["code"] = esp_err_to_name(code);  // Human-readable error code
@@ -42,10 +43,14 @@ void fatal_error(const char* msg, esp_err_t code) {
         if (len >= sizeof(topic)) {
             ESP_LOGE("FATAL", "Topic too long for buffer, skipping debug publish");
         } else {
-            mqttClient.publish(topic, payload.c_str(), false);  // Not retained for debug
-            ESP_LOGI("FATAL", "Published fatal error to debug topic");
+            int msg_id = esp_mqtt_client_publish(mqttClient, topic, payload.c_str(), 0, 1, 0);  // QoS 1, no retain
+            if (msg_id >= 0) {
+                ESP_LOGI("FATAL", "Published fatal error to debug topic, msg_id=%d", msg_id);
+            } else {
+                ESP_LOGE("FATAL", "Failed to publish fatal error to debug topic");
+            }
         }
-    } else if (!mqttClient.connected()) {
+    } else if (!mqttConnected) {
         ESP_LOGW("FATAL", "MQTT not connected, skipping debug publish");
     }
 
@@ -61,8 +66,12 @@ void fatal_error(const char* msg, esp_err_t code) {
     if (alertLen >= sizeof(alertTopic)) {
         ESP_LOGE("FATAL", "Alert topic too long for buffer, skipping alert publish");
     } else {
-        mqttClient.publish(alertTopic, alertPayload.c_str(), false);  // Not retained
-        ESP_LOGI("FATAL", "Published alert to %s", alertTopic);
+        int msg_id = esp_mqtt_client_publish(mqttClient, alertTopic, alertPayload.c_str(), 0, 1, 0);  // QoS 1, no retain
+        if (msg_id >= 0) {
+            ESP_LOGI("FATAL", "Published alert to %s, msg_id=%d", alertTopic, msg_id);
+        } else {
+            ESP_LOGE("FATAL", "Failed to publish alert");
+        }
     }
 
     // Delay to allow publish to complete before restart
