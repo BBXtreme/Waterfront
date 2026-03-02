@@ -199,6 +199,8 @@ code .
 
   ```
   aider --model xai/grok-code-fast-1
+  aider --model xai/grok-code-fast-1  --auto-commits --test-cmd 'pytest --tb=short' \
+        --stream --dark-mode --map-tokens 4096
   ```
 
 - Small, focused commits

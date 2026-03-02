@@ -2,25 +2,19 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-background to-muted/10">
-      <h1 className="text-4xl font-bold mb-6">Waterfront – Dev Start</h1>
-      <p className="text-xl mb-10 max-w-2xl">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem', textAlign: 'center' }}>
+      <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Waterfront – Dev Start</h1>
+      <p style={{ fontSize: '1.25rem', marginBottom: '2.5rem', maxWidth: '42rem' }}>
         Minimal setup • Nordend / Frankfurt • Connection tests first
       </p>
-      <div className="flex gap-4 flex-wrap justify-center">
-        <Link
-          href="/test-connections"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium shadow-md transition-colors"
-        >
-          → Connection Tests
-        </Link>
-        <Link
-          href="/booking"
-          className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg font-medium shadow-md transition-colors"
-        >
-          → Book a Kayak
-        </Link>
-      </div>
+      <Link
+        href="/test-connections"
+        style={{ backgroundColor: '#2563eb', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '1.125rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
+        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+      >
+        → Start Connection Tests
+      </Link>
     </div>
   );
 }

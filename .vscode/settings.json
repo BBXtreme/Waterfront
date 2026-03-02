@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "/Users/marco/Documents/GitHub/Waterfront/waterfront-esp32/src"
+    "cmake.sourceDirectory": "/Users/marco/Documents/GitHub/Waterfront/waterfront-esp32/src",
+    "idf.currentSetup": "/Users/marco/.espressif/v5.5.3/esp-idf"
 }
