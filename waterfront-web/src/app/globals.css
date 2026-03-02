@@ -66,3 +66,9 @@
     font-family: 'Space Grotesk', sans-serif;
   }
 }
+
+@layer components {
+  .bg-wave {
+    background: linear-gradient(135deg, #0EA5E9 0%, #F7931A 100%);
+  }
+}
