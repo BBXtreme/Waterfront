@@ -12,16 +12,12 @@ export default function Home() {
       <Link
         href="/test-connections"
         className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg hover:bg-blue-700 transition-colors"
-        onMouseOver={(e) => e.currentTarget.classList.add('bg-blue-700')}
-        onMouseOut={(e) => e.currentTarget.classList.remove('bg-blue-700')}
       >
         → Start Connection Tests
       </Link>
       <Link
         href="/booking"
         className="bg-green-600 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg hover:bg-green-700 transition-colors mt-4"
-        onMouseOver={(e) => e.currentTarget.classList.add('bg-green-700')}
-        onMouseOut={(e) => e.currentTarget.classList.remove('bg-green-700')}
       >
         → Start Booking Tests
       </Link>
