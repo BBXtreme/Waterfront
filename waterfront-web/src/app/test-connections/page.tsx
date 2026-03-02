@@ -34,7 +34,7 @@ function TestConnectionsPage() {
   
   // State for payment gateway tests
   const [stripeStatus, setStripeStatus] = useState<string>("Not Tested");
-  const [stripeResult, setStripeStatus] = useState<string>("");
+  const [stripeResult, setStripeResult] = useState<string>("");
   const [btcPayStatus, setBTCPayStatus] = useState<string>("Not Tested");
   const [btcPayResult, setBTCPayResult] = useState<string>("");
 
