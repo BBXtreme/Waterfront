@@ -15,6 +15,10 @@ CREATE TABLE bookings (
 -- Enable Row Level Security
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow anonymous inserts" ON bookings;
+DROP POLICY IF EXISTS "Allow anonymous reads" ON bookings;
+
 -- Create a policy to allow anonymous inserts (for demo purposes)
 -- In production, you might want to restrict this or use authentication
 CREATE POLICY "Allow anonymous inserts" ON bookings
