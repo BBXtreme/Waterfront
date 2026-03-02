@@ -163,6 +163,7 @@ const debugMQTTConnection = async () => {
       protocol: brokerUrl.startsWith('wss') ? 'wss' : 'ws',
       connectTimeout: 5000,
       reconnectPeriod: 0, // no auto-reconnect for test
+      rejectUnauthorized: false,
     };
 
     if (process.env.NEXT_PUBLIC_MQTT_USERNAME) {
@@ -1018,6 +1019,7 @@ const debugVercelEnvironment = async () => {
                     size="sm" 
                     onClick={checkEnvironment}
                     disabled={loading}
+                    style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
                   >
                     Check Environment
                   </Button>
@@ -1052,10 +1054,11 @@ const debugVercelEnvironment = async () => {
                     size="sm" 
                     onClick={checkVercel}
                     disabled={loading}
+                    style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
                   >
                     Test Connection
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={debugVercelEnvironment}>
+                  <Button variant="secondary" size="sm" onClick={debugVercelEnvironment} style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}>
                     Deep Debug Vercel
                   </Button>
                 </div>
@@ -1094,10 +1097,11 @@ const debugVercelEnvironment = async () => {
                     size="sm" 
                     onClick={async () => await checkSupabase()}
                     disabled={loading}
+                    style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
                   >
                     Test Connection
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={debugSupabaseConnection}>
+                  <Button variant="secondary" size="sm" onClick={debugSupabaseConnection} style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}>
                     Deep Debug Supabase
                   </Button>
                 </div>
@@ -1135,6 +1139,7 @@ const debugVercelEnvironment = async () => {
                     size="sm" 
                     onClick={testStripeConnection}
                     disabled={stripeStatus === "Pending"}
+                    style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
                   >
                     Test Connection
                   </Button>
@@ -1168,6 +1173,7 @@ const debugVercelEnvironment = async () => {
                     size="sm" 
                     onClick={testBTCPayConnection}
                     disabled={btcPayStatus === "Pending"}
+                    style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
                   >
                     Test Connection
                   </Button>
@@ -1213,6 +1219,7 @@ const debugVercelEnvironment = async () => {
             disabled={loading}
             variant="secondary"
             className="px-5 py-2.5 mr-2.5"
+            style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
           >
             {loading ? 'Refreshing...' : 'Refresh All'}
           </Button>

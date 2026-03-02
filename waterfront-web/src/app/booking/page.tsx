@@ -138,7 +138,7 @@ export default function BookingPage() {
                   <option value="canoe">Canoe</option>
                 </select>
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" style={{ backgroundColor: 'white', color: 'black', padding: '0.5rem 1rem', borderRadius: '9999px', fontSize: '1rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}>
                 Submit Booking
               </Button>
             </form>
