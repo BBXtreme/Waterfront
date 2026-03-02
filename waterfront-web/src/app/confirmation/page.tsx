@@ -15,9 +15,9 @@ export default function ConfirmationPage() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-2xl mx-auto">
-        <Card className="shadow-sm rounded-lg overflow-hidden bg-card border">
+        <Card className="shadow-sm hover:shadow-md transition-shadow rounded-xl border py-6 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-800/50 backdrop-blur-sm">
           <CardHeader className="p-6 pb-0">
-            <CardTitle className="font-medium text-center">Booking Confirmation</CardTitle>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-center">Booking Confirmation</h1>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
             <div className="text-center">

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -47,8 +47,8 @@
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 199 91% 59.8%;
-  --waterfront-primary: 217.2 91.2% 59.8%;
-  --btc-accent: linear-gradient(135deg, #f7931a 0%, #ff9500 100%);
+  --waterfront-primary: #0284C7;
+  --btc-accent: #D97706;
 }
 
 @layer base {

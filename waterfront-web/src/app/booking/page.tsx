@@ -63,14 +63,14 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-waterfront-primary/10 dark:bg-waterfront-primary/20 p-8">
       <div className="max-w-2xl mx-auto">
-        <Card className="shadow-sm rounded-lg overflow-hidden bg-card border">
+        <Card className="shadow-sm hover:shadow-md transition-shadow rounded-xl border py-6 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-800/50 backdrop-blur-sm">
           <CardHeader className="p-6 pb-0">
-            <CardTitle className="font-medium text-center">Book Your Kayak</CardTitle>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-center">Book Your Kayak</h1>
           </CardHeader>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -109,7 +109,7 @@ export default function BookingPage() {
                   id="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full p-2 border border-input bg-background rounded-md"
+                  className="w-full p-2 border border-input bg-background rounded-md focus-visible:ring-2 focus-visible:ring-waterfront-primary focus-visible:border-waterfront-primary"
                   required
                 >
                   <option value="">Select a time</option>
@@ -131,14 +131,14 @@ export default function BookingPage() {
                   id="kayakType"
                   value={kayakType}
                   onChange={(e) => setKayakType(e.target.value)}
-                  className="w-full p-2 border border-input bg-background rounded-md"
+                  className="w-full p-2 border border-input bg-background rounded-md focus-visible:ring-2 focus-visible:ring-waterfront-primary focus-visible:border-waterfront-primary"
                 >
                   <option value="single">Single Kayak</option>
                   <option value="double">Double Kayak</option>
                   <option value="canoe">Canoe</option>
                 </select>
               </div>
-              <Button type="submit" className="w-full bg-white text-black px-4 py-2 rounded-full text-base font-medium shadow-md transition-colors">
+              <Button type="submit" variant="btc" size="lg" className="transition-all duration-200 ease-in-out">
                 Submit Booking
               </Button>
             </form>
