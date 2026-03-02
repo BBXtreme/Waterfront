@@ -17,6 +17,14 @@ export default function Home() {
       >
         → Start Connection Tests
       </Link>
+      <Link
+        href="/booking"
+        style={{ backgroundColor: '#16a34a', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '1.125rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s', marginTop: '1rem' }}
+        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#15803d'}
+        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+      >
+        → Start Booking Tests
+      </Link>
     </div>
   );
 }
