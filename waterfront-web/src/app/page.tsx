@@ -7,12 +7,20 @@ export default function Home() {
       <p style={{ fontSize: '1.25rem', marginBottom: '2.5rem', maxWidth: '42rem' }}>
         Minimal setup • Nordend / Frankfurt • Connection tests first
       </p>
-      <a
-        href="/test-connections"
-        style={{ backgroundColor: '#2563eb', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '1.125rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
-      >
-        → Start Connection Tests
-      </a>
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <a
+          href="/test-connections"
+          style={{ backgroundColor: '#2563eb', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '1.125rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
+        >
+          → Connection Tests
+        </a>
+        <a
+          href="/booking"
+          style={{ backgroundColor: '#16a34a', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '1.125rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.2s' }}
+        >
+          → Book a Kayak
+        </a>
+      </div>
     </div>
   );
 }

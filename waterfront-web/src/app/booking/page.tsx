@@ -1,8 +1,105 @@
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast, Toaster } from 'sonner';
+
 export default function BookingPage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [kayakType, setKayakType] = useState('single');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate booking
+    toast.success('Booking submitted!', {
+      description: `Name: ${name}, Date: ${date}, Time: ${time}, Type: ${kayakType}`,
+    });
+    // Reset form
+    setName('');
+    setEmail('');
+    setDate('');
+    setTime('');
+    setKayakType('single');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/10 p-[50px]">
-      <h1 className="text-2xl font-semibold">Booking Page</h1>
-      <p>This is the booking page. Add your booking logic here.</p>
+      <div className="max-w-2xl mx-auto">
+        <Card className="shadow-sm rounded-lg overflow-hidden bg-card border border-border">
+          <CardHeader className="p-[25px] pb-0">
+            <CardTitle className="font-medium text-center">Book Your Kayak</CardTitle>
+          </CardHeader>
+          <CardContent className="p-[25px]">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">Time</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="kayakType">Kayak Type</Label>
+                <select
+                  id="kayakType"
+                  value={kayakType}
+                  onChange={(e) => setKayakType(e.target.value)}
+                  className="w-full p-2 border border-input bg-background rounded-md"
+                >
+                  <option value="single">Single Kayak</option>
+                  <option value="double">Double Kayak</option>
+                  <option value="canoe">Canoe</option>
+                </select>
+              </div>
+              <Button type="submit" className="w-full">
+                Submit Booking
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+      <Toaster />
     </div>
   );
 }
