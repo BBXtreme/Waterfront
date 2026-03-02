@@ -1247,7 +1247,7 @@ const debugVercelEnvironment = async () => {
                   <Badge
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
-                      hivemqCloudStatus.status === "OK" || hivemqCloudStatus.status.includes("Connected") || hivemqCloudStatus.includes("Detected") || hivemqCloudStatus.includes("connected")
+                      hivemqCloudStatus.status === "OK" || hivemqCloudStatus.status.includes("Connected") || hivemqCloudStatus.status.includes("Detected") || hivemqCloudStatus.status.includes("connected")
                         ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
                         : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"
                     )}
