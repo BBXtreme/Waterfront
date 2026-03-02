@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,24 +10,56 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast, Toaster } from 'sonner';
 
 export default function BookingPage() {
+  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [kayakType, setKayakType] = useState('single');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate booking
-    toast.success('Booking submitted!', {
-      description: `Name: ${name}, Date: ${date}, Time: ${time}, Type: ${kayakType}`,
-    });
-    // Reset form
-    setName('');
-    setEmail('');
-    setDate('');
-    setTime('');
-    setKayakType('single');
+
+    // Create Supabase client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    try {
+      // Insert booking into Supabase
+      const { error } = await supabase.from('bookings').insert({
+        name,
+        email,
+        date,
+        time,
+        kayak_type: kayakType,
+        created_at: new Date().toISOString(),
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Booking submitted!', {
+        description: `Name: ${name}, Date: ${date}, Time: ${time}, Type: ${kayakType}`,
+      });
+
+      // Navigate to confirmation with query params
+      const params = new URLSearchParams({
+        name,
+        email,
+        date,
+        time,
+        kayakType,
+      });
+      router.push(`/confirmation?${params.toString()}`);
+    } catch (error) {
+      console.error('Booking submission failed:', error);
+      toast.error('Booking failed', {
+        description: 'Please try again later.',
+      });
+    }
   };
 
   return (
@@ -71,13 +105,25 @@ export default function BookingPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="time">Time</Label>
-                <Input
+                <select
                   id="time"
-                  type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
+                  className="w-full p-2 border border-input bg-background rounded-md"
                   required
-                />
+                >
+                  <option value="">Select a time</option>
+                  <option value="09:00">9:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                  <option value="13:00">1:00 PM</option>
+                  <option value="14:00">2:00 PM</option>
+                  <option value="15:00">3:00 PM</option>
+                  <option value="16:00">4:00 PM</option>
+                  <option value="17:00">5:00 PM</option>
+                  <option value="18:00">6:00 PM</option>
+                </select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="kayakType">Kayak Type</Label>
