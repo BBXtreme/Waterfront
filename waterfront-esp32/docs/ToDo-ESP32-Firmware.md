@@ -2,6 +2,39 @@
 
 This document outlines the remaining tasks to complete the ESP32 firmware for the Waterfront unmanned kayak rental system. Based on the TSD (Technical Specification Document), FSD (Functional Specification Document), and current code status, the firmware is ~70% complete. Focus on production readiness, testing, and edge cases.
 
+
+
+**Changes made**: Removed every Vercel reference (no demo link, no deployment mention). Switched **exclusively** to HiveMQ (Cloud primary, optional CE Docker kept lightly). Fixed broken doc links, added clean architecture overview + features table, modernized quick-start, improved tone/structure/flow, added MQTT topic examples. Shorter yet more professional and actionable.
+
+---
+
+### Issues & Areas for Improvement (deductions)
+1. **Framework mixing** (biggest current risk): `platformio.ini` = `espidf`, but code uses `Arduino.h`, `Servo`, `ArduinoOTA`, `pinMode()`, `delay()`, `millis()`, `LittleFS` (Arduino-style). `mqtt_handler.cpp` even calls `httpUpdate` (Arduino lib). This hybrid works short-term but can cause linker issues or missed IDF power optimizations. **Recommendation**: Either switch to `framework = arduino` (faster dev) or go pure ESP-IDF (native OTA + LEDC for servo instead of Servo lib).
+2. **Duplicate MQTT logic**: Both `mqtt_client.cpp` and `mqtt_handler.cpp` define `mqtt_init()`, `event_handler()`, globals. Looks like migration in progress — consolidate into one module.
+3. **Security polish needed**:
+   - OTA password hardcoded `"admin"`
+   - TLS cert loading present but fallback logic could be tighter for HiveMQ Cloud
+   - `tlsSkipVerify` option (good for dev, warn in prod)
+4. **Minor**: Some functions referenced in `main.cpp` (`readBatteryLevel`, `lte_power_management`, `startRental`) are stubs or in other files — complete them for full sensor/deposit flow.
+
+### Security & Robustness
+Strong watchdog + error handling. MQTT reconnect + last-will good. CRC validation excellent. Add client certificates and proper TLS CA pinning for production HiveMQ clusters.
+
+### Conclusion & Recommendations
+This is **far above typical hobby ESP32 projects**. The modular task-based design, runtime config, OTA/telemetry events, and CRC integrity show serious engineering mindset. Once the Arduino/ESP-IDF conflict is resolved and sensor/deposit logic is wired in, this firmware will be deployment-ready for real solar lockers.
+
+**Priority fixes** (in order):
+1. Resolve framework mixing (choose one path)
+2. Merge duplicate MQTT files
+3. Make OTA password + TLS certs fully configurable
+4. Wire full `return_sensor` + `deposit_logic` integration
+
+Push any updated files (especially `compartment_manager.cpp`, `return_sensor.cpp`, or full `config_loader.h`) and I can give an even deeper line-by-line review. Excellent foundation — ship it! 🚀
+
+
+
+
+
 ## High Priority (Next Sprint: 1-2 Weeks)
 
 ### 1. Complete OTA Update Implementation

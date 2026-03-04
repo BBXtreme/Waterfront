@@ -1,49 +1,144 @@
-# WATERFRONT ESP32 Kayak Rental Controller
+# Waterfront – Unmanned Kayak & SUP Rental System
 
-## What is WATERFRONT?
-WATERFRONT is a smart system for managing kayak rentals at waterfront locations. It uses a small computer called an ESP32 to automatically open and close gates for kayak compartments. It connects to the internet via WiFi or cellular to send updates and receive commands. The system is designed to work outdoors with solar power, making it reliable for remote spots.
+**Fully autonomous 24/7 solar-powered kayak and paddleboard rental platform.**  
+Users book via PWA → pay (Stripe fiat or BTCPay Lightning/Liquid BTC) → receive PIN/QR code → unlock smart locker via ESP32 + **HiveMQ** MQTT → take equipment → sensors detect return → deposit auto-released.
 
-## Key Features
-- **Automatic Gate Control**: Opens and closes gates based on rental bookings.
-- **Secure Internet Connection**: Uses MQTT (a messaging protocol) with encryption for safe communication.
-- **Power Management**: Monitors battery and solar levels, enters sleep mode to save power.
-- **Remote Updates**: Update the software wirelessly without touching the device.
-- **Setup Without Coding**: Easy WiFi setup using Bluetooth or a web page.
-- **Health Monitoring**: Sends regular reports on system status, like battery level and errors.
-- **Error Alerts**: Notifies you if something goes wrong, like low power or connection issues.
+**Current Status**: Early but functional prototype. Booking calendar, Supabase realtime, auth, and ESP32 MQTT unlock/status working locally. Payments, full sensor logic, deposit handling, and admin telemetry next.
 
-## Who is This For?
-- Beginners: If you're new to IoT (Internet of Things), this guide will walk you through everything.
-- Developers: If you want to modify or extend the system, the code is open-source.
-- Rental Business Owners: To automate your kayak rental process.
+## Core Concept
+Mobile-first PWA booking → secure payment → instant access code → solar-powered ESP32 locker opens via MQTT command → presence sensors confirm return → deposit released automatically. No staff required.
 
-## Hardware You Need
-- **ESP32 Board**: A microcontroller like ESP32-DevKitC (costs about $10-20).
-- **Ultrasonic Sensors**: To detect if a kayak is present (e.g., HC-SR04, $5 each).
-- **Servo Motors**: To move the gates (e.g., SG90, $5 each).
-- **Limit Switches**: To know when gates are fully open or closed ($2 each).
-- **LTE Modem** (optional): For internet when WiFi isn't available (e.g., SIM7600, $50).
-- **Solar Panel and Battery**: For power in outdoor locations ($20-50).
-- **Voltage Sensors**: To measure battery and solar levels (built into ESP32 ADC).
+## Features – Status
 
-## Software Overview
-The system runs on the ESP32 using Arduino-compatible code. It includes:
-- **Main Program**: Handles daily operations like checking power and sending messages.
-- **MQTT Client**: Sends and receives messages over the internet.
-- **Config System**: Loads settings from a file on the ESP32.
-- **Gate Controller**: Manages servo motors and sensors.
-- **Power Manager**: Monitors and conserves energy.
-- **Error Handler**: Logs problems and sends alerts.
+| Feature                      | Status  | Notes                        |
+| ---------------------------- | ------- | ---------------------------- |
+| Guest booking calendar       | Working | React + Supabase Realtime    |
+| Real-time availability       | Working | Supabase subscriptions       |
+| PIN/QR generation & delivery | Partial | On-screen + future email/SMS |
+| ESP32 MQTT locker control    | Working | Unlock, status, telemetry    |
+| Kayak presence sensors       | Planned | Ultrasonic + limit switches  |
+| Deposit hold & auto-release  | Planned | MQTT events + backend logic  |
+| Stripe + BTCPay payments     | Planned | Webhooks critical path       |
+| Admin dashboard + telemetry  | Planned | Realtime Supabase            |
+| Offline-tolerant PWA         | Partial | Cached QR/PIN                |
 
-## How It Works (Simple Flow)
-1. **Setup**: Connect hardware, upload code, configure WiFi.
-2. **Normal Operation**: System waits for rental bookings via MQTT.
-3. **Rental Starts**: Receives booking, opens gate, starts timer.
-4. **Rental Ends**: Detects kayak return, closes gate, releases deposit.
-5. **Monitoring**: Sends health updates every minute, alerts on issues.
-6. **Power Saving**: If low power, enters deep sleep until charged.
 
-## Configuration
-Settings are stored in a file called `config.json` on the ESP32. It includes details like WiFi passwords, MQTT server, and pin numbers for hardware.
 
-### Example Config File
+## Tech Stack
+
+- **Frontend/PWA**: Next.js 15+ (App Router), TypeScript, Tailwind CSS, shadcn/ui
+- **Backend/DB/Auth**: Supabase (PostgreSQL + Auth + Realtime + Edge Functions)
+- **Payments**: Stripe Checkout + BTCPay Server (Lightning & Liquid BTC)
+- **IoT Controller**: ESP32-S3 with PlatformIO + ESP-IDF
+- **MQTT Broker**: **HiveMQ Cloud** (free tier, managed, TLS-native)
+- **Dev Tools**: pnpm workspaces, PlatformIO, Aider, Vitest
+
+
+
+## Architecture Overview
+
+Clean **REST + MQTT** hybrid:
+- PWA ↔ Supabase (bookings, auth, realtime)
+- Payment success → Supabase Edge Function publishes unlock to HiveMQ
+- ESP32 subscribes to location-specific topics, controls gates/sensors, publishes status/telemetry
+- Supabase processes events for deposit release and admin alerts
+
+
+
+## Project Structure
+
+waterfront/ 
+
+├── waterfront-web/          # Next.js PWA 
+
+├── waterfront-esp32/        # ESP32 firmware (PlatformIO + ESP-IDF) 
+
+├── supabase-local/          # Local Supabase dev 
+
+├── waterfront-infra/        # Optional HiveMQ CE Docker (for testing) 
+
+├── STYLE_GUIDE.md           # UI/UX + coding bible 
+
+├── .github/workflows/       # CI (PlatformIO tests) └── README.md
+
+
+
+## Quick Start – Local Development
+
+### 1. MQTT Broker – HiveMQ Cloud (Recommended)
+1. Sign up free at [https://console.hivemq.cloud](https://console.hivemq.cloud)
+2. Create a cluster
+3. Copy **Cluster URL**, port (8883 TLS), username & password
+
+### 2. Clone & Install
+```bash
+git clone https://github.com/bbxtreme/waterfront.git
+cd waterfront
+cd waterfront-web && pnpm installxxxxxxxxxx 
+```
+
+### 3. Environment Variables
+
+Create waterfront-web/.env.local:
+
+env
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url 
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key # HiveMQ Cloud (TLS required) MQTT_BROKER_URL=mqtts://username:password@your-cluster.hivemq.cloud:8883
+```
+
+### 4. Run PWA
+
+Bash
+
+```
+cd waterfront-web
+pnpm dev
+# → http://localhost:3000
+```
+
+### 5. Local Supabase (optional)
+
+Bash
+
+```
+cd supabase-local
+supabase start
+```
+
+### 6. ESP32 Firmware
+
+- Open waterfront-esp32 folder in VS Code + PlatformIO extension
+- Update data/config.json with your HiveMQ credentials + location slug/code
+- Build → Upload firmware + filesystem (pio run -t uploadfs)
+- Monitor: pio device monitor
+
+See waterfront-esp32 docs for full hardware pinout and MQTT topics.
+
+
+
+## MQTT Topics (HiveMQ)
+
+Dynamic per location: 
+
+waterfront/{location-slug}/{site-code}/compartments/{id}/command 
+
+waterfront/{location-slug}/{site-code}/compartments/{id}/status 
+
+waterfront/{location-slug}/{site-code}/config/update (remote config reload)
+
+
+
+## Development Guidelines
+
+- Follow STYLE_GUIDE.md strictly (web + embedded)
+- Small, focused commits with clear messages
+- Use Aider with style-guide prompts
+- Test MQTT commands via HiveMQ Web Client or MQTTX CLI
+
+
+
+## License
+
+MIT License

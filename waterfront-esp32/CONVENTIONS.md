@@ -15,7 +15,7 @@ Follow these rules strictly when writing, editing, or refactoring code. Prioriti
 
 ## Git and Workflow Best Practices
 - **Monorepo Structure**: Keep subprojects isolated (e.g., waterfront-web/, waterfront-esp32/). Use pnpm workspaces for dependency management.
-- **Aider Usage**: Start sessions with `--read CONVENTIONS.md --model xai/grok-code-fast-1`. Provide clear, step-by-step instructions. Review diffs thoroughly before accepting.
+- **Aider Usage**: Start sessions with `aider --read CONVENTIONS.md --model xai/grok-code-fast-1 --auto-commits --test-cmd 'pytest --tb=short' --stream --dark-mode --map-tokens 4096`. Provide clear, step-by-step instructions. Review diffs thoroughly before accepting.
 - **CI/CD**: Use GitHub Actions for linting, testing, and deployment (Vercel for web, PlatformIO for ESP32 builds).
 - **Dependencies**: Pin versions in package.json/platformio.ini. Audit regularly (pnpm audit, PlatformIO checks).
 - **Code Reviews**: Self-review via Aider diffs; for major changes, use PRs even if solo.
