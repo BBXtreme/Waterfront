@@ -12,6 +12,14 @@
 #include <esp_littlefs.h>
 #include <nlohmann/json.hpp>
 
+// LittleFS configuration
+static esp_littlefs_config_t littlefs_config = {
+    .base_path = "/littlefs",
+    .partition_label = NULL,
+    .format_if_mount_failed = true,
+    .dont_mount = false
+};
+
 // Global config instance - shared across the application
 GlobalConfig g_config;
 

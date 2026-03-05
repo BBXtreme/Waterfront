@@ -3,6 +3,7 @@
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp_netif.h>
+#include <string>
 
 // Adapted from original wifi_event_handler in mdb-slave-esp32s3.c
 void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
@@ -11,8 +12,8 @@ void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id
             case WIFI_EVENT_STA_START:
                 ESP_LOGI("WiFi", "STA started, connecting...");
                 vPortEnterCritical(&g_configMutex);
-                String fallbackSsid = g_config.wifiProvisioning.fallbackSsid;
-                String fallbackPass = g_config.wifiProvisioning.fallbackPass;
+                std::string fallbackSsid = g_config.wifiProvisioning.fallbackSsid;
+                std::string fallbackPass = g_config.wifiProvisioning.fallbackPass;
                 vPortExitCritical(&g_configMutex);
                 wifi_config_t wifi_config = {};
                 strcpy((char*)wifi_config.sta.ssid, fallbackSsid.c_str());
@@ -42,8 +43,8 @@ void wifi_init() {
     esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL);
     esp_wifi_set_mode(WIFI_MODE_STA);
     vPortEnterCritical(&g_configMutex);
-    String fallbackSsid = g_config.wifiProvisioning.fallbackSsid;
-    String fallbackPass = g_config.wifiProvisioning.fallbackPass;
+    std::string fallbackSsid = g_config.wifiProvisioning.fallbackSsid;
+    std::string fallbackPass = g_config.wifiProvisioning.fallbackPass;
     vPortExitCritical(&g_configMutex);
     wifi_config_t wifi_config = {};
     strcpy((char*)wifi_config.sta.ssid, fallbackSsid.c_str());
