@@ -9,8 +9,7 @@
     "useTLS": true,
     "caCertPath": "/littlefs/ca.pem",
     "clientCertPath": "",
-    "clientKeyPath": "",
-    "tlsSkipVerify": false
+    "clientKeyPath": ""
   },
   "location": {
     "slug": "bremen",

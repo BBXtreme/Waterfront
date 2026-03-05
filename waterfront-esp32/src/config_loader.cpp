@@ -199,8 +199,7 @@ bool loadConfig() {
         strcpy(g_config.mqtt.clientCertPath, clientCertPath ? clientCertPath : "");
         const char *clientKeyPath = cJSON_GetStringValue(cJSON_GetObjectItem(mqtt, "clientKeyPath"));
         strcpy(g_config.mqtt.clientKeyPath, clientKeyPath ? clientKeyPath : "");
-        g_config.mqtt.tlsSkipVerify = cJSON_IsTrue(cJSON_GetObjectItem(mqtt, "tlsSkipVerify"));
-        ESP_LOGI("CONFIG", "Loaded MQTT config: broker=%s, port=%d, useTLS=%d, tlsSkipVerify=%d", g_config.mqtt.broker, g_config.mqtt.port, g_config.mqtt.useTLS, g_config.mqtt.tlsSkipVerify);
+        ESP_LOGI("CONFIG", "Loaded MQTT config: broker=%s, port=%d, useTLS=%d", g_config.mqtt.broker, g_config.mqtt.port, g_config.mqtt.useTLS);
     } else {
         ESP_LOGW("CONFIG", "MQTT section missing, using defaults");
     }
@@ -342,7 +341,6 @@ bool saveConfig() {
     cJSON_AddStringToObject(mqtt, "caCertPath", g_config.mqtt.caCertPath);
     cJSON_AddStringToObject(mqtt, "clientCertPath", g_config.mqtt.clientCertPath);
     cJSON_AddStringToObject(mqtt, "clientKeyPath", g_config.mqtt.clientKeyPath);
-    cJSON_AddBoolToObject(mqtt, "tlsSkipVerify", g_config.mqtt.tlsSkipVerify);
     // Serialize location section
     cJSON *loc = cJSON_AddObjectToObject(doc, "location");
     cJSON_AddStringToObject(loc, "slug", g_config.location.slug);
@@ -467,7 +465,6 @@ GlobalConfig getDefaultConfig() {
     strcpy(def.mqtt.caCertPath, "/littlefs/ca.pem");
     strcpy(def.mqtt.clientCertPath, "");
     strcpy(def.mqtt.clientKeyPath, "");
-    def.mqtt.tlsSkipVerify = false;
     strcpy(def.location.slug, "bremen");
     strcpy(def.location.code, "harbor-01");
     strcpy(def.wifiProvisioning.fallbackSsid, "WATERFRONT-DEFAULT");
@@ -512,7 +509,6 @@ const char* getConfigAsJson() {
     cJSON_AddStringToObject(mqtt, "caCertPath", g_config.mqtt.caCertPath);
     cJSON_AddStringToObject(mqtt, "clientCertPath", g_config.mqtt.clientCertPath);
     cJSON_AddStringToObject(mqtt, "clientKeyPath", g_config.mqtt.clientKeyPath);
-    cJSON_AddBoolToObject(mqtt, "tlsSkipVerify", g_config.mqtt.tlsSkipVerify);
     // Serialize location section
     cJSON *loc = cJSON_AddObjectToObject(doc, "location");
     cJSON_AddStringToObject(loc, "slug", g_config.location.slug);

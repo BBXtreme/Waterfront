@@ -24,7 +24,6 @@ struct MqttConfig {
     char caCertPath[64];
     char clientCertPath[64];
     char clientKeyPath[64];
-    bool tlsSkipVerify;
 };
 
 // Location config
