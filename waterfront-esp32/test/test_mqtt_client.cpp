@@ -82,7 +82,7 @@ unsigned long mockMillis = 0;
 // Test mqtt_init
 TEST_CASE("MQTT Client Init", "[mqtt_client]") {
     // Set mock config
-    g_config.mqtt.broker = "test.com";
+    strcpy(g_config.mqtt.broker, "test.com");
     g_config.mqtt.port = 1883;
     MockPubSubClient::mockConnected = true;
 
@@ -98,7 +98,7 @@ TEST_CASE("MQTT Client Init", "[mqtt_client]") {
 // Test mqtt_publish_status
 TEST_CASE("MQTT Publish Status", "[mqtt_client]") {
     // Set mock config
-    g_config.location.code = "test-01";
+    strcpy(g_config.location.code, "test-01");
     MockPubSubClient::mockConnected = true;
 
     // Call publish

@@ -10,18 +10,30 @@ extern esp_netif_t* esp_netif; // Netif for LTE
 extern uart_port_t uart_num; // UART port for modem
 
 // Initialize LTE modem (power off initially)
-void initLTE();
+void lte_init();
 
 // Power up and configure the modem
-void powerUpModem();
+void lte_power_up();
 
 // Power down the modem to save energy
-void powerDownModem();
+void lte_power_down();
 
 // Switch MQTT client to LTE and reconnect
-void switchToLTE();
+void lte_switch_to_lte();
 
 // Switch MQTT client back to WiFi and reconnect
-void switchToWiFi();
+void lte_switch_to_wifi();
+
+// Get LTE signal quality
+int lte_get_signal();
+
+// Check if LTE is connected
+bool lte_is_connected();
+
+// Check if LTE should be disabled (e.g., low solar)
+bool shouldDisableLTE();
+
+// Power management for LTE based on conditions
+void lte_power_management();
 
 #endif // LTE_MANAGER_H

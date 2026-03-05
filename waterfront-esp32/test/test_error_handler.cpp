@@ -57,9 +57,8 @@ bool espRestartCalled = false;
 // Test fatal error with MQTT connected and debug mode
 TEST_CASE("Fatal Error - MQTT Connected Debug Mode", "[error]") {
     // Set mock config
-    g_config.debugMode = true;
-    g_config.location.slug = "bremen";
-    g_config.location.code = "harbor-01";
+    strcpy(g_config.location.slug, "bremen");
+    strcpy(g_config.location.code, "harbor-01");
     MockPubSubClient::mockConnected = true;
     espRestartCalled = false;
     mockMqttClient.publishCount = 0;
@@ -77,7 +76,8 @@ TEST_CASE("Fatal Error - MQTT Connected Debug Mode", "[error]") {
 // Test fatal error with MQTT disconnected
 TEST_CASE("Fatal Error - MQTT Disconnected", "[error]") {
     // Set mock config
-    g_config.debugMode = true;
+    strcpy(g_config.location.slug, "bremen");
+    strcpy(g_config.location.code, "harbor-01");
     MockPubSubClient::mockConnected = false;
     espRestartCalled = false;
     mockMqttClient.publishCount = 0;
@@ -93,7 +93,8 @@ TEST_CASE("Fatal Error - MQTT Disconnected", "[error]") {
 // Test fatal error with debug mode off
 TEST_CASE("Fatal Error - Debug Mode Off", "[error]") {
     // Set mock config
-    g_config.debugMode = false;
+    strcpy(g_config.location.slug, "bremen");
+    strcpy(g_config.location.code, "harbor-01");
     MockPubSubClient::mockConnected = true;
     espRestartCalled = false;
     mockMqttClient.publishCount = 0;
@@ -110,7 +111,8 @@ TEST_CASE("Fatal Error - Debug Mode Off", "[error]") {
 // Test fatal error with null message
 TEST_CASE("Fatal Error - Null Message", "[error]") {
     // Set mock config
-    g_config.debugMode = true;
+    strcpy(g_config.location.slug, "bremen");
+    strcpy(g_config.location.code, "harbor-01");
     MockPubSubClient::mockConnected = true;
     espRestartCalled = false;
     mockMqttClient.publishCount = 0;
@@ -127,7 +129,8 @@ TEST_CASE("Fatal Error - Null Message", "[error]") {
 // Test fatal error with different error codes
 TEST_CASE("Fatal Error - Different Error Codes", "[error]") {
     // Set mock config
-    g_config.debugMode = true;
+    strcpy(g_config.location.slug, "bremen");
+    strcpy(g_config.location.code, "harbor-01");
     MockPubSubClient::mockConnected = true;
     espRestartCalled = false;
     mockMqttClient.publishCount = 0;

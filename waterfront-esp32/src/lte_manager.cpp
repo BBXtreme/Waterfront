@@ -1,3 +1,112 @@
+#include "lte_manager.h"
+#include "config_loader.h"
+#include <esp_log.h>
+
+// ESP-IDF modem instances
+esp_modem_dce_t* dce = nullptr;
+esp_netif_t* esp_netif = nullptr;
+uart_port_t uart_num = UART_NUM_1;
+
+// Initialize LTE modem (power off initially)
+void lte_init() {
+    ESP_LOGI("LTE", "Initializing LTE modem");
+    // Initialize UART for modem communication
+    uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .rx_flow_ctrl_thresh = 0,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+    uart_param_config(uart_num, &uart_config);
+    uart_set_pin(uart_num, 17, 16, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);  // TX, RX pins
+    uart_driver_install(uart_num, 1024, 0, 0, NULL, 0);
+
+    // Initialize modem DCE
+    esp_modem_dce_config_t dce_config = ESP_MODEM_DCE_DEFAULT_CONFIG();
+    dce = esp_modem_new(&dce_config, ESP_MODEM_DCE_MODE_COMMAND, uart_num);
+
+    // Initialize netif
+    esp_netif_config_t netif_config = ESP_NETIF_DEFAULT_PPP();
+    esp_netif = esp_netif_new(&netif_config);
+
+    ESP_LOGI("LTE", "LTE modem initialized");
+}
+
+// Power up and configure the modem
+void lte_power_up() {
+    ESP_LOGI("LTE", "Powering up LTE modem");
+    // Power on modem (assume PWRKEY pin control)
+    // gpio_set_level(PWRKEY_PIN, 1);
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+    // gpio_set_level(PWRKEY_PIN, 0);
+
+    // Initialize PPP
+    esp_modem_set_mode(dce, ESP_MODEM_MODE_DATA);
+    esp_netif_attach(esp_netif, esp_modem_get_netif(dce));
+
+    // Connect to GPRS
+    vPortEnterCritical(&g_configMutex);
+    const char* apn = g_config.lte.apn;
+    vPortExitCritical(&g_configMutex);
+    esp_modem_connect(dce, apn, "", "");
+
+    ESP_LOGI("LTE", "LTE modem powered up and connected");
+}
+
+// Power down the modem to save energy
+void lte_power_down() {
+    ESP_LOGI("LTE", "Powering down LTE modem");
+    esp_modem_disconnect(dce);
+    // gpio_set_level(PWRKEY_PIN, 1);
+    // vTaskDelay(pdMS_TO_TICKS(3000));
+    // gpio_set_level(PWRKEY_PIN, 0);
+    ESP_LOGI("LTE", "LTE modem powered down");
+}
+
+// Switch MQTT client to LTE and reconnect
+void lte_switch_to_lte() {
+    ESP_LOGI("LTE", "Switching to LTE");
+    // Ensure LTE is powered up
+    lte_power_up();
+    // MQTT will use LTE netif
+    ESP_LOGI("LTE", "Switched to LTE");
+}
+
+// Switch MQTT client back to WiFi and reconnect
+void lte_switch_to_wifi() {
+    ESP_LOGI("LTE", "Switching to WiFi");
+    // Power down LTE
+    lte_power_down();
+    // MQTT will use WiFi netif
+    ESP_LOGI("LTE", "Switched to WiFi");
+}
+
+// Get LTE signal quality
+int lte_get_signal() {
+    int rssi = 0;
+    esp_modem_get_signal_quality(dce, &rssi);
+    return rssi;
+}
+
+// Check if LTE is connected
+bool lte_is_connected() {
+    return esp_modem_is_connected(dce);
+}
+
+// Check if LTE should be disabled (e.g., low solar)
+bool shouldDisableLTE() {
+    vPortEnterCritical(&g_configMutex);
+    float minVoltage = g_config.system.solarVoltageMin;
+    vPortExitCritical(&g_configMutex);
+    // Mock: assume solar voltage is checked elsewhere
+    // For now, return false
+    return false;
+}
+
+// Power management for LTE based on conditions
 void lte_power_management() {
     // Power down LTE if WiFi is connected and MQTT has been idle for >5 minutes
     if (WiFi.status() == WL_CONNECTED && mqttClient.connected() && (millis() - lastMqttActivity > 300000)) {  // 5 min idle
