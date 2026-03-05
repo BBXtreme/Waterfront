@@ -12,6 +12,7 @@
 #include "gate_control.h"
 #include "return_sensor.h"
 #include "deposit_logic.h"
+#include "mqtt_handler.h"
 
 // Mock MQTT client
 class MockPubSubClient {
@@ -195,4 +196,89 @@ TEST_CASE("Integration with GPIO Failure", "[integration]") {
     // In real code, gate_task might handle, but test assumes no crash
     gate_task();
     REQUIRE(true);  // No exception thrown
+}
+
+// New: Full MQTT-to-gate flow with multiple compartments
+TEST_CASE("Full MQTT to Multi-Gate Flow", "[integration]") {
+    // Setup config for 2 compartments
+    g_config = getDefaultConfig();
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartments[1] = {2, 18, 19, 20, 21, 22, 23};
+    g_config.compartmentCount = 2;
+    g_config.system.gracePeriodSec = 3600;
+
+    // Init modules
+    gate_init();
+    sensor_init();
+    deposit_init();
+
+    // Simulate MQTT command: open compartment 1
+    openCompartmentGate(1);
+    REQUIRE(mockDuty[0] == 512);
+
+    // Simulate MQTT command: open compartment 2
+    openCompartmentGate(2);
+    REQUIRE(mockDuty[1] == 512);
+
+    // Simulate limit switches triggered
+    mockGpioLevels[13] = 1;  // Compartment 1 open
+    mockGpioLevels[19] = 1;  // Compartment 2 open
+    gate_task();
+
+    // Check states
+    REQUIRE(std::string(getCompartmentGateState(1)) == "open");
+    REQUIRE(std::string(getCompartmentGateState(2)) == "open");
+
+    // Simulate close commands
+    closeCompartmentGate(1);
+    closeCompartmentGate(2);
+    REQUIRE(mockDuty[0] == 128);
+    REQUIRE(mockDuty[1] == 128);
+
+    // Simulate close limits
+    mockGpioLevels[14] = 1;  // Compartment 1 close
+    mockGpioLevels[20] = 1;  // Compartment 2 close
+    gate_task();
+
+    REQUIRE(std::string(getCompartmentGateState(1)) == "closed");
+    REQUIRE(std::string(getCompartmentGateState(2)) == "closed");
+}
+
+// New: MQTT config update flow
+TEST_CASE("MQTT Config Update Flow", "[integration]") {
+    // Setup config
+    g_config = getDefaultConfig();
+
+    // Simulate MQTT config update
+    const char* newConfig = "{\"mqtt\":{\"broker\":\"new.broker.com\"},\"system\":{\"debugMode\":false}}";
+    bool updated = updateConfigFromJson(newConfig);
+    REQUIRE(updated == true);
+    REQUIRE(std::string(g_config.mqtt.broker) == "new.broker.com");
+    REQUIRE(g_config.system.debugMode == false);
+}
+
+// New: Sensor and deposit integration with timeout
+TEST_CASE("Sensor Deposit Timeout Flow", "[integration]") {
+    // Setup config
+    g_config = getDefaultConfig();
+    g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
+    g_config.compartmentCount = 1;
+    g_config.system.gracePeriodSec = 10;  // Short grace period
+
+    deposit_init();
+
+    // Start rental
+    startRental(1, 5);  // 5 sec duration
+
+    // Simulate take
+    MockPubSubClient client;
+    deposit_on_take(&client);
+    REQUIRE(deposit_is_held() == true);
+
+    // Advance time past grace period (15 sec total)
+    mockMillis = 15000;
+
+    // Simulate return attempt
+    deposit_on_return(&client);
+    REQUIRE(deposit_is_held() == true);  // Should still be held due to timeout
 }
