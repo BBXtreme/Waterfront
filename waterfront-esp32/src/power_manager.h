@@ -33,4 +33,32 @@ int power_manager_get_battery_percent();
  */
 float power_manager_get_solar_voltage();
 
+/**
+ * @brief Gets the total awake time in milliseconds.
+ * @return Total awake time.
+ */
+unsigned long power_manager_get_total_awake_time();
+
+/**
+ * @brief Gets the wake-up count.
+ * @return Number of wake-ups.
+ */
+unsigned int power_manager_get_wake_up_count();
+
+/**
+ * @brief Gets the last wake-up cause.
+ * @return Last wake-up cause.
+ */
+esp_sleep_wakeup_cause_t power_manager_get_last_wake_up_cause();
+
+/**
+ * @brief Starts awake time profiling.
+ */
+void power_manager_start_awake_profiling();
+
+/**
+ * @brief Stops awake time profiling and updates total.
+ */
+void power_manager_stop_awake_profiling();
+
 #endif // POWER_MANAGER_H

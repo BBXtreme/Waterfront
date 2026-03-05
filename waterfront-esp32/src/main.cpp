@@ -218,9 +218,9 @@ void debug_task(void *pvParameters) {
             cJSON_AddNumberToObject(doc, "batteryPercent", readBatteryLevel());  // Battery percentage
             cJSON_AddNumberToObject(doc, "tasks", uxTaskGetNumberOfTasks());  // Number of active tasks
             cJSON_AddNumberToObject(doc, "reconnects", getMqttReconnectCount());  // MQTT reconnect count
-            cJSON_AddNumberToObject(doc, "totalAwakeTime", totalAwakeTime);  // Total awake time in ms
-            cJSON_AddNumberToObject(doc, "wakeUpCount", wakeUpCount);  // Number of wake-ups
-            cJSON_AddNumberToObject(doc, "lastWakeUpCause", lastWakeUpCause);  // Last wake-up cause
+            cJSON_AddNumberToObject(doc, "totalAwakeTime", power_manager_get_total_awake_time());  // Total awake time in ms
+            cJSON_AddNumberToObject(doc, "wakeUpCount", power_manager_get_wake_up_count());  // Number of wake-ups
+            cJSON_AddNumberToObject(doc, "lastWakeUpCause", power_manager_get_last_wake_up_cause());  // Last wake-up cause
             char *payload = cJSON_PrintUnformatted(doc);
             // Publish to debug topic
             if (mqttConnected) {
@@ -279,7 +279,7 @@ void app_main() {
     ESP_LOGI("MAIN", "Wake-up cause: %d, total wake-ups: %u", lastWakeUpCause, wakeUpCount);
 
     // Start awake time profiling
-    awakeStartTime = esp_timer_get_time() / 1000;
+    power_manager_start_awake_profiling();
 
     // Initialize task watchdog timer for stability (12s timeout)
     esp_task_wdt_init(12, true);
@@ -413,6 +413,7 @@ void main_loop() {
         ESP_LOGI("MAIN", "Performing power check");
         if (!power_manager_check_conditions()) {
             ESP_LOGW("MAIN", "Low power detected, entering deep sleep");
+            power_manager_stop_awake_profiling();
             enterDeepSleep();
         }
         lastPowerCheck = esp_timer_get_time() / 1000;

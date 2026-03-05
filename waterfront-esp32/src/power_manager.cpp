@@ -28,6 +28,7 @@ static esp_adc_cal_characteristics_t adc_chars;
 RTC_DATA_ATTR static unsigned long totalAwakeTime = 0;
 RTC_DATA_ATTR static unsigned int wakeUpCount = 0;
 RTC_DATA_ATTR static esp_sleep_wakeup_cause_t lastWakeUpCause = ESP_SLEEP_WAKEUP_UNDEFINED;
+RTC_DATA_ATTR static unsigned long awakeStartTime = 0;
 
 // Initialize ADC for power readings
 esp_err_t power_manager_init() {
@@ -139,4 +140,30 @@ float power_manager_get_solar_voltage() {
     int adc_raw = adc1_get_raw(SOLAR_ADC_CHANNEL);
     uint32_t voltage_mv = esp_adc_cal_raw_to_voltage(adc_raw, &adc_chars);
     return voltage_mv / 1000.0f;
+}
+
+// Get total awake time
+unsigned long power_manager_get_total_awake_time() {
+    return totalAwakeTime;
+}
+
+// Get wake-up count
+unsigned int power_manager_get_wake_up_count() {
+    return wakeUpCount;
+}
+
+// Get last wake-up cause
+esp_sleep_wakeup_cause_t power_manager_get_last_wake_up_cause() {
+    return lastWakeUpCause;
+}
+
+// Start awake profiling
+void power_manager_start_awake_profiling() {
+    awakeStartTime = esp_timer_get_time() / 1000;
+}
+
+// Stop awake profiling and update total
+void power_manager_stop_awake_profiling() {
+    unsigned long currentTime = esp_timer_get_time() / 1000;
+    totalAwakeTime += currentTime - awakeStartTime;
 }
