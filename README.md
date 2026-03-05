@@ -47,9 +47,9 @@ Users book online → pay → receive PIN/QR → arrive at solar-powered locker 
 - **Frontend / PWA** — Next.js 15+, TypeScript, Tailwind CSS, shadcn/ui, Vercel deployment
 - **Backend / Database / Auth** — Supabase (PostgreSQL + Auth + Realtime + Storage)
 - **Payments** — Stripe Checkout + BTCPay Server (self-hosted, Lightning/Liquid)
-- **IoT Controller** — ESP32-S3 (ESP-IDF), MQTT (PubSubClient or esp-mqtt), TinyGSM (LTE fallback)
+- **IoT Controller** — ESP32-S3 (ESP-IDF), MQTT (esp-mqtt), TinyGSM (LTE fallback)
 - **MQTT Broker** — Mosquitto (Docker)
-- **Development** — pnpm, Aider (AI pair programming), PlatformIO, GitHub monorepo
+- **Development** — pnpm, Aider (AI pair programming), GitHub monorepo
 - **Deployment** — Vercel (frontend), Railway/Render/VPS (MQTT broker, future BTCPay)
 
 ## Project Structure (Monorepo)
