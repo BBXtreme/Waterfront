@@ -9,9 +9,6 @@
 // Include headers under test
 #include "config_loader.h"
 
-// Define global config for tests
-GlobalConfig g_config;
-
 // Mock LittleFS for file operations
 class MockLittleFS {
 public:

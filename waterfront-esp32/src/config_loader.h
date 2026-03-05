@@ -11,6 +11,9 @@
 // Thread-safety mutex for g_config access (ESP32 multi-core)
 extern portMUX_TYPE g_configMutex;
 
+// Global config instance - shared across the application
+extern GlobalConfig g_config;
+
 // MQTT config
 struct MqttConfig {
     std::string broker;

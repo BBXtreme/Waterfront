@@ -13,9 +13,6 @@
 #include "return_sensor.h"
 #include "deposit_logic.h"
 
-// Define global config for tests
-GlobalConfig g_config;
-
 // Mock MQTT client
 class MockPubSubClient {
 public:
@@ -73,6 +70,10 @@ int mockUnlink(const char* path) { return 0; }
 
 // Override LittleFS
 #define LittleFS MockLittleFS
+
+// Mock loadConfig and saveConfig for integration tests
+bool loadConfig() { return true; }
+bool saveConfig() { return true; }
 
 // Mock millis
 unsigned long mockMillis = 0;

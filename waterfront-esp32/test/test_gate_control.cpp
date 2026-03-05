@@ -10,9 +10,6 @@
 #include "gate_control.h"
 #include "config_loader.h"
 
-// Define global config for tests
-GlobalConfig g_config;
-
 // Enhanced Mock LEDC functions with failure simulation
 ledc_channel_config_t mockServoChannels[MAX_COMPARTMENTS];
 int mockDuty[MAX_COMPARTMENTS] = {0};

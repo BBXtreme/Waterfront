@@ -348,9 +348,6 @@ bool saveConfig() {
         doc["compartments"][i]["servoPin"] = g_config.compartments[i].servoPin;
         doc["compartments"][i]["limitOpenPin"] = g_config.compartments[i].limitOpenPin;
         doc["compartments"][i]["limitClosePin"] = g_config.compartments[i].limitClosePin;
-        doc["compartments"][i]["ultrasonicTriggerPin"] = g_config.compartments[i].ultrasonicTriggerPin;
-        doc["compartments"][i]["ultrasonicEchoPin"] = g_config.compartments[i].ultrasonicEchoPin;
-        doc["compartments"][i]["weightSensorPin"] = g_config.compartments[i].weightSensorPin;
     }
     // Serialize system section
     doc["system"]["maxCompartments"] = g_config.system.maxCompartments;

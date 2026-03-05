@@ -12,12 +12,16 @@
 #include "config_loader.h"
 #include "return_sensor.h"
 
-// Define global config for tests
-GlobalConfig g_config;
+// Mock LittleFS for config load test
+class MockLittleFS {
+public:
+    static bool begin() { return true; }
+    static FILE* open(const char* path, const char* mode) { return nullptr; }  // Not used in mock
+};
+#define LittleFS MockLittleFS
 
-// Mock millis for performance tests
-unsigned long mockMillis = 0;
-#define millis() mockMillis
+// Mock loadConfig for performance test
+bool loadConfig() { return true; }
 
 // Mock GPIO for sensor
 int mockGpioLevels[40] = {0};
