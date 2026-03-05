@@ -30,6 +30,15 @@ int lte_get_signal();
 // Check if LTE is connected
 bool lte_is_connected();
 
+// Get current data usage in bytes
+uint64_t lte_get_data_usage();
+
+// Reset data usage counter
+void lte_reset_data_usage();
+
+// Update data usage (call periodically)
+void lte_update_data_usage();
+
 // Check if LTE should be disabled (e.g., low solar)
 bool shouldDisableLTE();
 

@@ -10,6 +10,10 @@ uart_port_t uart_num = UART_NUM_1;
 // Mutex for thread-safe access to LTE state
 portMUX_TYPE lteMutex = portMUX_INITIALIZER_UNLOCKED;
 
+// Data usage tracking
+static uint64_t lteDataUsageBytes = 0;  // Track data usage in bytes
+static unsigned long lastDataCheck = 0;  // Last time data usage was checked
+
 // Initialize LTE modem (power off initially)
 void lte_init() {
     ESP_LOGI("LTE", "Initializing LTE modem");
@@ -99,18 +103,55 @@ bool lte_is_connected() {
     return esp_modem_is_connected(dce);
 }
 
-// Check if LTE should be disabled (e.g., low solar)
+// Get current data usage in bytes
+uint64_t lte_get_data_usage() {
+    vPortEnterCritical(&lteMutex);
+    uint64_t usage = lteDataUsageBytes;
+    vPortExitCritical(&lteMutex);
+    return usage;
+}
+
+// Reset data usage counter
+void lte_reset_data_usage() {
+    vPortEnterCritical(&lteMutex);
+    lteDataUsageBytes = 0;
+    vPortExitCritical(&lteMutex);
+    ESP_LOGI("LTE", "Data usage reset");
+}
+
+// Update data usage (call periodically)
+void lte_update_data_usage() {
+    // Placeholder: In a real implementation, query modem for data usage
+    // For now, estimate based on time connected
+    unsigned long now = esp_timer_get_time() / 1000;
+    if (lastDataCheck > 0) {
+        unsigned long deltaTime = now - lastDataCheck;
+        // Estimate 1 KB per second (adjust based on actual usage)
+        vPortEnterCritical(&lteMutex);
+        lteDataUsageBytes += deltaTime * 1024;
+        vPortExitCritical(&lteMutex);
+    }
+    lastDataCheck = now;
+}
+
+// Check if LTE should be disabled (e.g., low solar or data limit exceeded)
 bool shouldDisableLTE() {
     vPortEnterCritical(&g_configMutex);
     float minVoltage = g_config.system.solarVoltageMin;
+    uint64_t maxUsage = g_config.lte.dataUsageAlertLimitKb * 1024ULL;
     vPortExitCritical(&g_configMutex);
-    // Mock: assume solar voltage is checked elsewhere
+    // Check solar voltage (placeholder: integrate with ADC)
     // For now, return false
-    return false;
+    bool lowSolar = false;  // TODO: Implement solar check
+    bool overUsage = lte_get_data_usage() > maxUsage;
+    return lowSolar || overUsage;
 }
 
 // Power management for LTE based on conditions
 void lte_power_management() {
+    // Update data usage
+    lte_update_data_usage();
+
     // Power down LTE if WiFi is connected and MQTT has been idle for >5 minutes
     wifi_ap_record_t ap_info;
     if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK && mqttConnected && (esp_timer_get_time() / 1000 - lastMqttActivity > 300000)) {  // 5 min idle
@@ -120,6 +161,13 @@ void lte_power_management() {
     // Power down LTE if solar voltage is low to conserve power
     if (shouldDisableLTE()) {
         lte_power_down();
-        ESP_LOGI("LTE", "Powered down due to low solar voltage");
+        ESP_LOGI("LTE", "Powered down due to low solar or data limit exceeded");
+    }
+    // Log signal quality periodically
+    static unsigned long lastSignalCheck = 0;
+    if (esp_timer_get_time() / 1000 - lastSignalCheck > 60000) {  // Every minute
+        int rssi = lte_get_signal();
+        ESP_LOGI("LTE", "Signal quality: %d dBm", rssi);
+        lastSignalCheck = esp_timer_get_time() / 1000;
     }
 }
