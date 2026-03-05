@@ -303,15 +303,64 @@ bool loadConfig() {
 // Returns true on success, false on failure
 bool saveConfig() {
     ESP_LOGI("CONFIG", "Attempting to save config to LittleFS");
+    vPortEnterCritical(&g_configMutex);
+    nlohmann::json doc;
+    // Serialize version
+    doc["version"] = g_config.version;
+    // Serialize MQTT section
+    doc["mqtt"]["broker"] = g_config.mqtt.broker;
+    doc["mqtt"]["port"] = g_config.mqtt.port;
+    doc["mqtt"]["username"] = g_config.mqtt.username;
+    doc["mqtt"]["password"] = g_config.mqtt.password;
+    doc["mqtt"]["clientIdPrefix"] = g_config.mqtt.clientIdPrefix;
+    doc["mqtt"]["useTLS"] = g_config.mqtt.useTLS;
+    doc["mqtt"]["caCertPath"] = g_config.mqtt.caCertPath;
+    doc["mqtt"]["clientCertPath"] = g_config.mqtt.clientCertPath;
+    doc["mqtt"]["clientKeyPath"] = g_config.mqtt.clientKeyPath;
+    doc["mqtt"]["tlsSkipVerify"] = g_config.mqtt.tlsSkipVerify;
+    // Serialize location section
+    doc["location"]["slug"] = g_config.location.slug;
+    doc["location"]["code"] = g_config.location.code;
+    // Serialize WiFi provisioning section
+    doc["wifiProvisioning"]["fallbackSsid"] = g_config.wifiProvisioning.fallbackSsid;
+    doc["wifiProvisioning"]["fallbackPass"] = g_config.wifiProvisioning.fallbackPass;
+    // Serialize LTE section
+    doc["lte"]["apn"] = g_config.lte.apn;
+    doc["lte"]["simPin"] = g_config.lte.simPin;
+    doc["lte"]["rssiThreshold"] = g_config.lte.rssiThreshold;
+    doc["lte"]["dataUsageAlertLimitKb"] = g_config.lte.dataUsageAlertLimitKb;
+    // Serialize BLE section
+    doc["ble"]["serviceUuid"] = g_config.ble.serviceUuid;
+    doc["ble"]["ssidCharUuid"] = g_config.ble.ssidCharUuid;
+    doc["ble"]["passCharUuid"] = g_config.ble.passCharUuid;
+    doc["ble"]["statusCharUuid"] = g_config.ble.statusCharUuid;
+    // Serialize compartments array
+    for (int i = 0; i < g_config.compartmentCount; i++) {
+        doc["compartments"][i]["number"] = g_config.compartments[i].number;
+        doc["compartments"][i]["servoPin"] = g_config.compartments[i].servoPin;
+        doc["compartments"][i]["limitOpenPin"] = g_config.compartments[i].limitOpenPin;
+        doc["compartments"][i]["limitClosePin"] = g_config.compartments[i].limitClosePin;
+        doc["compartments"][i]["ultrasonicTriggerPin"] = g_config.compartments[i].ultrasonicTriggerPin;
+        doc["compartments"][i]["ultrasonicEchoPin"] = g_config.compartments[i].ultrasonicEchoPin;
+        doc["compartments"][i]["weightSensorPin"] = g_config.compartments[i].weightSensorPin;
+    }
+    // Serialize system section
+    doc["system"]["maxCompartments"] = g_config.system.maxCompartments;
+    doc["system"]["debugMode"] = g_config.system.debugMode;
+    doc["system"]["gracePeriodSec"] = g_config.system.gracePeriodSec;
+    doc["system"]["batteryLowThresholdPercent"] = g_config.system.batteryLowThresholdPercent;
+    doc["system"]["solarVoltageMin"] = g_config.system.solarVoltageMin;
+    // Serialize other section
+    doc["other"]["offlinePinTtlSec"] = g_config.other.offlinePinTtlSec;
+    doc["other"]["depositHoldAmountFallback"] = g_config.other.depositHoldAmountFallback;
+    // Serialize to string
+    std::string jsonString = doc.dump(4);  // Pretty print with 4 spaces
+    vPortExitCritical(&g_configMutex);
     FILE* configFile = fopen("/littlefs/config.json", "w");
     if (!configFile) {
         ESP_LOGE("CONFIG", "Failed to open config.json for write");
         return false;
     }
-    nlohmann::json doc;
-    // Serialize g_config to doc (placeholder - implement full serialization if needed)
-    // For now, assume config is saved via updateConfigFromJson
-    std::string jsonString = doc.dump();
     size_t written = fwrite(jsonString.c_str(), 1, jsonString.size(), configFile);
     fclose(configFile);
     if (written != jsonString.size()) {
@@ -409,62 +458,53 @@ std::string getConfigAsJson() {
     // Serialize version
     doc["version"] = g_config.version;
     // Serialize MQTT section
-    auto mqtt = doc["mqtt"];
-    mqtt["broker"] = g_config.mqtt.broker;
-    mqtt["port"] = g_config.mqtt.port;
-    mqtt["username"] = g_config.mqtt.username;
-    mqtt["password"] = g_config.mqtt.password;
-    mqtt["clientIdPrefix"] = g_config.mqtt.clientIdPrefix;
-    mqtt["useTLS"] = g_config.mqtt.useTLS;
-    mqtt["caCertPath"] = g_config.mqtt.caCertPath;
-    mqtt["clientCertPath"] = g_config.mqtt.clientCertPath;
-    mqtt["clientKeyPath"] = g_config.mqtt.clientKeyPath;
-    mqtt["tlsSkipVerify"] = g_config.mqtt.tlsSkipVerify;
+    doc["mqtt"]["broker"] = g_config.mqtt.broker;
+    doc["mqtt"]["port"] = g_config.mqtt.port;
+    doc["mqtt"]["username"] = g_config.mqtt.username;
+    doc["mqtt"]["password"] = g_config.mqtt.password;
+    doc["mqtt"]["clientIdPrefix"] = g_config.mqtt.clientIdPrefix;
+    doc["mqtt"]["useTLS"] = g_config.mqtt.useTLS;
+    doc["mqtt"]["caCertPath"] = g_config.mqtt.caCertPath;
+    doc["mqtt"]["clientCertPath"] = g_config.mqtt.clientCertPath;
+    doc["mqtt"]["clientKeyPath"] = g_config.mqtt.clientKeyPath;
+    doc["mqtt"]["tlsSkipVerify"] = g_config.mqtt.tlsSkipVerify;
     // Serialize location section
-    auto location = doc["location"];
-    location["slug"] = g_config.location.slug;
-    location["code"] = g_config.location.code;
+    doc["location"]["slug"] = g_config.location.slug;
+    doc["location"]["code"] = g_config.location.code;
     // Serialize WiFi provisioning section
-    auto wifiProvisioning = doc["wifiProvisioning"];
-    wifiProvisioning["fallbackSsid"] = g_config.wifiProvisioning.fallbackSsid;
-    wifiProvisioning["fallbackPass"] = g_config.wifiProvisioning.fallbackPass;
+    doc["wifiProvisioning"]["fallbackSsid"] = g_config.wifiProvisioning.fallbackSsid;
+    doc["wifiProvisioning"]["fallbackPass"] = g_config.wifiProvisioning.fallbackPass;
     // Serialize LTE section
-    auto lte = doc["lte"];
-    lte["apn"] = g_config.lte.apn;
-    lte["simPin"] = g_config.lte.simPin;
-    lte["rssiThreshold"] = g_config.lte.rssiThreshold;
-    lte["dataUsageAlertLimitKb"] = g_config.lte.dataUsageAlertLimitKb;
+    doc["lte"]["apn"] = g_config.lte.apn;
+    doc["lte"]["simPin"] = g_config.lte.simPin;
+    doc["lte"]["rssiThreshold"] = g_config.lte.rssiThreshold;
+    doc["lte"]["dataUsageAlertLimitKb"] = g_config.lte.dataUsageAlertLimitKb;
     // Serialize BLE section
-    auto ble = doc["ble"];
-    ble["serviceUuid"] = g_config.ble.serviceUuid;
-    ble["ssidCharUuid"] = g_config.ble.ssidCharUuid;
-    ble["passCharUuid"] = g_config.ble.passCharUuid;
-    ble["statusCharUuid"] = g_config.ble.statusCharUuid;
+    doc["ble"]["serviceUuid"] = g_config.ble.serviceUuid;
+    doc["ble"]["ssidCharUuid"] = g_config.ble.ssidCharUuid;
+    doc["ble"]["passCharUuid"] = g_config.ble.passCharUuid;
+    doc["ble"]["statusCharUuid"] = g_config.ble.statusCharUuid;
     // Serialize compartments array
-    auto compartments = doc["compartments"];
     for (int i = 0; i < g_config.compartmentCount; i++) {
-        auto comp = compartments[i];
-        comp["number"] = g_config.compartments[i].number;
-        comp["servoPin"] = g_config.compartments[i].servoPin;
-        comp["limitOpenPin"] = g_config.compartments[i].limitOpenPin;
-        comp["limitClosePin"] = g_config.compartments[i].limitClosePin;
-        comp["ultrasonicTriggerPin"] = g_config.compartments[i].ultrasonicTriggerPin;
-        comp["ultrasonicEchoPin"] = g_config.compartments[i].ultrasonicEchoPin;
-        comp["weightSensorPin"] = g_config.compartments[i].weightSensorPin;
+        doc["compartments"][i]["number"] = g_config.compartments[i].number;
+        doc["compartments"][i]["servoPin"] = g_config.compartments[i].servoPin;
+        doc["compartments"][i]["limitOpenPin"] = g_config.compartments[i].limitOpenPin;
+        doc["compartments"][i]["limitClosePin"] = g_config.compartments[i].limitClosePin;
+        doc["compartments"][i]["ultrasonicTriggerPin"] = g_config.compartments[i].ultrasonicTriggerPin;
+        doc["compartments"][i]["ultrasonicEchoPin"] = g_config.compartments[i].ultrasonicEchoPin;
+        doc["compartments"][i]["weightSensorPin"] = g_config.compartments[i].weightSensorPin;
     }
     // Serialize system section
-    auto system = doc["system"];
-    system["maxCompartments"] = g_config.system.maxCompartments;
-    system["debugMode"] = g_config.system.debugMode;
-    system["gracePeriodSec"] = g_config.system.gracePeriodSec;
-    system["batteryLowThresholdPercent"] = g_config.system.batteryLowThresholdPercent;
-    system["solarVoltageMin"] = g_config.system.solarVoltageMin;
+    doc["system"]["maxCompartments"] = g_config.system.maxCompartments;
+    doc["system"]["debugMode"] = g_config.system.debugMode;
+    doc["system"]["gracePeriodSec"] = g_config.system.gracePeriodSec;
+    doc["system"]["batteryLowThresholdPercent"] = g_config.system.batteryLowThresholdPercent;
+    doc["system"]["solarVoltageMin"] = g_config.system.solarVoltageMin;
     // Serialize other section
-    auto other = doc["other"];
-    other["offlinePinTtlSec"] = g_config.other.offlinePinTtlSec;
-    other["depositHoldAmountFallback"] = g_config.other.depositHoldAmountFallback;
+    doc["other"]["offlinePinTtlSec"] = g_config.other.offlinePinTtlSec;
+    doc["other"]["depositHoldAmountFallback"] = g_config.other.depositHoldAmountFallback;
     // Serialize to string
-    std::string jsonString = doc.dump();
+    std::string jsonString = doc.dump(4);  // Pretty print with 4 spaces
     vPortExitCritical(&g_configMutex);
     return jsonString;
 }
