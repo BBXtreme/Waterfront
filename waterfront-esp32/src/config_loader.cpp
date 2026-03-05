@@ -181,23 +181,30 @@ bool loadConfig() {
         // Add any migration logic here if needed for future versions
     }
     vPortEnterCritical(&g_configMutex);
-    g_config.version = configVersion;
-    ESP_LOGI("CONFIG", "Config version: %s", g_config.version.c_str());
+    strcpy(g_config.version, configVersion.c_str());
+    ESP_LOGI("CONFIG", "Config version: %s", g_config.version);
 
     // Parse MQTT section
     if (doc.contains("mqtt")) {
         auto mqtt = doc["mqtt"];
-        g_config.mqtt.broker = mqtt.value("broker", "");
+        std::string broker = mqtt.value("broker", "");
+        strcpy(g_config.mqtt.broker, broker.c_str());
         g_config.mqtt.port = mqtt.value("port", 0);
-        g_config.mqtt.username = mqtt.value("username", "");
-        g_config.mqtt.password = mqtt.value("password", "");
-        g_config.mqtt.clientIdPrefix = mqtt.value("clientIdPrefix", "");
+        std::string username = mqtt.value("username", "");
+        strcpy(g_config.mqtt.username, username.c_str());
+        std::string password = mqtt.value("password", "");
+        strcpy(g_config.mqtt.password, password.c_str());
+        std::string clientIdPrefix = mqtt.value("clientIdPrefix", "");
+        strcpy(g_config.mqtt.clientIdPrefix, clientIdPrefix.c_str());
         g_config.mqtt.useTLS = mqtt.value("useTLS", false);
-        g_config.mqtt.caCertPath = mqtt.value("caCertPath", "");
-        g_config.mqtt.clientCertPath = mqtt.value("clientCertPath", "");
-        g_config.mqtt.clientKeyPath = mqtt.value("clientKeyPath", "");
+        std::string caCertPath = mqtt.value("caCertPath", "");
+        strcpy(g_config.mqtt.caCertPath, caCertPath.c_str());
+        std::string clientCertPath = mqtt.value("clientCertPath", "");
+        strcpy(g_config.mqtt.clientCertPath, clientCertPath.c_str());
+        std::string clientKeyPath = mqtt.value("clientKeyPath", "");
+        strcpy(g_config.mqtt.clientKeyPath, clientKeyPath.c_str());
         g_config.mqtt.tlsSkipVerify = mqtt.value("tlsSkipVerify", false);
-        ESP_LOGI("CONFIG", "Loaded MQTT config: broker=%s, port=%d, useTLS=%d, tlsSkipVerify=%d", g_config.mqtt.broker.c_str(), g_config.mqtt.port, g_config.mqtt.useTLS, g_config.mqtt.tlsSkipVerify);
+        ESP_LOGI("CONFIG", "Loaded MQTT config: broker=%s, port=%d, useTLS=%d, tlsSkipVerify=%d", g_config.mqtt.broker, g_config.mqtt.port, g_config.mqtt.useTLS, g_config.mqtt.tlsSkipVerify);
     } else {
         ESP_LOGW("CONFIG", "MQTT section missing, using defaults");
     }
@@ -205,9 +212,11 @@ bool loadConfig() {
     // Parse location section
     if (doc.contains("location")) {
         auto loc = doc["location"];
-        g_config.location.slug = loc.value("slug", "");
-        g_config.location.code = loc.value("code", "");
-        ESP_LOGI("CONFIG", "Loaded location: slug=%s, code=%s", g_config.location.slug.c_str(), g_config.location.code.c_str());
+        std::string slug = loc.value("slug", "");
+        strcpy(g_config.location.slug, slug.c_str());
+        std::string code = loc.value("code", "");
+        strcpy(g_config.location.code, code.c_str());
+        ESP_LOGI("CONFIG", "Loaded location: slug=%s, code=%s", g_config.location.slug, g_config.location.code);
     } else {
         ESP_LOGW("CONFIG", "Location section missing, using defaults");
     }
@@ -215,9 +224,11 @@ bool loadConfig() {
     // Parse WiFi provisioning section
     if (doc.contains("wifiProvisioning")) {
         auto wp = doc["wifiProvisioning"];
-        g_config.wifiProvisioning.fallbackSsid = wp.value("fallbackSsid", "");
-        g_config.wifiProvisioning.fallbackPass = wp.value("fallbackPass", "");
-        ESP_LOGI("CONFIG", "Loaded WiFi provisioning: SSID=%s", g_config.wifiProvisioning.fallbackSsid.c_str());
+        std::string fallbackSsid = wp.value("fallbackSsid", "");
+        strcpy(g_config.wifiProvisioning.fallbackSsid, fallbackSsid.c_str());
+        std::string fallbackPass = wp.value("fallbackPass", "");
+        strcpy(g_config.wifiProvisioning.fallbackPass, fallbackPass.c_str());
+        ESP_LOGI("CONFIG", "Loaded WiFi provisioning: SSID=%s", g_config.wifiProvisioning.fallbackSsid);
     } else {
         ESP_LOGW("CONFIG", "WiFi provisioning section missing, using defaults");
     }
@@ -225,11 +236,13 @@ bool loadConfig() {
     // Parse LTE section
     if (doc.contains("lte")) {
         auto lte = doc["lte"];
-        g_config.lte.apn = lte.value("apn", "");
-        g_config.lte.simPin = lte.value("simPin", "");
+        std::string apn = lte.value("apn", "");
+        strcpy(g_config.lte.apn, apn.c_str());
+        std::string simPin = lte.value("simPin", "");
+        strcpy(g_config.lte.simPin, simPin.c_str());
         g_config.lte.rssiThreshold = lte.value("rssiThreshold", 0);
         g_config.lte.dataUsageAlertLimitKb = lte.value("dataUsageAlertLimitKb", 0);
-        ESP_LOGI("CONFIG", "Loaded LTE config: APN=%s, RSSI threshold=%d", g_config.lte.apn.c_str(), g_config.lte.rssiThreshold);
+        ESP_LOGI("CONFIG", "Loaded LTE config: APN=%s, RSSI threshold=%d", g_config.lte.apn, g_config.lte.rssiThreshold);
     } else {
         ESP_LOGW("CONFIG", "LTE section missing, using defaults");
     }
@@ -237,11 +250,15 @@ bool loadConfig() {
     // Parse BLE section
     if (doc.contains("ble")) {
         auto ble = doc["ble"];
-        g_config.ble.serviceUuid = ble.value("serviceUuid", "");
-        g_config.ble.ssidCharUuid = ble.value("ssidCharUuid", "");
-        g_config.ble.passCharUuid = ble.value("passCharUuid", "");
-        g_config.ble.statusCharUuid = ble.value("statusCharUuid", "");
-        ESP_LOGI("CONFIG", "Loaded BLE config: service UUID=%s", g_config.ble.serviceUuid.c_str());
+        std::string serviceUuid = ble.value("serviceUuid", "");
+        strcpy(g_config.ble.serviceUuid, serviceUuid.c_str());
+        std::string ssidCharUuid = ble.value("ssidCharUuid", "");
+        strcpy(g_config.ble.ssidCharUuid, ssidCharUuid.c_str());
+        std::string passCharUuid = ble.value("passCharUuid", "");
+        strcpy(g_config.ble.passCharUuid, passCharUuid.c_str());
+        std::string statusCharUuid = ble.value("statusCharUuid", "");
+        strcpy(g_config.ble.statusCharUuid, statusCharUuid.c_str());
+        ESP_LOGI("CONFIG", "Loaded BLE config: service UUID=%s", g_config.ble.serviceUuid);
     } else {
         ESP_LOGW("CONFIG", "BLE section missing, using defaults");
     }
@@ -348,6 +365,9 @@ bool saveConfig() {
         doc["compartments"][i]["servoPin"] = g_config.compartments[i].servoPin;
         doc["compartments"][i]["limitOpenPin"] = g_config.compartments[i].limitOpenPin;
         doc["compartments"][i]["limitClosePin"] = g_config.compartments[i].limitClosePin;
+        doc["compartments"][i]["ultrasonicTriggerPin"] = g_config.compartments[i].ultrasonicTriggerPin;
+        doc["compartments"][i]["ultrasonicEchoPin"] = g_config.compartments[i].ultrasonicEchoPin;
+        doc["compartments"][i]["weightSensorPin"] = g_config.compartments[i].weightSensorPin;
     }
     // Serialize system section
     doc["system"]["maxCompartments"] = g_config.system.maxCompartments;
@@ -420,29 +440,29 @@ bool updateConfigFromJson(const char* jsonPayload) {
 GlobalConfig getDefaultConfig() {
     ESP_LOGI("CONFIG", "Generating default config");
     GlobalConfig def;
-    def.version = "1.0";
-    def.mqtt.broker = "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud";
+    strcpy(def.version, "1.0");
+    strcpy(def.mqtt.broker, "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud");
     def.mqtt.port = 8883;
-    def.mqtt.username = "mqttuser";
-    def.mqtt.password = "strongpass123";
-    def.mqtt.clientIdPrefix = "waterfront";
+    strcpy(def.mqtt.username, "mqttuser");
+    strcpy(def.mqtt.password, "strongpass123");
+    strcpy(def.mqtt.clientIdPrefix, "waterfront");
     def.mqtt.useTLS = true;
-    def.mqtt.caCertPath = "/littlefs/ca.pem";
-    def.mqtt.clientCertPath = "";
-    def.mqtt.clientKeyPath = "";
+    strcpy(def.mqtt.caCertPath, "/littlefs/ca.pem");
+    strcpy(def.mqtt.clientCertPath, "");
+    strcpy(def.mqtt.clientKeyPath, "");
     def.mqtt.tlsSkipVerify = false;
-    def.location.slug = "bremen";
-    def.location.code = "harbor-01";
-    def.wifiProvisioning.fallbackSsid = "WATERFRONT-DEFAULT";
-    def.wifiProvisioning.fallbackPass = "defaultpass123";
-    def.lte.apn = "internet.t-mobile.de";
-    def.lte.simPin = "";
+    strcpy(def.location.slug, "bremen");
+    strcpy(def.location.code, "harbor-01");
+    strcpy(def.wifiProvisioning.fallbackSsid, "WATERFRONT-DEFAULT");
+    strcpy(def.wifiProvisioning.fallbackPass, "defaultpass123");
+    strcpy(def.lte.apn, "internet.t-mobile.de");
+    strcpy(def.lte.simPin, "");
     def.lte.rssiThreshold = -70;
     def.lte.dataUsageAlertLimitKb = 100000;
-    def.ble.serviceUuid = "12345678-1234-1234-1234-123456789abc";
-    def.ble.ssidCharUuid = "87654321-4321-4321-4321-cba987654321";
-    def.ble.passCharUuid = "87654321-4321-4321-4321-dba987654321";
-    def.ble.statusCharUuid = "87654321-4321-4321-4321-eba987654321";
+    strcpy(def.ble.serviceUuid, "12345678-1234-1234-1234-123456789abc");
+    strcpy(def.ble.ssidCharUuid, "87654321-4321-4321-4321-cba987654321");
+    strcpy(def.ble.passCharUuid, "87654321-4321-4321-4321-dba987654321");
+    strcpy(def.ble.statusCharUuid, "87654321-4321-4321-4321-eba987654321");
     def.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     def.compartmentCount = 1;
     def.system.maxCompartments = 10;

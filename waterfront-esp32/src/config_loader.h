@@ -16,44 +16,44 @@ extern GlobalConfig g_config;
 
 // MQTT config
 struct MqttConfig {
-    std::string broker;
+    char broker[64];
     int port;
-    std::string username;
-    std::string password;
-    std::string clientIdPrefix;
+    char username[32];
+    char password[32];
+    char clientIdPrefix[32];
     bool useTLS;
-    std::string caCertPath;
-    std::string clientCertPath;
-    std::string clientKeyPath;
+    char caCertPath[64];
+    char clientCertPath[64];
+    char clientKeyPath[64];
     bool tlsSkipVerify;
 };
 
 // Location config
 struct LocationConfig {
-    std::string slug;
-    std::string code;
+    char slug[32];
+    char code[32];
 };
 
 // WiFi provisioning config
 struct WifiProvisioningConfig {
-    std::string fallbackSsid;
-    std::string fallbackPass;
+    char fallbackSsid[32];
+    char fallbackPass[32];
 };
 
 // LTE config
 struct LteConfig {
-    std::string apn;
-    std::string simPin;
+    char apn[32];
+    char simPin[16];
     int rssiThreshold;
     int dataUsageAlertLimitKb;
 };
 
 // BLE config
 struct BleConfig {
-    std::string serviceUuid;
-    std::string ssidCharUuid;
-    std::string passCharUuid;
-    std::string statusCharUuid;
+    char serviceUuid[37];  // UUID length
+    char ssidCharUuid[37];
+    char passCharUuid[37];
+    char statusCharUuid[37];
 };
 
 // Compartment config (pins)
@@ -84,7 +84,7 @@ struct OtherConfig {
 
 // Global config struct
 struct GlobalConfig {
-    std::string version;  // Config version for migration
+    char version[16];  // Config version for migration
     MqttConfig mqtt;
     LocationConfig location;
     WifiProvisioningConfig wifiProvisioning;

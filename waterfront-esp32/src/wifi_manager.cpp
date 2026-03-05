@@ -12,12 +12,14 @@ void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id
             case WIFI_EVENT_STA_START:
                 ESP_LOGI("WiFi", "STA started, connecting...");
                 vPortEnterCritical(&g_configMutex);
-                std::string fallbackSsid = g_config.wifiProvisioning.fallbackSsid;
-                std::string fallbackPass = g_config.wifiProvisioning.fallbackPass;
+                char fallbackSsid[32];
+                strcpy(fallbackSsid, g_config.wifiProvisioning.fallbackSsid);
+                char fallbackPass[32];
+                strcpy(fallbackPass, g_config.wifiProvisioning.fallbackPass);
                 vPortExitCritical(&g_configMutex);
                 wifi_config_t wifi_config = {};
-                strcpy((char*)wifi_config.sta.ssid, fallbackSsid.c_str());
-                strcpy((char*)wifi_config.sta.password, fallbackPass.c_str());
+                strcpy((char*)wifi_config.sta.ssid, fallbackSsid);
+                strcpy((char*)wifi_config.sta.password, fallbackPass);
                 esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
                 esp_wifi_connect();
                 break;
@@ -43,12 +45,14 @@ void wifi_init() {
     esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL);
     esp_wifi_set_mode(WIFI_MODE_STA);
     vPortEnterCritical(&g_configMutex);
-    std::string fallbackSsid = g_config.wifiProvisioning.fallbackSsid;
-    std::string fallbackPass = g_config.wifiProvisioning.fallbackPass;
+    char fallbackSsid[32];
+    strcpy(fallbackSsid, g_config.wifiProvisioning.fallbackSsid);
+    char fallbackPass[32];
+    strcpy(fallbackPass, g_config.wifiProvisioning.fallbackPass);
     vPortExitCritical(&g_configMutex);
     wifi_config_t wifi_config = {};
-    strcpy((char*)wifi_config.sta.ssid, fallbackSsid.c_str());
-    strcpy((char*)wifi_config.sta.password, fallbackPass.c_str());
+    strcpy((char*)wifi_config.sta.ssid, fallbackSsid);
+    strcpy((char*)wifi_config.sta.password, fallbackPass);
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     esp_wifi_start();
     esp_wifi_connect();

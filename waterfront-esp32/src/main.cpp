@@ -59,7 +59,9 @@ void factory_reset_task(void *pvParameters) {
                     String payload;
                     serializeJson(doc, payload);
                     char topic[96];
-                    int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+                    vPortEnterCritical(&g_configMutex);
+                    int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
+                    vPortExitCritical(&g_configMutex);
                     if (len < sizeof(topic)) {
                         mqttClient.publish(topic, payload.c_str(), false);
                         ESP_LOGI("MAIN", "Published factory reset event");
@@ -109,8 +111,10 @@ void debug_task(void *pvParameters) {
         esp_task_wdt_reset();  // Reset watchdog
         vPortEnterCritical(&g_configMutex);
         bool debugEnabled = g_config.system.debugMode;
-        String locationSlug = g_config.location.slug;
-        String locationCode = g_config.location.code;
+        char locationSlug[32];
+        strcpy(locationSlug, g_config.location.slug);
+        char locationCode[32];
+        strcpy(locationCode, g_config.location.code);
         vPortExitCritical(&g_configMutex);
         if (debugEnabled) {
             // Collect telemetry data
@@ -126,7 +130,7 @@ void debug_task(void *pvParameters) {
             // Publish to debug topic
             if (mqttClient.connected()) {
                 char topic[96];
-                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", locationSlug.c_str(), locationCode.c_str());
+                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", locationSlug, locationCode);
                 if (len < sizeof(topic)) {
                     mqttClient.publish(topic, payload.c_str(), false);  // Not retained
                     ESP_LOGI("DEBUG", "Published debug telemetry: %s", payload.c_str());
@@ -177,7 +181,7 @@ void setup() {
     deposit_init();
 
     // Initialize OTA with callbacks for remote monitoring
-    ArduinoOTA.setHostname((g_config.mqtt.clientIdPrefix + "-ota").c_str());
+    ArduinoOTA.setHostname((String(g_config.mqtt.clientIdPrefix) + "-ota").c_str());
     ArduinoOTA.setPassword("admin");  // Password for security
     ArduinoOTA.onStart([]() {
         String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
@@ -191,7 +195,9 @@ void setup() {
             String payload;
             serializeJson(doc, payload);
             char topic[96];
-            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+            vPortEnterCritical(&g_configMutex);
+            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
+            vPortExitCritical(&g_configMutex);
             if (len < sizeof(topic)) {
                 mqttClient.publish(topic, payload.c_str(), false);
             }
@@ -207,7 +213,9 @@ void setup() {
             String payload;
             serializeJson(doc, payload);
             char topic[96];
-            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+            vPortEnterCritical(&g_configMutex);
+            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
+            vPortExitCritical(&g_configMutex);
             if (len < sizeof(topic)) {
                 mqttClient.publish(topic, payload.c_str(), false);
             }
@@ -228,7 +236,9 @@ void setup() {
                 String payload;
                 serializeJson(doc, payload);
                 char topic[96];
-                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+                vPortEnterCritical(&g_configMutex);
+                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
+                vPortExitCritical(&g_configMutex);
                 if (len < sizeof(topic)) {
                     mqttClient.publish(topic, payload.c_str(), false);
                 }
@@ -252,7 +262,9 @@ void setup() {
             String payload;
             serializeJson(doc, payload);
             char topic[96];
-            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+            vPortEnterCritical(&g_configMutex);
+            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
+            vPortExitCritical(&g_configMutex);
             if (len < sizeof(topic)) {
                 mqttClient.publish(topic, payload.c_str(), false);
             }
@@ -342,7 +354,9 @@ void loop() {
                 String payload;
                 serializeJson(doc, payload);
                 char topic[96];
-                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/alert", g_config.location.slug.c_str(), g_config.location.code.c_str());
+                vPortEnterCritical(&g_configMutex);
+                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/alert", g_config.location.slug, g_config.location.code);
+                vPortExitCritical(&g_configMutex);
                 if (len < sizeof(topic)) {
                     mqttClient.publish(topic, payload.c_str(), false);
                     ESP_LOGI("MAIN", "Published low power alert");

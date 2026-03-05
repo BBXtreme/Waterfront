@@ -49,29 +49,37 @@ extern bool mqttConnected;
 // Initialize MQTT handler
 esp_err_t mqtt_init() {
     vPortEnterCritical(&g_configMutex);
-    String broker = g_config.mqtt.broker;
+    char broker[64];
+    strcpy(broker, g_config.mqtt.broker);
     int port = g_config.mqtt.port;
     vPortExitCritical(&g_configMutex);
     // Build URI
-    String uri = "mqtt://" + broker + ":" + String(port);
+    char uri[128];
+    snprintf(uri, sizeof(uri), "mqtt://%s:%d", broker, port);
     esp_mqtt_client_config_t mqtt_config = {};
-    mqtt_config.uri = uri.c_str();
+    mqtt_config.uri = uri;
     mqtt_config.lwt.topic = MQTT_LAST_WILL_TOPIC;
     mqtt_config.lwt.msg = MQTT_LAST_WILL_MESSAGE;
     mqtt_config.lwt.qos = 1;
     mqtt_config.lwt.retain = true;
     vPortEnterCritical(&g_configMutex);
-    String clientIdPrefix = g_config.mqtt.clientIdPrefix;
+    char clientIdPrefix[32];
+    strcpy(clientIdPrefix, g_config.mqtt.clientIdPrefix);
     vPortExitCritical(&g_configMutex);
-    String clientId = (clientIdPrefix.length() > 0 ? clientIdPrefix : "waterfront") + "-client";
-    mqtt_config.client_id = clientId.c_str();
+    char clientId[64];
+    if (strlen(clientIdPrefix) > 0) {
+        snprintf(clientId, sizeof(clientId), "%s-client", clientIdPrefix);
+    } else {
+        strcpy(clientId, "waterfront-client");
+    }
+    mqtt_config.client_id = clientId;
     mqttClient = esp_mqtt_client_init(&mqtt_config);
     if (!mqttClient) return ESP_FAIL;
     esp_mqtt_client_register_event(mqttClient, ESP_EVENT_ANY_ID, event_handler, NULL);
     esp_err_t err = esp_mqtt_client_start(mqttClient);
     if (err != ESP_OK) return err;
     gate_init();  // Initialize gate control
-    ESP_LOGI("MQTT", "Initialized with broker %s:%d", broker.c_str(), port);
+    ESP_LOGI("MQTT", "Initialized with broker %s:%d", broker, port);
     return ESP_OK;
 }
 
@@ -88,10 +96,12 @@ void mqtt_subscribe() {
     char topic[96];
     // Subscribe to status wildcard for this location
     vPortEnterCritical(&g_configMutex);
-    String locationSlug = g_config.location.slug;
-    String locationCode = g_config.location.code;
+    char locationSlug[32];
+    strcpy(locationSlug, g_config.location.slug);
+    char locationCode[32];
+    strcpy(locationCode, g_config.location.code);
     vPortExitCritical(&g_configMutex);
-    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/+/status", locationSlug.c_str(), locationCode.c_str());
+    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/+/status", locationSlug, locationCode);
     int msg_id = esp_mqtt_client_subscribe(mqttClient, topic, 1);
     if (msg_id < 0) {
         ESP_LOGE("MQTT", "Failed to subscribe to %s", topic);
@@ -99,7 +109,7 @@ void mqtt_subscribe() {
         ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", topic, msg_id);
     }
     // Subscribe to command wildcard for this location
-    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/+/command", locationSlug.c_str(), locationCode.c_str());
+    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/+/command", locationSlug, locationCode);
     msg_id = esp_mqtt_client_subscribe(mqttClient, topic, 1);
     if (msg_id < 0) {
         ESP_LOGE("MQTT", "Failed to subscribe to %s", topic);
@@ -107,28 +117,31 @@ void mqtt_subscribe() {
         ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", topic, msg_id);
     }
     // Subscribe to config update
-    std::string configTopic = "waterfront/" + locationSlug + "/" + locationCode + "/config/update";
-    msg_id = esp_mqtt_client_subscribe(mqttClient, configTopic.c_str(), 1);
+    char configTopic[96];
+    snprintf(configTopic, sizeof(configTopic), "waterfront/%s/%s/config/update", locationSlug, locationCode);
+    msg_id = esp_mqtt_client_subscribe(mqttClient, configTopic, 1);
     if (msg_id < 0) {
-        ESP_LOGE("MQTT", "Failed to subscribe to %s", configTopic.c_str());
+        ESP_LOGE("MQTT", "Failed to subscribe to %s", configTopic);
     } else {
-        ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", configTopic.c_str(), msg_id);
+        ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", configTopic, msg_id);
     }
     // Subscribe to OTA update
-    std::string otaTopic = "waterfront/" + locationSlug + "/" + locationCode + "/ota/update";
-    msg_id = esp_mqtt_client_subscribe(mqttClient, otaTopic.c_str(), 1);
+    char otaTopic[96];
+    snprintf(otaTopic, sizeof(otaTopic), "waterfront/%s/%s/ota/update", locationSlug, locationCode);
+    msg_id = esp_mqtt_client_subscribe(mqttClient, otaTopic, 1);
     if (msg_id < 0) {
-        ESP_LOGE("MQTT", "Failed to subscribe to %s", otaTopic.c_str());
+        ESP_LOGE("MQTT", "Failed to subscribe to %s", otaTopic);
     } else {
-        ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", otaTopic.c_str(), msg_id);
+        ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", otaTopic, msg_id);
     }
     // Subscribe to booking paid
-    std::string bookingPaidTopic = "waterfront/" + locationSlug + "/" + locationCode + "/booking/paid";
-    msg_id = esp_mqtt_client_subscribe(mqttClient, bookingPaidTopic.c_str(), 1);
+    char bookingPaidTopic[96];
+    snprintf(bookingPaidTopic, sizeof(bookingPaidTopic), "waterfront/%s/%s/booking/paid", locationSlug, locationCode);
+    msg_id = esp_mqtt_client_subscribe(mqttClient, bookingPaidTopic, 1);
     if (msg_id < 0) {
-        ESP_LOGE("MQTT", "Failed to subscribe to %s", bookingPaidTopic.c_str());
+        ESP_LOGE("MQTT", "Failed to subscribe to %s", bookingPaidTopic);
     } else {
-        ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", bookingPaidTopic.c_str(), msg_id);
+        ESP_LOGI("MQTT", "Subscribed to %s, msg_id=%d", bookingPaidTopic, msg_id);
     }
 }
 
@@ -147,10 +160,12 @@ void mqtt_publish_retained_status(int compartmentId, const char* jsonPayload) {
     serializeJson(doc, updatedPayload);
     char topic[96];
     vPortEnterCritical(&g_configMutex);
-    String locationSlug = g_config.location.slug;
-    String locationCode = g_config.location.code;
+    char locationSlug[32];
+    strcpy(locationSlug, g_config.location.slug);
+    char locationCode[32];
+    strcpy(locationCode, g_config.location.code);
     vPortExitCritical(&g_configMutex);
-    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/%d/status", locationSlug.c_str(), locationCode.c_str(), compartmentId);
+    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/%d/status", locationSlug, locationCode, compartmentId);
     int msg_id = esp_mqtt_client_publish(mqttClient, topic, updatedPayload.c_str(), 0, 1, 1);  // QoS 1, retain
     if (msg_id < 0) {
         ESP_LOGE("MQTT", "Failed to publish retained status");
@@ -169,10 +184,12 @@ void mqtt_publish_ack(int compartmentId, const char* action) {
     fullPayload[strlen(fullPayload) - 1] = '}';  // Fix JSON
     char topic[96];
     vPortEnterCritical(&g_configMutex);
-    String locationSlug = g_config.location.slug;
-    String locationCode = g_config.location.code;
+    char locationSlug[32];
+    strcpy(locationSlug, g_config.location.slug);
+    char locationCode[32];
+    strcpy(locationCode, g_config.location.code);
     vPortExitCritical(&g_configMutex);
-    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/%d/ack", locationSlug.c_str(), locationCode.c_str(), compartmentId);
+    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/%d/ack", locationSlug, locationCode, compartmentId);
     int msg_id = esp_mqtt_client_publish(mqttClient, topic, fullPayload, 0, 1, 1);  // QoS 1, retain
     if (msg_id < 0) {
         ESP_LOGE("MQTT", "Failed to publish ack");
@@ -202,11 +219,14 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
 
             // Check if config update
             vPortEnterCritical(&g_configMutex);
-            String locationSlug = g_config.location.slug;
-            String locationCode = g_config.location.code;
+            char locationSlug[32];
+            strcpy(locationSlug, g_config.location.slug);
+            char locationCode[32];
+            strcpy(locationCode, g_config.location.code);
             vPortExitCritical(&g_configMutex);
-            std::string configTopic = "waterfront/" + locationSlug + "/" + locationCode + "/config/update";
-            if (topic == configTopic.c_str()) {
+            char configTopic[96];
+            snprintf(configTopic, sizeof(configTopic), "waterfront/%s/%s/config/update", locationSlug, locationCode);
+            if (topic == configTopic) {
                 ESP_LOGI("MQTT", "Config update received");
                 if (updateConfigFromJson(msg.c_str())) {
                     ESP_LOGI("MQTT", "Config updated, restarting ESP");
@@ -219,8 +239,9 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
             }
 
             // Check if OTA update
-            std::string otaTopic = "waterfront/" + locationSlug + "/" + locationCode + "/ota/update";
-            if (topic == otaTopic.c_str()) {
+            char otaTopic[96];
+            snprintf(otaTopic, sizeof(otaTopic), "waterfront/%s/%s/ota/update", locationSlug, locationCode);
+            if (topic == otaTopic) {
                 ESP_LOGI("MQTT", "OTA update received: %s", msg.c_str());
                 // Save current version to NVS before update
                 Preferences prefs;
@@ -253,8 +274,9 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
                 }
                 String otaPayload;
                 serializeJson(otaDoc, otaPayload);
-                std::string otaStatusTopic = "waterfront/" + locationSlug + "/" + locationCode + "/ota/status";
-                int msg_id = esp_mqtt_client_publish(mqttClient, otaStatusTopic.c_str(), otaPayload.c_str(), 0, 1, 1);
+                char otaStatusTopic[96];
+                snprintf(otaStatusTopic, sizeof(otaStatusTopic), "waterfront/%s/%s/ota/status", locationSlug, locationCode);
+                int msg_id = esp_mqtt_client_publish(mqttClient, otaStatusTopic, otaPayload.c_str(), 0, 1, 1);
                 if (msg_id >= 0) {
                     ESP_LOGI("OTA", "Published OTA status, msg_id=%d", msg_id);
                 }
@@ -265,8 +287,9 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
             }
 
             // Check if booking paid
-            std::string bookingPaidTopic = "waterfront/" + locationSlug + "/" + locationCode + "/booking/paid";
-            if (topic == bookingPaidTopic.c_str()) {
+            char bookingPaidTopic[96];
+            snprintf(bookingPaidTopic, sizeof(bookingPaidTopic), "waterfront/%s/%s/booking/paid", locationSlug, locationCode);
+            if (topic == bookingPaidTopic) {
                 ESP_LOGI("MQTT", "Booking paid received: %s", msg.c_str());
                 DynamicJsonDocument doc(256);
                 DeserializationError error = deserializeJson(doc, msg);
@@ -337,10 +360,12 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
                     fullPayload[strlen(fullPayload) - 1] = '}';  // Fix JSON
                     char topic[96];
                     vPortEnterCritical(&g_configMutex);
-                    String locSlug = g_config.location.slug;
-                    String locCode = g_config.location.code;
+                    char locSlug[32];
+                    strcpy(locSlug, g_config.location.slug);
+                    char locCode[32];
+                    strcpy(locCode, g_config.location.code);
                     vPortExitCritical(&g_configMutex);
-                    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/%d/ack", locSlug.c_str(), locCode.c_str(), compartmentId);
+                    snprintf(topic, sizeof(topic), "waterfront/%s/%s/compartments/%d/ack", locSlug, locCode, compartmentId);
                     int msg_id = esp_mqtt_client_publish(mqttClient, topic, fullPayload, 0, 1, 1);
                     if (msg_id >= 0) {
                         ESP_LOGI("MQTT", "Published query ack, msg_id=%d", msg_id);

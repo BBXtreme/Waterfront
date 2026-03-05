@@ -20,7 +20,7 @@ extern esp_mqtt_client_handle_t mqttClient;
 extern bool mqttConnected;
 
 // fatal_error function: Handles unrecoverable errors.
-// Logs the error, publishes to MQTT if connected, and restarts the ESP32.
+// Logs the error, publishes to MQTT if connected and debug mode enabled, and restarts the ESP32.
 // Edge cases: MQTT not connected (skips publish), invalid code (logs as is).
 void fatal_error(const char* msg, esp_err_t code) {
     // Validate inputs
@@ -31,7 +31,10 @@ void fatal_error(const char* msg, esp_err_t code) {
     ESP_LOGE("FATAL", "%s: %s (0x%x)", msg, esp_err_to_name(code), code);
 
     // Publish fatal error to debug topic if MQTT connected and debug mode enabled
-    if (mqttConnected && g_config.debugMode) {
+    vPortEnterCritical(&g_configMutex);
+    bool debugEnabled = g_config.system.debugMode;
+    vPortExitCritical(&g_configMutex);
+    if (mqttConnected && debugEnabled) {
         DynamicJsonDocument doc(256);
         doc["error"] = msg;
         doc["code"] = esp_err_to_name(code);  // Human-readable error code
@@ -39,7 +42,9 @@ void fatal_error(const char* msg, esp_err_t code) {
         String payload;
         serializeJson(doc, payload);
         char topic[96];
-        int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug.c_str(), g_config.location.code.c_str());
+        vPortEnterCritical(&g_configMutex);
+        int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
+        vPortExitCritical(&g_configMutex);
         if (len >= sizeof(topic)) {
             ESP_LOGE("FATAL", "Topic too long for buffer, skipping debug publish");
         } else {
@@ -62,7 +67,9 @@ void fatal_error(const char* msg, esp_err_t code) {
     String alertPayload;
     serializeJson(alertDoc, alertPayload);
     char alertTopic[96];
-    int alertLen = snprintf(alertTopic, sizeof(alertTopic), "waterfront/%s/%s/alert", g_config.location.slug.c_str(), g_config.location.code.c_str());
+    vPortEnterCritical(&g_configMutex);
+    int alertLen = snprintf(alertTopic, sizeof(alertTopic), "waterfront/%s/%s/alert", g_config.location.slug, g_config.location.code);
+    vPortExitCritical(&g_configMutex);
     if (alertLen >= sizeof(alertTopic)) {
         ESP_LOGE("FATAL", "Alert topic too long for buffer, skipping alert publish");
     } else {
