@@ -11,12 +11,12 @@
 #include "config.h"
 
 // State machine for each compartment
-enum CompartmentState { IDLE, OPENING, CLOSING, OPEN, CLOSED, ERROR };
+enum CompartmentState { IDLE, OPENING, CLOSING, OPEN, CLOSED, ERROR }; ///< States for compartment gate control
 
 // Extern compartment states for testing
-extern CompartmentState compartmentStates[MAX_COMPARTMENTS];
-extern unsigned long compartmentStartTimes[MAX_COMPARTMENTS];
-extern int retryCounts[MAX_COMPARTMENTS];
+extern CompartmentState compartmentStates[MAX_COMPARTMENTS]; ///< Array of compartment states
+extern unsigned long compartmentStartTimes[MAX_COMPARTMENTS]; ///< Start times for operations
+extern int retryCounts[MAX_COMPARTMENTS]; ///< Retry counts for failed operations
 
 /**
  * @brief Initializes gate control for all compartments.

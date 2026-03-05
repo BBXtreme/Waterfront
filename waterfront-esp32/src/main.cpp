@@ -26,11 +26,14 @@
 // Include other headers as needed
 
 // Firmware version define
-const char* FW_VERSION = "0.9.2-beta";
+const char* FW_VERSION = "0.9.2-beta"; ///< Firmware version string
 
-// Factory reset task: Monitors GPIO 0 for long press to trigger factory reset.
-// Resets config and NVS, publishes event, and restarts ESP32.
-// Edge cases: button debounce, MQTT not connected, NVS erase failure.
+/**
+ * @brief Factory reset task: Monitors GPIO 0 for long press to trigger factory reset.
+ *        Resets config and NVS, publishes event, and restarts ESP32.
+ *        Edge cases: button debounce, MQTT not connected, NVS erase failure.
+ * @param pvParameters Task parameters (unused).
+ */
 void factory_reset_task(void *pvParameters) {
     const int RESET_BUTTON_PIN = 0;  // GPIO 0 (boot button)
     const unsigned long RESET_HOLD_TIME_MS = 5000;  // 5 seconds hold time
@@ -89,8 +92,11 @@ void factory_reset_task(void *pvParameters) {
     }
 }
 
-// Overdue check task: Periodically checks for overdue rentals and triggers auto-lock.
-// Edge cases: no active timers, MQTT publish failure.
+/**
+ * @brief Overdue check task: Periodically checks for overdue rentals and triggers auto-lock.
+ *        Edge cases: no active timers, MQTT publish failure.
+ * @param pvParameters Task parameters (unused).
+ */
 void overdue_check_task(void *pvParameters) {
     // Add this task to watchdog for monitoring
     esp_task_wdt_add(NULL);
@@ -101,9 +107,12 @@ void overdue_check_task(void *pvParameters) {
     }
 }
 
-// Debug task: Publishes health telemetry every 60s if debug mode is enabled.
-// Includes uptime, heap, firmware version, battery, tasks, and reconnects.
-// Edge cases: debug mode disabled, MQTT not connected.
+/**
+ * @brief Debug task: Publishes health telemetry every 60s if debug mode is enabled.
+ *        Includes uptime, heap, firmware version, battery, tasks, and reconnects.
+ *        Edge cases: debug mode disabled, MQTT not connected.
+ * @param pvParameters Task parameters (unused).
+ */
 void debug_task(void *pvParameters) {
     // Add this task to watchdog for monitoring
     esp_task_wdt_add(NULL);
@@ -145,8 +154,10 @@ void debug_task(void *pvParameters) {
     }
 }
 
-// Setup function: Initializes hardware, loads config, sets up tasks and OTA.
-// Edge cases: LittleFS mount failure, config load failure, task creation failure.
+/**
+ * @brief Setup function: Initializes hardware, loads config, sets up tasks and OTA.
+ *        Edge cases: LittleFS mount failure, config load failure, task creation failure.
+ */
 void setup() {
     Serial.begin(115200);
     ESP_LOGI("MAIN", "WATERFRONT starting...");
@@ -304,8 +315,10 @@ void setup() {
     // Other initializations (WiFi, sensors, etc.) can be added here
 }
 
-// Main loop: Handles MQTT, OTA, LTE power, and power checks.
-// Edge cases: MQTT loop failure, OTA handle failure, power check failures.
+/**
+ * @brief Main loop: Handles MQTT, OTA, LTE power, and power checks.
+ *        Edge cases: MQTT loop failure, OTA handle failure, power check failures.
+ */
 void loop() {
     esp_task_wdt_reset();  // Reset watchdog at start of loop
 

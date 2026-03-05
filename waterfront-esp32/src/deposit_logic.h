@@ -7,19 +7,47 @@
 #include <PubSubClient.h>
 
 struct RentalTimer {
-    int compartmentId;
-    unsigned long startMs;
-    unsigned long durationSec;
-    TimerHandle_t timerHandle;
+    int compartmentId; ///< ID of the compartment
+    unsigned long startMs; ///< Start time in milliseconds
+    unsigned long durationSec; ///< Duration in seconds
+    TimerHandle_t timerHandle; ///< FreeRTOS timer handle
 };
 
-extern std::vector<RentalTimer> activeTimers;
+extern std::vector<RentalTimer> activeTimers; ///< Vector of active rental timers
 
+/**
+ * @brief Initializes deposit logic.
+ */
 void deposit_init();
+
+/**
+ * @brief Starts a rental timer for a compartment.
+ * @param compartmentId The compartment ID.
+ * @param durationSec The rental duration in seconds.
+ */
 void startRental(int compartmentId, unsigned long durationSec);
+
+/**
+ * @brief Checks for overdue rentals.
+ */
 void checkOverdue();
+
+/**
+ * @brief Handles deposit on take action.
+ * @param client MQTT client for publishing.
+ */
 void deposit_on_take(PubSubClient* client);
+
+/**
+ * @brief Handles deposit on return action.
+ * @param client MQTT client for publishing.
+ */
 void deposit_on_return(PubSubClient* client);
+
+/**
+ * @brief Checks if deposit is held.
+ * @return True if held, false otherwise.
+ */
 bool deposit_is_held();
 
 #endif // DEPOSIT_LOGIC_H

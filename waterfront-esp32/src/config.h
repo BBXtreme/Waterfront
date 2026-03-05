@@ -15,10 +15,10 @@
 // All values are defined as macros for compile-time constants, avoiding runtime overhead.
 
 // Debug settings
-#define DEBUG_MODE 1                       // Enable debug mode (1 = enabled, 0 = disabled)
-#define DEBUG_PUBLISH_INTERVAL_MS 5000     // Interval to publish debug traces in ms
+#define DEBUG_MODE 1                       ///< Enable debug mode (1 = enabled, 0 = disabled)
+#define DEBUG_PUBLISH_INTERVAL_MS 5000     ///< Interval to publish debug traces in ms
 
 // Compartment settings
-#define MAX_COMPARTMENTS 10                // Maximum number of compartments supported
+#define MAX_COMPARTMENTS 10                ///< Maximum number of compartments supported
 
 #endif // CONFIG_H
