@@ -13,6 +13,7 @@
 #include <esp_system.h>
 #include <esp_log.h>
 #include <esp_event.h>
+#include <esp_sleep.h>
 #include <nvs_flash.h>
 #include <esp_spiffs.h>
 #include <esp_https_ota.h>
@@ -30,6 +31,7 @@
 #include "error_handler.h"
 #include "deposit_logic.h"
 #include "logger.h"
+#include "ota_handler.h"
 
 // Include other headers as needed
 
@@ -81,8 +83,22 @@ float readSolarVoltage() {
 void enterDeepSleep() {
     ESP_LOGI("SLEEP", "Entering deep sleep for power conservation");
     // Configure wake-up sources
-    esp_sleep_enable_timer_wakeup(3600000000ULL);  // Wake up every 1 hour (adjust as needed)
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, 0);   // Wake up on GPIO 0 low (reset button)
+    vPortEnterCritical(&g_configMutex);
+    bool enableSleep = g_config.sleep.enableDeepSleep;
+    int timerSec = g_config.sleep.timerWakeupSec;
+    int sensorPin = g_config.sleep.sensorWakeupPin;
+    int mqttPin = g_config.sleep.mqttWakeupPin;
+    vPortExitCritical(&g_configMutex);
+    if (!enableSleep) {
+        ESP_LOGI("SLEEP", "Deep sleep disabled in config, skipping");
+        return;
+    }
+    // Timer wakeup
+    esp_sleep_enable_timer_wakeup(timerSec * 1000000ULL);  // Convert to microseconds
+    // GPIO wakeup for sensor (rising edge, assume active high)
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)sensorPin, 1);
+    // GPIO wakeup for MQTT (rising edge, assume active high)
+    esp_sleep_enable_ext1_wakeup(1ULL << mqttPin, ESP_EXT1_WAKEUP_ANY_HIGH);
     // Disable WiFi and Bluetooth to save power
     esp_wifi_stop();
     esp_bt_controller_disable();
@@ -228,6 +244,30 @@ void debug_task(void *pvParameters) {
 }
 
 /**
+ * @brief OTA task: Periodically checks for and performs OTA updates.
+ *        Edge cases: OTA check failure, update failure, MQTT not connected.
+ * @param pvParameters Task parameters (unused).
+ */
+void ota_task(void *pvParameters) {
+    // Add this task to watchdog for monitoring
+    esp_task_wdt_add(NULL);
+    while (1) {
+        esp_task_wdt_reset();  // Reset watchdog
+        // Check for OTA update
+        if (ota_check_for_update()) {
+            ESP_LOGI("OTA", "OTA update available, performing update");
+            esp_err_t ret = ota_perform_update();
+            if (ret != ESP_OK) {
+                ESP_LOGE("OTA", "OTA update failed");
+            }
+        } else {
+            ESP_LOGI("OTA", "No OTA update available");
+        }
+        vTaskDelay(pdMS_TO_TICKS(3600000));  // Check every hour
+    }
+}
+
+/**
  * @brief Setup function: Initializes hardware, loads config, sets up tasks and OTA.
  *        Edge cases: SPIFFS mount failure, config load failure, task creation failure.
  */
@@ -292,13 +332,11 @@ void app_main() {
     // Initialize deposit logic
     deposit_init();
 
-    // Initialize OTA with callbacks for remote monitoring
-    esp_http_client_config_t config = {
-        .url = "https://example.com/firmware.bin",  // Placeholder; updated via MQTT
-        .cert_pem = NULL,
-        .skip_cert_common_name_check = true,
-    };
-    // OTA handle will be set later via MQTT
+    // Initialize OTA handler
+    if (ota_init() != ESP_OK) {
+        ESP_LOGE("MAIN", "OTA init failed, continuing without OTA");
+        // Graceful degradation: continue without OTA
+    }
 
     // Create factory reset task
     BaseType_t task_ret = xTaskCreate(factory_reset_task, "factory_reset", 2048, NULL, 5, NULL);
@@ -328,6 +366,15 @@ void app_main() {
         }
     }
 
+    // Create OTA task
+    task_ret = xTaskCreate(ota_task, "ota", 4096, NULL, 2, NULL);  // Low priority
+    if (task_ret != pdPASS) {
+        ESP_LOGE("MAIN", "Failed to create OTA task, continuing without");
+        // Graceful degradation: continue without OTA updates
+    } else {
+        ESP_LOGI("MAIN", "OTA task started");
+    }
+
     // Other initializations (WiFi, sensors, etc.) can be added here
 
     // Main loop for continuous operation
@@ -349,17 +396,12 @@ void main_loop() {
 
     esp_task_wdt_reset();  // Reset after MQTT
 
-    // Handle OTA updates (placeholder; triggered via MQTT)
-    // esp_https_ota(&ota_config);  // Called when URL received
-
-    esp_task_wdt_reset();  // Reset after OTA
+    // Other loop tasks can be added here
 
     // Manage LTE power based on conditions
     lte_power_management();
 
     esp_task_wdt_reset();  // Reset after LTE
-
-    // Other loop tasks can be added here
 
     // Periodic power check for deep sleep
     static unsigned long lastPowerCheck = 0;
