@@ -56,6 +56,7 @@ unsigned long mockMillis = 0;
 // Test gate initialization
 TEST_CASE("Gate Initialization", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -76,6 +77,7 @@ TEST_CASE("Gate Initialization", "[gate]") {
 // Test open gate state transition
 TEST_CASE("Open Gate State Transition", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -94,6 +96,7 @@ TEST_CASE("Open Gate State Transition", "[gate]") {
 // Test close gate state transition
 TEST_CASE("Close Gate State Transition", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -112,6 +115,7 @@ TEST_CASE("Close Gate State Transition", "[gate]") {
 // Test get gate state
 TEST_CASE("Get Gate State", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -130,6 +134,7 @@ TEST_CASE("Get Gate State", "[gate]") {
 // Test timeout and retry logic
 TEST_CASE("Gate Timeout and Retry", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -153,6 +158,7 @@ TEST_CASE("Gate Timeout and Retry", "[gate]") {
 // Test invalid compartment ID
 TEST_CASE("Invalid Compartment ID", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -166,6 +172,7 @@ TEST_CASE("Invalid Compartment ID", "[gate]") {
 // New: Test LEDC failure during open
 TEST_CASE("Open Gate LEDC Failure", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -182,6 +189,7 @@ TEST_CASE("Open Gate LEDC Failure", "[gate]") {
 // New: Test GPIO failure during state check
 TEST_CASE("Get Gate State GPIO Failure", "[gate]") {
     // Set mock config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
@@ -198,6 +206,7 @@ TEST_CASE("Get Gate State GPIO Failure", "[gate]") {
 // New: Test state transition with invalid pins
 TEST_CASE("Gate State with Invalid Pins", "[gate]") {
     // Set mock config with invalid pins
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 50, 13, 14, 15, 16, 17};  // Invalid servo pin
     g_config.compartmentCount = 1;
 

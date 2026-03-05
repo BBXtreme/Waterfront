@@ -65,8 +65,8 @@ TEST_CASE("Load Config - Valid JSON", "[config]") {
 
     // Verify success
     REQUIRE(result == true);
-    REQUIRE(strcmp(g_config.mqtt.broker, "test.com") == 0);
-    REQUIRE(g_config.location.slug == std::string("test"));
+    REQUIRE(std::string(g_config.mqtt.broker) == "test.com");
+    REQUIRE(std::string(g_config.location.slug) == "test");
     REQUIRE(g_config.compartmentCount == 1);
 }
 
@@ -80,7 +80,7 @@ TEST_CASE("Load Config - Invalid JSON", "[config]") {
 
     // Verify fallback to defaults
     REQUIRE(result == false);
-    REQUIRE(strcmp(g_config.mqtt.broker, "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud") == 0);  // Default
+    REQUIRE(std::string(g_config.mqtt.broker) == "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud");  // Default
 }
 
 // Test load config with missing file
@@ -182,7 +182,7 @@ TEST_CASE("Update Config from JSON", "[config]") {
 
     // Verify success
     REQUIRE(result == true);
-    REQUIRE(strcmp(g_config.mqtt.broker, "updated.com") == 0);
+    REQUIRE(std::string(g_config.mqtt.broker) == "updated.com");
     REQUIRE(g_config.system.debugMode == false);
 }
 
@@ -213,8 +213,8 @@ TEST_CASE("Get Default Config", "[config]") {
     GlobalConfig def = getDefaultConfig();
 
     // Verify defaults
-    REQUIRE(strcmp(def.mqtt.broker, "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud") == 0);
-    REQUIRE(strcmp(def.location.slug, "bremen") == 0);
+    REQUIRE(std::string(def.mqtt.broker) == "8bee884b3e6048c280526f54fe81b9b9.s1.eu.hivemq.cloud");
+    REQUIRE(std::string(def.location.slug) == "bremen");
     REQUIRE(def.compartmentCount == 1);
 }
 
@@ -240,6 +240,6 @@ TEST_CASE("Update Config - Partial JSON", "[config]") {
 
     // Verify success and partial update
     REQUIRE(result == true);
-    REQUIRE(strcmp(g_config.mqtt.broker, "partial.com") == 0);
+    REQUIRE(std::string(g_config.mqtt.broker) == "partial.com");
     // Other fields should remain default or previous
 }

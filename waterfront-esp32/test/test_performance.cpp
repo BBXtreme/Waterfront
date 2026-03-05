@@ -42,6 +42,7 @@ uint64_t esp_timer_get_time() { return mockEspTimer; }
 // Performance test for gate_task (should complete <50ms)
 TEST_CASE("Gate Task Performance", "[performance]") {
     // Setup config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
     gate_init();
@@ -58,6 +59,7 @@ TEST_CASE("Gate Task Performance", "[performance]") {
 // Performance test for sensor_get_distance (should complete <10ms)
 TEST_CASE("Sensor Distance Performance", "[performance]") {
     // Setup config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
     sensor_init();

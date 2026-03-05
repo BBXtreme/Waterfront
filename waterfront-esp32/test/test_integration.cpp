@@ -98,6 +98,7 @@ uint64_t esp_timer_get_time() { return mockEspTimer; }
 // Test end-to-end: MQTT command to open gate, check sensor
 TEST_CASE("MQTT to Gate Open Flow", "[integration]") {
     // Setup config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
     g_config.system.gracePeriodSec = 3600;
@@ -144,6 +145,7 @@ TEST_CASE("MQTT to Gate Open Flow", "[integration]") {
 // Test overdue timer flow
 TEST_CASE("Overdue Timer Flow", "[integration]") {
     // Setup
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
     g_config.system.gracePeriodSec = 1;  // Short for test
@@ -184,6 +186,7 @@ TEST_CASE("Config Load Save Flow", "[integration]") {
 // New: Test integration with hardware failure
 TEST_CASE("Integration with GPIO Failure", "[integration]") {
     // Setup config
+    g_config = getDefaultConfig();
     g_config.compartments[0] = {1, 12, 13, 14, 15, 16, 17};
     g_config.compartmentCount = 1;
 
