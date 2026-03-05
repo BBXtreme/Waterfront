@@ -27,7 +27,7 @@ static esp_adc_cal_characteristics_t adc_chars;
 // RTC memory for wake-up profiling (persists across deep sleep)
 RTC_DATA_ATTR static unsigned long totalAwakeTime = 0;
 RTC_DATA_ATTR static unsigned int wakeUpCount = 0;
-RTC_DATA_ATTR static esp_sleep_wakeup_cause_t lastWakeUpCause = ESP_SLEEP_WAKEUP_UNDEFINED;
+RTC_DATA_ATTR static int lastWakeUpCause = ESP_SLEEP_WAKEUP_UNDEFINED;
 RTC_DATA_ATTR static unsigned long awakeStartTime = 0;
 
 // Initialize ADC for power readings
@@ -154,7 +154,7 @@ unsigned int power_manager_get_wake_up_count() {
 
 // Get last wake-up cause
 esp_sleep_wakeup_cause_t power_manager_get_last_wake_up_cause() {
-    return lastWakeUpCause;
+    return (esp_sleep_wakeup_cause_t)lastWakeUpCause;
 }
 
 // Start awake profiling
