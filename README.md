@@ -24,25 +24,23 @@ Users book online → pay → receive PIN/QR → arrive at solar-powered locker 
 | Admin dashboard (bookings, telemetry) | 🚧 Planned | Supabase + real-time           |
 | Offline-tolerant PWA                  | 🟡 Partial | QR/PIN caching                 |
 
-## WATERFRONT Documentation Index
+## WATERFRONT Documentation Index (updated March 2026)
 
-##### Core Specifications
-- [Technical Specification Document (TSD)](Technical%20Specification%20Document%20(TSD).md) — full system overview, flows, BTC/Lightning, edge cases
-- [Functional Specification Document (FSD)](Functional%20Specification%20Document%20(FSD).md) — requirements, architecture, data models
+### Core Specifications
+- [TSD.md](/BBXtreme/Waterfront/blob/main/TSD.md) — Technical overview, flows, BTC/Lightning integration, edge cases
+- [FSD.md](/BBXtreme/Waterfront/blob/main/FSD.md) — Functional requirements, architecture, data models
 
-##### ESP32 Firmware Preparation
-- [ESP32 Pinout Plan and Diagram](ESP32%20Pinout%20Plan%20and%20Diagram.md) — GPIO assignments + wiring
-- [ESP32 Project Plan – Nodestark Adaptation](ESP32%20Project%20Plan%20-%20Waterfront%20Firmware%20Code%20Development.md) — step-by-step adaptation roadmap
-- [ESP32 Firmware – Test Checklist](ESP32%20Firmware%20-%20Test%20Checklist.md) — phased verification
+### ESP32 Firmware & Integration
+- [ESP32-Readme.md (main firmware documentation)](/BBXtreme/Waterfront/blob/main/waterfront-esp32/ESP32-Readme.md)  
+  → consolidated info: hardware baseline, dynamic pinout via config, MQTT command/status examples, testing instructions, debug tips, power notes
 
-##### Integration & Architecture
-- [HARDWARE_BASELINE](HARDWARE_BASELINE.md) — confirmed board, sensors, modem, power
-- [MQTT_SPEC](MQTT_SPEC.md) — topics, payloads, QoS
-- [REST-MQTT-Architecture](REST-MQTT-Architecture.md) — backend → MQTT → ESP32 flow
+### Architecture & API
+- [REST-MQTT-Architecture.md](/BBXtreme/Waterfront/blob/main/REST-MQTT-Architecture.md) — backend → MQTT → ESP32 flow
+- [API_REFERENCE.md](/BBXtreme/Waterfront/blob/main/API_REFERENCE.md) — additional API details (if relevant)
 
-##### UI/UX Specs
-- [APP Admin - Layout Spec](APP%20Admin%20-%20Layout%20Spec.md)
-- [APP Booking - PWA Layout Spec](APP%20Booking%20-%20PWA%20Layout%20Spec.md)
+### Other / Planned
+- UI/UX layout specs (Admin & Booking PWA) — pending creation
+- Detailed MQTT topic catalog — covered with examples in ESP32-Readme.md
 
 ## Tech Stack
 
