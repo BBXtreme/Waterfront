@@ -20,6 +20,11 @@ unsigned long lastMqttActivity = 0;
 // Mutex for thread-safe access to MQTT state
 portMUX_TYPE mqttMutex = portMUX_INITIALIZER_UNLOCKED;
 
+// Static buffers to avoid dynamic allocation
+static char messageBuffer[1024];
+static char topicBuffer[128];
+static char payloadBuffer[1024];
+
 // MQTT event handler: Processes incoming events and updates activity timestamp.
 // Handles connect, disconnect, data, etc.
 // Edge cases: invalid data, unknown events.
@@ -42,19 +47,19 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
             vPortEnterCritical(&mqttMutex);
             lastMqttActivity = millis();  // Track last activity for power management
             vPortExitCritical(&mqttMutex);
-            if (!event->topic || !event->data || event->data_len == 0) {
+            if (!event->topic || !event->data || event->data_len == 0 || event->data_len >= sizeof(messageBuffer)) {
                 ESP_LOGW("MQTT", "Invalid event data: topic=%p, data=%p, len=%d", event->topic, event->data, event->data_len);
                 return;
             }
-            String message = "";
-            for (int i = 0; i < event->data_len; i++) {
-                message += (char)event->data[i];
-            }
-            ESP_LOGI("MQTT", "Message received on %.*s: %s", event->topic_len, event->topic, message.c_str());
+            memcpy(messageBuffer, event->data, event->data_len);
+            messageBuffer[event->data_len] = '\0';
+            memcpy(topicBuffer, event->topic, event->topic_len);
+            topicBuffer[event->topic_len] = '\0';
+            ESP_LOGI("MQTT", "Message received on %s: %s", topicBuffer, messageBuffer);
 
             // Parse JSON payload for commands or updates
-            DynamicJsonDocument doc(1024);
-            DeserializationError error = deserializeJson(doc, message);
+            StaticJsonDocument<1024> doc;
+            DeserializationError error = deserializeJson(doc, messageBuffer);
             if (error) {
                 ESP_LOGW("MQTT", "JSON parse failed: %s", error.c_str());
                 return;
@@ -246,22 +251,25 @@ void mqtt_publish_status() {
         ESP_LOGW("MQTT", "Not connected, skipping status publish");
         return;
     }
-    DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
     doc["state"] = "idle";
     doc["battery"] = 92;  // Placeholder, integrate with ADC
     doc["connType"] = "wifi";
-    String payload;
-    serializeJson(doc, payload);
+    size_t len = serializeJson(doc, payloadBuffer, sizeof(payloadBuffer));
+    if (len >= sizeof(payloadBuffer)) {
+        ESP_LOGE("MQTT", "Payload too large for buffer");
+        return;
+    }
     char topic[64];
     vPortEnterCritical(&g_configMutex);
     String locationCode = g_config.location.code.length() > 0 ? g_config.location.code : "harbor-01";
     vPortExitCritical(&g_configMutex);
-    int len = snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", locationCode.c_str());
-    if (len >= sizeof(topic)) {
+    int topicLen = snprintf(topic, sizeof(topic), "waterfront/machine/%s/status", locationCode.c_str());
+    if (topicLen >= sizeof(topic)) {
         ESP_LOGE("MQTT", "Status topic too long, skipping publish");
         return;
     }
-    int msg_id = esp_mqtt_client_publish(mqttClient, topic, payload.c_str(), 0, 1, 1);  // QoS 1, retain
+    int msg_id = esp_mqtt_client_publish(mqttClient, topic, payloadBuffer, 0, 1, 1);  // QoS 1, retain
     if (msg_id < 0) {
         ESP_LOGE("MQTT", "Failed to publish status");
     } else {
