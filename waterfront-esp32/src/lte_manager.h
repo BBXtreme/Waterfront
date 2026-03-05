@@ -1,18 +1,13 @@
-// lte_manager.h - Header file for LTE cellular fallback management
-// This header declares functions for initializing and controlling the LTE modem.
-// It provides an interface for switching between WiFi and LTE connectivity.
-// Used in conjunction with lte_manager.cpp for cellular operations.
-
 #ifndef LTE_MANAGER_H
 #define LTE_MANAGER_H
 
-#include <TinyGsmClient.h>    // TinyGSM client for MQTT over LTE
-#include <HardwareSerial.h>   // Serial for modem communication
+#include <esp_modem.h>        // ESP-IDF modem for cellular
+#include <driver/uart.h>      // ESP-IDF UART for modem communication
 
-// External TinyGSM instances for global access
-extern TinyGsm modem;         // Modem object
-extern TinyGsmClient lteClient;  // LTE TCP client
-extern HardwareSerial SerialAT;  // Serial port for modem
+// External ESP-IDF modem instances for global access
+extern esp_modem_dce_t* dce;  // Modem DCE object
+extern esp_netif_t* esp_netif; // Netif for LTE
+extern uart_port_t uart_num; // UART port for modem
 
 // Initialize LTE modem (power off initially)
 void initLTE();
