@@ -14,6 +14,8 @@
 
 This TSD now fully aligns with **RentalBuddy** (self-service 24/7 unmanned rentals, Stripe integration, digital lock/PIN access, ID checks, website embedding, reminders) and **HEIUKI Share** (heiuki.com / app.heiuki.com – automated SUP/kayak vending machines, book-online → open-compartment → take → paddle → return-to-machine flow, solar-powered lockers, booking-number entry, centralized smartphone management, Progressive Web App).
 
+Type Safety → Zod schemas are the single source of truth. No raw interfaces allowed.
+
 ## 1. Overview (Updated)
 
 ### 1.1 Rental Process – Full Flow (HEIUKI + RentalBuddy inspired)

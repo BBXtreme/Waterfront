@@ -26,10 +26,10 @@ Mobile-first PWA booking → secure payment → instant access code → solar-po
 
 ## Tech Stack
 
-- **Frontend/PWA**: Next.js 15+ (App Router), TypeScript, Tailwind CSS, shadcn/ui
-- **Backend/DB/Auth**: Supabase (PostgreSQL + Auth + Realtime + Edge Functions)
+- **Frontend/PWA**: Next.js 15+ (App Router), TypeScript, Tailwind CSS, shadcn/ui, DaysiUI, **Zod** (schema validation),
+- **Backend/Database/Auth**: Supabase (PostgreSQL + Auth + Realtime + Edge Functions + Storage)
 - **Payments**: Stripe Checkout + BTCPay Server (Lightning & Liquid BTC)
-- **IoT Controller**: ESP32-S3 with PlatformIO + ESP-IDF
+- **IoT Controller**: ESP32-S3 (ESP-IDF), MQTT
 - **MQTT Broker**: **HiveMQ Cloud** (free tier, managed, TLS-native)
 - **Dev Tools**: pnpm workspaces, PlatformIO, Aider, Vitest
 
@@ -88,7 +88,19 @@ NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key # HiveMQ Cloud (TLS required) MQTT_BROKER_URL=mqtts://username:password@your-cluster.hivemq.cloud:8883
 ```
 
-### 4. Run PWA
+### 4. Data Validation (Zod)
+
+All forms, Supabase responses, MQTT payloads, and environment variables are validated with **Zod**.  
+Schemas live in `waterfront-web/src/lib/schemas/` (barrel export `index.ts`).
+
+- Booking forms, calendar dates, payment data
+- Realtime Supabase subscriptions
+- HiveMQ / MQTT JSON payloads
+- `.env` validation at build time (`src/env.ts`)
+
+See `STYLE_GUIDE.md` → “Validation & Type Safety” for full conventions.
+
+### 5. Run PWA
 
 Bash
 
@@ -98,7 +110,7 @@ pnpm dev
 # → http://localhost:3000
 ```
 
-### 5. Local Supabase (optional)
+### 6. Local Supabase (optional)
 
 Bash
 
@@ -107,7 +119,7 @@ cd supabase-local
 supabase start
 ```
 
-### 6. ESP32 Firmware
+### 7. ESP32 Firmware
 
 - Open waterfront-esp32 folder in VS Code + PlatformIO extension
 - Update data/config.json with your HiveMQ credentials + location slug/code
@@ -134,7 +146,8 @@ waterfront/{location-slug}/{site-code}/config/update (remote config reload)
 
 - Follow STYLE_GUIDE.md strictly (web + embedded)
 - Small, focused commits with clear messages
-- Use Aider with style-guide prompts
+- Use **Aider** for code generation/refactoring... 
+- **Always use Zod schemas** for any new form, API response, or MQTT payload (see STYLE_GUIDE.md)
 - Test MQTT commands via HiveMQ Web Client or MQTTX CLI
 
 

@@ -127,6 +127,7 @@ Configuration is centralized in LittleFS JSON → loaded on boot → supports dy
 - **NFR-002**: 99% uptime for ESP32. ✅ DONE
 - **NFR-003**: Secure payments (TLS, PCI compliance). ✅ DONE
 - **NFR-004**: Mobile-first PWA design. ✅ DONE
+- **NFR-005**: All booking data validated via bookingSchema — see waterfront-web/src/lib/schemas/booking.ts
 
 ## 6. System Architecture
 
