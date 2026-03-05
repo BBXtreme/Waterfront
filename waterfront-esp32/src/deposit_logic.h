@@ -4,6 +4,7 @@
 #include <vector>
 #include <freertos/FreeRTOS.h>
 #include <freertos/timers.h>
+#include <PubSubClient.h>
 
 struct RentalTimer {
     int compartmentId;
