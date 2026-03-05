@@ -2,7 +2,6 @@
 
 Unmanned, 24/7 kayak/SUP rental platform with **Next.js PWA**, **Supabase** backend, **Stripe + BTCPay** payments (fiat + Lightning/Liquid BTC), and **ESP32 MQTT** smart-locker control.
 
-**Live demo (frontend only – Vercel)**: https://waterfront-[your-project-slug].vercel.app  
 **Current status**: Early development – auth, local Supabase, calendar skeleton & MQTT base working. Payments & ESP32 sensor logic next.
 
 ## Core Concept
