@@ -249,6 +249,9 @@ TEST_CASE("MQTT Config Update Flow", "[integration]") {
     // Setup config
     g_config = getDefaultConfig();
 
+    // Mock file system for update
+    MockLittleFS::mockContent = "{\"mqtt\":{\"broker\":\"new.broker.com\"},\"system\":{\"debugMode\":false}}";
+
     // Simulate MQTT config update
     const char* newConfig = "{\"mqtt\":{\"broker\":\"new.broker.com\"},\"system\":{\"debugMode\":false}}";
     bool updated = updateConfigFromJson(newConfig);
