@@ -3,7 +3,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/timers.h>
-#include <PubSubClient.h>
+#include <mqtt_client.h>
 
 #define MAX_TIMERS 10 ///< Maximum number of active timers
 
@@ -38,13 +38,13 @@ void checkOverdue();
  * @brief Handles deposit on take action.
  * @param client MQTT client for publishing.
  */
-void deposit_on_take(PubSubClient* client);
+void deposit_on_take(esp_mqtt_client_handle_t client);
 
 /**
  * @brief Handles deposit on return action.
  * @param client MQTT client for publishing.
  */
-void deposit_on_return(PubSubClient* client);
+void deposit_on_return(esp_mqtt_client_handle_t client);
 
 /**
  * @brief Checks if deposit is held.

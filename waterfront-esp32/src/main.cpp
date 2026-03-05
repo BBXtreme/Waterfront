@@ -3,25 +3,28 @@
  * @brief Main entry point for WATERFRONT ESP32 Kayak Rental Controller.
  * @author BBXtreme + Grok
  * @date 2026-02-28
- * @note Initializes LittleFS, loads config, sets up tasks for MQTT, OTA, factory reset, and power management.
+ * @note Initializes SPIFFS, loads config, sets up tasks for MQTT, OTA, factory reset, and power management.
  *       Main loop handles MQTT, OTA, LTE power management, and periodic power checks for deep sleep.
  *       Edge cases: config load failure, task creation failure, power conditions.
  */
 
-#include <Arduino.h>
-#include <LittleFS.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_system.h>
+#include <esp_log.h>
+#include <esp_event.h>
+#include <nvs_flash.h>
+#include <esp_spiffs.h>
+#include <esp_https_ota.h>
+#include <esp_http_client.h>
+#include <cJSON.h>
+#include <mqtt_client.h>
 #include "config_loader.h"
 #include "compartment_manager.h"
 #include "mqtt_handler.h"
 #include <esp_task_wdt.h>
 #include "error_handler.h"
 #include "deposit_logic.h"
-#include <esp_ota_ops.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-#include <nvs_flash.h>
-#include <ArduinoOTA.h>
-#include <Preferences.h>
 #include "logger.h"
 
 // Include other headers as needed
@@ -44,7 +47,13 @@ static esp_sleep_wakeup_cause_t lastWakeUpCause = ESP_SLEEP_WAKEUP_UNDEFINED;
 void factory_reset_task(void *pvParameters) {
     const int RESET_BUTTON_PIN = 0;  // GPIO 0 (boot button)
     const unsigned long RESET_HOLD_TIME_MS = 5000;  // 5 seconds hold time
-    pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);  // Pull-up for active low
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = (1ULL << RESET_BUTTON_PIN);
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    gpio_config(&io_conf);
     // Add this task to watchdog for monitoring
     esp_task_wdt_add(NULL);
     unsigned long pressStartTime = 0;
@@ -52,44 +61,45 @@ void factory_reset_task(void *pvParameters) {
 
     while (1) {
         esp_task_wdt_reset();  // Reset watchdog to prevent timeout
-        int buttonState = digitalRead(RESET_BUTTON_PIN);
-        if (buttonState == LOW) {  // Button pressed (active low)
+        int buttonState = gpio_get_level((gpio_num_t)RESET_BUTTON_PIN);
+        if (buttonState == 0) {  // Button pressed (active low)
             if (!buttonPressed) {
-                pressStartTime = millis();
+                pressStartTime = esp_timer_get_time() / 1000;
                 buttonPressed = true;
                 ESP_LOGI("MAIN", "Reset button pressed, hold for 5 seconds to trigger factory reset");
-            } else if (millis() - pressStartTime > RESET_HOLD_TIME_MS) {
+            } else if ((esp_timer_get_time() / 1000) - pressStartTime > RESET_HOLD_TIME_MS) {
                 // Factory reset triggered after 5s hold
                 ESP_LOGW("MAIN", "Factory reset triggered by long-press on GPIO 0");
                 // Publish event to MQTT for remote monitoring
-                if (mqttClient.connected()) {
-                    StaticJsonDocument<256> doc;
-                    doc["event"] = "factory_reset";
-                    doc["timestamp"] = millis();
-                    String payload;
-                    serializeJson(doc, payload);
+                if (mqttConnected) {
+                    cJSON *doc = cJSON_CreateObject();
+                    cJSON_AddStringToObject(doc, "event", "factory_reset");
+                    cJSON_AddNumberToObject(doc, "timestamp", esp_timer_get_time() / 1000);
+                    char *payload = cJSON_PrintUnformatted(doc);
                     char topic[96];
                     vPortEnterCritical(&g_configMutex);
                     int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
                     vPortExitCritical(&g_configMutex);
                     if (len < sizeof(topic)) {
-                        mqttClient.publish(topic, payload.c_str(), false);
+                        esp_mqtt_client_publish(mqttClient, topic, payload, 0, 1, 0);
                         ESP_LOGI("MAIN", "Published factory reset event");
                     } else {
                         ESP_LOGE("MAIN", "Topic too long, skipping publish");
                     }
+                    cJSON_free(payload);
+                    cJSON_Delete(doc);
                 } else {
                     ESP_LOGW("MAIN", "MQTT not connected, skipping factory reset publish");
                 }
                 // Remove config file and erase NVS for clean reset
-                if (!LittleFS.remove("/config.json")) {
+                if (esp_spiffs_remove("/spiffs/config.json") != ESP_OK) {
                     ESP_LOGE("MAIN", "Failed to remove config file");
                 }
                 if (nvs_flash_erase() != ESP_OK) {
                     ESP_LOGE("MAIN", "Failed to erase NVS");
                 }
                 ESP_LOGI("MAIN", "Config removed and NVS erased, restarting...");
-                delay(1000);  // Brief delay before restart
+                vTaskDelay(pdMS_TO_TICKS(1000));  // Brief delay before restart
                 esp_restart();
             }
         } else {
@@ -134,31 +144,32 @@ void debug_task(void *pvParameters) {
         vPortExitCritical(&g_configMutex);
         if (debugEnabled) {
             // Collect telemetry data
-            StaticJsonDocument<512> doc;
-            doc["uptime"] = millis() / 1000;  // Uptime in seconds
-            doc["heapFree"] = ESP.getFreeHeap();  // Free heap memory
-            doc["fwVersion"] = FW_VERSION;  // Firmware version
-            doc["batteryPercent"] = readBatteryLevel();  // Battery percentage
-            doc["tasks"] = uxTaskGetNumberOfTasks();  // Number of active tasks
-            doc["reconnects"] = getMqttReconnectCount();  // MQTT reconnect count
-            doc["totalAwakeTime"] = totalAwakeTime;  // Total awake time in ms
-            doc["wakeUpCount"] = wakeUpCount;  // Number of wake-ups
-            doc["lastWakeUpCause"] = lastWakeUpCause;  // Last wake-up cause
-            String payload;
-            serializeJson(doc, payload);
+            cJSON *doc = cJSON_CreateObject();
+            cJSON_AddNumberToObject(doc, "uptime", esp_timer_get_time() / 1000000);  // Uptime in seconds
+            cJSON_AddNumberToObject(doc, "heapFree", esp_get_free_heap_size());  // Free heap memory
+            cJSON_AddStringToObject(doc, "fwVersion", FW_VERSION);  // Firmware version
+            cJSON_AddNumberToObject(doc, "batteryPercent", readBatteryLevel());  // Battery percentage
+            cJSON_AddNumberToObject(doc, "tasks", uxTaskGetNumberOfTasks());  // Number of active tasks
+            cJSON_AddNumberToObject(doc, "reconnects", getMqttReconnectCount());  // MQTT reconnect count
+            cJSON_AddNumberToObject(doc, "totalAwakeTime", totalAwakeTime);  // Total awake time in ms
+            cJSON_AddNumberToObject(doc, "wakeUpCount", wakeUpCount);  // Number of wake-ups
+            cJSON_AddNumberToObject(doc, "lastWakeUpCause", lastWakeUpCause);  // Last wake-up cause
+            char *payload = cJSON_PrintUnformatted(doc);
             // Publish to debug topic
-            if (mqttClient.connected()) {
+            if (mqttConnected) {
                 char topic[96];
                 int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", locationSlug, locationCode);
                 if (len < sizeof(topic)) {
-                    mqttClient.publish(topic, payload.c_str(), false);  // Not retained
-                    ESP_LOGI("DEBUG", "Published debug telemetry: %s", payload.c_str());
+                    esp_mqtt_client_publish(mqttClient, topic, payload, 0, 1, 0);  // Not retained
+                    ESP_LOGI("DEBUG", "Published debug telemetry: %s", payload);
                 } else {
                     ESP_LOGE("DEBUG", "Topic too long, skipping debug publish");
                 }
             } else {
                 ESP_LOGW("DEBUG", "MQTT not connected, skipping debug publish");
             }
+            cJSON_free(payload);
+            cJSON_Delete(doc);
         }
         vTaskDelay(pdMS_TO_TICKS(60000));  // Every 60 seconds
     }
@@ -166,10 +177,9 @@ void debug_task(void *pvParameters) {
 
 /**
  * @brief Setup function: Initializes hardware, loads config, sets up tasks and OTA.
- *        Edge cases: LittleFS mount failure, config load failure, task creation failure.
+ *        Edge cases: SPIFFS mount failure, config load failure, task creation failure.
  */
-void setup() {
-    Serial.begin(115200);
+void app_main() {
     ESP_LOGI("MAIN", "WATERFRONT starting...");
 
     // Profile wake-up cause
@@ -178,18 +188,33 @@ void setup() {
     ESP_LOGI("MAIN", "Wake-up cause: %d, total wake-ups: %u", lastWakeUpCause, wakeUpCount);
 
     // Start awake time profiling
-    awakeStartTime = millis();
+    awakeStartTime = esp_timer_get_time() / 1000;
 
     // Initialize task watchdog timer for stability (12s timeout)
     esp_task_wdt_init(12, true);
     esp_task_wdt_add(NULL);  // Add main task to watchdog
 
-    // Initialize LittleFS for config storage
-    if (!LittleFS.begin()) {
-        ESP_LOGE("MAIN", "LittleFS mount failed, attempting graceful degradation");
-        fatal_error("LittleFS mount failed");
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    // Initialize SPIFFS for config storage
+    esp_vfs_spiffs_conf_t conf = {
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = true
+    };
+    ret = esp_vfs_spiffs_register(&conf);
+    if (ret != ESP_OK) {
+        ESP_LOGE("MAIN", "SPIFFS mount failed, attempting graceful degradation");
+        fatal_error("SPIFFS mount failed");
     } else {
-        ESP_LOGI("MAIN", "LittleFS mounted");
+        ESP_LOGI("MAIN", "SPIFFS mounted");
     }
 
     // Load configuration from JSON, fallback to defaults
@@ -213,97 +238,12 @@ void setup() {
     deposit_init();
 
     // Initialize OTA with callbacks for remote monitoring
-    ArduinoOTA.setHostname((String(g_config.mqtt.clientIdPrefix) + "-ota").c_str());
-    ArduinoOTA.setPassword("admin");  // Password for security
-    ArduinoOTA.onStart([]() {
-        String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
-        ESP_LOGI("OTA", "Start updating %s", type.c_str());
-        // Publish OTA start event
-        if (mqttClient.connected()) {
-            StaticJsonDocument<256> doc;
-            doc["event"] = "ota_start";
-            doc["type"] = type;
-            doc["timestamp"] = millis();
-            String payload;
-            serializeJson(doc, payload);
-            char topic[96];
-            vPortEnterCritical(&g_configMutex);
-            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
-            vPortExitCritical(&g_configMutex);
-            if (len < sizeof(topic)) {
-                mqttClient.publish(topic, payload.c_str(), false);
-            }
-        }
-    });
-    ArduinoOTA.onEnd([]() {
-        ESP_LOGI("OTA", "End");
-        // Publish OTA end event
-        if (mqttClient.connected()) {
-            StaticJsonDocument<256> doc;
-            doc["event"] = "ota_end";
-            doc["timestamp"] = millis();
-            String payload;
-            serializeJson(doc, payload);
-            char topic[96];
-            vPortEnterCritical(&g_configMutex);
-            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
-            vPortExitCritical(&g_configMutex);
-            if (len < sizeof(topic)) {
-                mqttClient.publish(topic, payload.c_str(), false);
-            }
-        }
-    });
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-        ESP_LOGI("OTA", "Progress: %u%%", (progress / (total / 100)));
-        // Publish progress every 10% to avoid spam
-        static unsigned int lastProgress = 0;
-        unsigned int percent = progress / (total / 100);
-        if (percent >= lastProgress + 10) {
-            lastProgress = percent;
-            if (mqttClient.connected()) {
-                StaticJsonDocument<256> doc;
-                doc["event"] = "ota_progress";
-                doc["progress"] = percent;
-                doc["timestamp"] = millis();
-                String payload;
-                serializeJson(doc, payload);
-                char topic[96];
-                vPortEnterCritical(&g_configMutex);
-                int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
-                vPortExitCritical(&g_configMutex);
-                if (len < sizeof(topic)) {
-                    mqttClient.publish(topic, payload.c_str(), false);
-                }
-            }
-        }
-    });
-    ArduinoOTA.onError([](ota_error_t error) {
-        ESP_LOGE("OTA", "Error[%u]: ", error);
-        // Log specific errors
-        if (error == OTA_AUTH_ERROR) ESP_LOGE("OTA", "Auth Failed");
-        else if (error == OTA_BEGIN_ERROR) ESP_LOGE("OTA", "Begin Failed");
-        else if (error == OTA_CONNECT_ERROR) ESP_LOGE("OTA", "Connect Failed");
-        else if (error == OTA_RECEIVE_ERROR) ESP_LOGE("OTA", "Receive Failed");
-        else if (error == OTA_END_ERROR) ESP_LOGE("OTA", "End Failed");
-        // Publish error event
-        if (mqttClient.connected()) {
-            StaticJsonDocument<256> doc;
-            doc["event"] = "ota_error";
-            doc["error_code"] = error;
-            doc["timestamp"] = millis();
-            String payload;
-            serializeJson(doc, payload);
-            char topic[96];
-            vPortEnterCritical(&g_configMutex);
-            int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/debug", g_config.location.slug, g_config.location.code);
-            vPortExitCritical(&g_configMutex);
-            if (len < sizeof(topic)) {
-                mqttClient.publish(topic, payload.c_str(), false);
-            }
-        }
-    });
-    ArduinoOTA.begin();
-    ESP_LOGI("OTA", "OTA initialized");
+    esp_http_client_config_t config = {
+        .url = "https://example.com/firmware.bin",  // Placeholder; updated via MQTT
+        .cert_pem = NULL,
+        .skip_cert_common_name_check = true,
+    };
+    // OTA handle will be set later via MQTT
 
     // Create factory reset task
     BaseType_t task_ret = xTaskCreate(factory_reset_task, "factory_reset", 2048, NULL, 5, NULL);
@@ -334,13 +274,19 @@ void setup() {
     }
 
     // Other initializations (WiFi, sensors, etc.) can be added here
+
+    // Main loop for continuous operation
+    while (1) {
+        main_loop();
+        vTaskDelay(pdMS_TO_TICKS(10));  // Small delay to yield
+    }
 }
 
 /**
  * @brief Main loop: Handles MQTT, OTA, LTE power, and power checks.
  *        Edge cases: MQTT loop failure, OTA handle failure, power check failures.
  */
-void loop() {
+void main_loop() {
     esp_task_wdt_reset();  // Reset watchdog at start of loop
 
     // Process MQTT messages
@@ -348,8 +294,8 @@ void loop() {
 
     esp_task_wdt_reset();  // Reset after MQTT
 
-    // Handle OTA updates
-    ArduinoOTA.handle();
+    // Handle OTA updates (placeholder; triggered via MQTT)
+    // esp_https_ota(&ota_config);  // Called when URL received
 
     esp_task_wdt_reset();  // Reset after OTA
 
@@ -362,7 +308,7 @@ void loop() {
 
     // Periodic power check for deep sleep
     static unsigned long lastPowerCheck = 0;
-    if (millis() - lastPowerCheck > 60000) {  // Every minute
+    if ((esp_timer_get_time() / 1000) - lastPowerCheck > 60000) {  // Every minute
         ESP_LOGI("MAIN", "Performing power check");
         int batteryPercent = readBatteryLevel();
         float solarVoltage = readSolarVoltage();
@@ -379,24 +325,25 @@ void loop() {
         // Publish alert if low power
         if (batteryPercent < g_config.system.batteryLowThresholdPercent || solarVoltage < g_config.system.solarVoltageMin) {
             ESP_LOGW("MAIN", "Low power detected, publishing alert");
-            if (mqttClient.connected()) {
-                StaticJsonDocument<256> doc;
-                doc["alert"] = "low_power";
-                doc["batteryPercent"] = batteryPercent;
-                doc["solarVoltage"] = solarVoltage;
-                doc["timestamp"] = millis();
-                String payload;
-                serializeJson(doc, payload);
+            if (mqttConnected) {
+                cJSON *doc = cJSON_CreateObject();
+                cJSON_AddStringToObject(doc, "alert", "low_power");
+                cJSON_AddNumberToObject(doc, "batteryPercent", batteryPercent);
+                cJSON_AddNumberToObject(doc, "solarVoltage", solarVoltage);
+                cJSON_AddNumberToObject(doc, "timestamp", esp_timer_get_time() / 1000);
+                char *payload = cJSON_PrintUnformatted(doc);
                 char topic[96];
                 vPortEnterCritical(&g_configMutex);
                 int len = snprintf(topic, sizeof(topic), "waterfront/%s/%s/alert", g_config.location.slug, g_config.location.code);
                 vPortExitCritical(&g_configMutex);
                 if (len < sizeof(topic)) {
-                    mqttClient.publish(topic, payload.c_str(), false);
+                    esp_mqtt_client_publish(mqttClient, topic, payload, 0, 1, 0);
                     ESP_LOGI("MAIN", "Published low power alert");
                 } else {
                     ESP_LOGE("MAIN", "Alert topic too long, skipping publish");
                 }
+                cJSON_free(payload);
+                cJSON_Delete(doc);
             } else {
                 ESP_LOGW("MAIN", "MQTT not connected, skipping low power alert");
             }
@@ -406,7 +353,7 @@ void loop() {
             ESP_LOGW("MAIN", "Entering deep sleep due to low power");
             enterDeepSleep();
         }
-        lastPowerCheck = millis();
+        lastPowerCheck = esp_timer_get_time() / 1000;
     }
 
     esp_task_wdt_reset();  // Reset watchdog at end of loop

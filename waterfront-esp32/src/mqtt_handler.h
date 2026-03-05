@@ -11,6 +11,9 @@
 
 #include <mqtt_client.h>
 
+extern esp_mqtt_client_handle_t mqttClient;
+extern bool mqttConnected;
+
 /**
  * @brief Initializes MQTT handler and gate control.
  */
