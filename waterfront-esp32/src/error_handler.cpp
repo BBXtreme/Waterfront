@@ -35,7 +35,7 @@ void fatal_error(const char* msg, esp_err_t code = ESP_FAIL) {
     bool debugEnabled = g_config.system.debugMode;
     vPortExitCritical(&g_configMutex);
     if (mqttConnected && debugEnabled) {
-        DynamicJsonDocument doc(256);
+        StaticJsonDocument<256> doc;
         doc["error"] = msg;
         doc["code"] = esp_err_to_name(code);  // Human-readable error code
         doc["timestamp"] = millis();
@@ -60,7 +60,7 @@ void fatal_error(const char* msg, esp_err_t code = ESP_FAIL) {
     }
 
     // Publish to alert topic for critical alerts (always attempted)
-    DynamicJsonDocument alertDoc(256);
+    StaticJsonDocument<256> alertDoc;
     alertDoc["error"] = msg;
     alertDoc["code"] = code;  // Numeric code for alerts
     alertDoc["timestamp"] = millis();

@@ -29,6 +29,12 @@
 // Firmware version define
 const char* FW_VERSION = "0.9.2-beta"; ///< Firmware version string
 
+// Deep sleep profiling variables
+static unsigned long awakeStartTime = 0;
+static unsigned long totalAwakeTime = 0;
+static unsigned int wakeUpCount = 0;
+static esp_sleep_wakeup_cause_t lastWakeUpCause = ESP_SLEEP_WAKEUP_UNDEFINED;
+
 /**
  * @brief Factory reset task: Monitors GPIO 0 for long press to trigger factory reset.
  *        Resets config and NVS, publishes event, and restarts ESP32.
@@ -57,7 +63,7 @@ void factory_reset_task(void *pvParameters) {
                 ESP_LOGW("MAIN", "Factory reset triggered by long-press on GPIO 0");
                 // Publish event to MQTT for remote monitoring
                 if (mqttClient.connected()) {
-                    DynamicJsonDocument doc(256);
+                    StaticJsonDocument<256> doc;
                     doc["event"] = "factory_reset";
                     doc["timestamp"] = millis();
                     String payload;
@@ -128,13 +134,16 @@ void debug_task(void *pvParameters) {
         vPortExitCritical(&g_configMutex);
         if (debugEnabled) {
             // Collect telemetry data
-            DynamicJsonDocument doc(512);
+            StaticJsonDocument<512> doc;
             doc["uptime"] = millis() / 1000;  // Uptime in seconds
             doc["heapFree"] = ESP.getFreeHeap();  // Free heap memory
             doc["fwVersion"] = FW_VERSION;  // Firmware version
             doc["batteryPercent"] = readBatteryLevel();  // Battery percentage
             doc["tasks"] = uxTaskGetNumberOfTasks();  // Number of active tasks
             doc["reconnects"] = getMqttReconnectCount();  // MQTT reconnect count
+            doc["totalAwakeTime"] = totalAwakeTime;  // Total awake time in ms
+            doc["wakeUpCount"] = wakeUpCount;  // Number of wake-ups
+            doc["lastWakeUpCause"] = lastWakeUpCause;  // Last wake-up cause
             String payload;
             serializeJson(doc, payload);
             // Publish to debug topic
@@ -162,6 +171,14 @@ void debug_task(void *pvParameters) {
 void setup() {
     Serial.begin(115200);
     ESP_LOGI("MAIN", "WATERFRONT starting...");
+
+    // Profile wake-up cause
+    lastWakeUpCause = esp_sleep_get_wakeup_cause();
+    wakeUpCount++;
+    ESP_LOGI("MAIN", "Wake-up cause: %d, total wake-ups: %u", lastWakeUpCause, wakeUpCount);
+
+    // Start awake time profiling
+    awakeStartTime = millis();
 
     // Initialize task watchdog timer for stability (12s timeout)
     esp_task_wdt_init(12, true);
@@ -203,7 +220,7 @@ void setup() {
         ESP_LOGI("OTA", "Start updating %s", type.c_str());
         // Publish OTA start event
         if (mqttClient.connected()) {
-            DynamicJsonDocument doc(256);
+            StaticJsonDocument<256> doc;
             doc["event"] = "ota_start";
             doc["type"] = type;
             doc["timestamp"] = millis();
@@ -222,7 +239,7 @@ void setup() {
         ESP_LOGI("OTA", "End");
         // Publish OTA end event
         if (mqttClient.connected()) {
-            DynamicJsonDocument doc(256);
+            StaticJsonDocument<256> doc;
             doc["event"] = "ota_end";
             doc["timestamp"] = millis();
             String payload;
@@ -244,7 +261,7 @@ void setup() {
         if (percent >= lastProgress + 10) {
             lastProgress = percent;
             if (mqttClient.connected()) {
-                DynamicJsonDocument doc(256);
+                StaticJsonDocument<256> doc;
                 doc["event"] = "ota_progress";
                 doc["progress"] = percent;
                 doc["timestamp"] = millis();
@@ -270,7 +287,7 @@ void setup() {
         else if (error == OTA_END_ERROR) ESP_LOGE("OTA", "End Failed");
         // Publish error event
         if (mqttClient.connected()) {
-            DynamicJsonDocument doc(256);
+            StaticJsonDocument<256> doc;
             doc["event"] = "ota_error";
             doc["error_code"] = error;
             doc["timestamp"] = millis();
@@ -363,7 +380,7 @@ void loop() {
         if (batteryPercent < g_config.system.batteryLowThresholdPercent || solarVoltage < g_config.system.solarVoltageMin) {
             ESP_LOGW("MAIN", "Low power detected, publishing alert");
             if (mqttClient.connected()) {
-                DynamicJsonDocument doc(256);
+                StaticJsonDocument<256> doc;
                 doc["alert"] = "low_power";
                 doc["batteryPercent"] = batteryPercent;
                 doc["solarVoltage"] = solarVoltage;

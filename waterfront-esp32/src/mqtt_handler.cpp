@@ -147,7 +147,7 @@ void mqtt_subscribe() {
 
 // Publish retained status for a compartment with CRC32
 void mqtt_publish_retained_status(int compartmentId, const char* jsonPayload) {
-    DynamicJsonDocument doc(512);
+    StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, jsonPayload);
     if (error) {
         ESP_LOGE("MQTT", "Failed to parse JSON for status publish: %s", error.c_str());
@@ -251,7 +251,7 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
                 prefs.end();
                 // Assume msg is the URL
                 t_httpUpdate_return ret = httpUpdate.update(msg);
-                DynamicJsonDocument otaDoc(256);
+                StaticJsonDocument<256> otaDoc;
                 otaDoc["firmwareVersion"] = FW_VERSION;
                 switch (ret) {
                     case HTTP_UPDATE_FAILED:
@@ -291,7 +291,7 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
             snprintf(bookingPaidTopic, sizeof(bookingPaidTopic), "waterfront/%s/%s/booking/paid", locationSlug, locationCode);
             if (topic == bookingPaidTopic) {
                 ESP_LOGI("MQTT", "Booking paid received: %s", msg.c_str());
-                DynamicJsonDocument doc(256);
+                StaticJsonDocument<256> doc;
                 DeserializationError error = deserializeJson(doc, msg);
                 if (error) {
                     ESP_LOGE("MQTT", "Failed to parse booking paid payload");
@@ -310,7 +310,7 @@ void event_handler(void* args, esp_event_base_t base, int32_t event_id, void* da
             }
 
             // Validate CRC for other messages
-            DynamicJsonDocument doc(512);
+            StaticJsonDocument<512> doc;
             DeserializationError error = deserializeJson(doc, msg);
             if (error) {
                 ESP_LOGE("MQTT", "JSON parse failed for status: %s", error.c_str());
