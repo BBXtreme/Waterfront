@@ -1,11 +1,10 @@
 #ifndef CONFIG_LOADER_H
 #define CONFIG_LOADER_H
 
-#include <string>
-#include <nlohmann/json.hpp>
+#include <cJSON.h>
 #include "config.h"
 
-// JSON buffer size for ArduinoJson documents (tune if config grows)
+// JSON buffer size for cJSON documents (tune if config grows)
 #define JSON_BUFFER_SIZE 4096
 
 // Thread-safety mutex for g_config access (ESP32 multi-core)
@@ -102,7 +101,7 @@ bool loadConfig();
 bool saveConfig();
 bool updateConfigFromJson(const char* jsonPayload);
 GlobalConfig getDefaultConfig();
-std::string getConfigAsJson();
+const char* getConfigAsJson();
 bool validateConfig(const GlobalConfig& cfg);
 
 #endif // CONFIG_LOADER_H
