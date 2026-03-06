@@ -6,7 +6,7 @@
 
 #include "nimble.h"
 #include "config_loader.h"
-#include <BLEDevice.h>
+#include "esp_bt.h"
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>

@@ -1,119 +1,89 @@
-// offline_fallback.cpp - Offline PIN validation and fallback logic
-// This file handles pre-synced PIN lists from retained MQTT topics for offline unlock validation.
-// It stores active bookings/PINs in NVS and validates entered PINs locally if MQTT is unavailable.
-// Used for gate control when the ESP32 cannot reach the broker.
-
+// offline_fallback.cpp
 #include "offline_fallback.h"
 #include "config_loader.h"
 #include <nvs.h>
-#include <ArduinoJson.h>
+#include <ArduinoJson.h>   // ← change to "cJSON.h" later
+#include <string.h>
 
-// NVS namespace for PIN storage
 #define NVS_NAMESPACE "pins"
+#define MAX_BOOKINGS 10
 
-// Structure for a single booking entry
 struct BookingEntry {
     char bookingId[32];
     char pin[8];
-    time_t expires;  // Unix timestamp for expiration
+    time_t expires;
 };
 
-// Array to hold active bookings (max 10 for simplicity; adjust as needed)
-#define MAX_BOOKINGS 10
-BookingEntry activeBookings[MAX_BOOKINGS];
-int numActiveBookings = 0;
+static BookingEntry activeBookings[MAX_BOOKINGS];
+static int numActiveBookings = 0;
 
-// Initialize NVS for PIN storage
 void offline_init() {
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        err = nvs_flash_init();
+        nvs_flash_erase();
+        nvs_flash_init();
     }
-    ESP_ERROR_CHECK(err);
-    ESP_LOGI("OFFLINE", "NVS initialized for PIN storage");
+    ESP_LOGI("OFFLINE", "NVS initialized");
 }
 
-// Sync PIN list from retained MQTT topic payload
-// Payload example: [{"bookingId":"bk_abc","pin":"1234","expires":"2026-03-01T12:00:00Z"}, ...]
 void offline_sync_pins(const char* payload) {
+    // TODO: replace with cJSON later
     DynamicJsonDocument doc(2048);
     DeserializationError error = deserializeJson(doc, payload);
     if (error) {
-        ESP_LOGE("OFFLINE", "Failed to parse PIN sync payload");
+        ESP_LOGE("OFFLINE", "JSON parse failed: %s", error.c_str());
         return;
     }
 
     numActiveBookings = 0;
-    for (JsonObject booking : doc.as<JsonArray>()) {
+    JsonArray arr = doc.as<JsonArray>();
+    for (JsonObject obj : arr) {
         if (numActiveBookings >= MAX_BOOKINGS) break;
-        strlcpy(activeBookings[numActiveBookings].bookingId, booking["bookingId"], sizeof(activeBookings[numActiveBookings].bookingId));
-        strlcpy(activeBookings[numActiveBookings].pin, booking["pin"], sizeof(activeBookings[numActiveBookings].pin));
-        // Parse expires timestamp (assume ISO 8601; simple conversion)
-        String expiresStr = booking["expires"];
-        // TODO: Implement proper ISO 8601 to Unix timestamp conversion
-        activeBookings[numActiveBookings].expires = 0;  // Placeholder; set to future time
+        strlcpy(activeBookings[numActiveBookings].bookingId, obj["bookingId"] | "", 32);
+        strlcpy(activeBookings[numActiveBookings].pin, obj["pin"] | "", 8);
+        // TODO: proper expires parsing
+        activeBookings[numActiveBookings].expires = time(NULL) + 86400; // placeholder
         numActiveBookings++;
     }
 
-    // Store in NVS for persistence
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("OFFLINE", "NVS open failed");
-        return;
-    }
-    size_t size = sizeof(BookingEntry) * numActiveBookings;
-    err = nvs_set_blob(nvs_handle, "bookings", activeBookings, size);
-    if (err != ESP_OK) {
-        ESP_LOGE("OFFLINE", "NVS set blob failed");
-    }
-    nvs_commit(nvs_handle);
-    nvs_close(nvs_handle);
-    ESP_LOGI("OFFLINE", "Synced %d bookings to NVS", numActiveBookings);
+    // Save to NVS
+    nvs_handle_t h;
+    nvs_open(NVS_NAMESPACE, NVS_READWRITE, &h);
+    nvs_set_blob(h, "bookings", activeBookings, sizeof(BookingEntry) * numActiveBookings);
+    nvs_commit(h);
+    nvs_close(h);
+
+    ESP_LOGI("OFFLINE", "Synced %d bookings", numActiveBookings);
 }
 
-// Validate PIN locally (for offline keypad entry or MQTT fallback)
 bool offline_validate_pin(const char* enteredPin) {
-    time_t now = time(NULL);  // Assume time is set; otherwise use millis-based check
+    time_t now = time(NULL);
     for (int i = 0; i < numActiveBookings; i++) {
         if (strcmp(activeBookings[i].pin, enteredPin) == 0 && activeBookings[i].expires > now) {
-            ESP_LOGI("OFFLINE", "PIN validated offline for booking %s", activeBookings[i].bookingId);
             return true;
         }
     }
-    ESP_LOGW("OFFLINE", "PIN validation failed offline");
     return false;
 }
 
-// Load PINs from NVS on boot
 void offline_load_pins() {
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGW("OFFLINE", "NVS open for load failed");
-        return;
-    }
-    size_t size = sizeof(BookingEntry) * MAX_BOOKINGS;
-    err = nvs_get_blob(nvs_handle, "bookings", activeBookings, &size);
-    if (err == ESP_OK) {
-        numActiveBookings = size / sizeof(BookingEntry);
-        ESP_LOGI("OFFLINE", "Loaded %d bookings from NVS", numActiveBookings);
-    } else {
-        ESP_LOGW("OFFLINE", "NVS get blob failed");
-    }
-    nvs_close(nvs_handle);
+    nvs_handle_t h;
+    if (nvs_open(NVS_NAMESPACE, NVS_READONLY, &h) != ESP_OK) return;
+
+    size_t sz = sizeof(BookingEntry) * MAX_BOOKINGS;
+    nvs_get_blob(h, "bookings", activeBookings, &sz);
+    numActiveBookings = sz / sizeof(BookingEntry);
+    nvs_close(h);
+    ESP_LOGI("OFFLINE", "Loaded %d bookings from NVS", numActiveBookings);
 }
 
-// Clean up expired bookings (call periodically)
 void offline_cleanup_expired() {
     time_t now = time(NULL);
-    int newCount = 0;
+    int j = 0;
     for (int i = 0; i < numActiveBookings; i++) {
         if (activeBookings[i].expires > now) {
-            activeBookings[newCount++] = activeBookings[i];
+            activeBookings[j++] = activeBookings[i];
         }
     }
-    numActiveBookings = newCount;
-    ESP_LOGI("OFFLINE", "Cleaned up expired bookings; %d remaining", numActiveBookings);
+    numActiveBookings = j;
 }
