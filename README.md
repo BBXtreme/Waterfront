@@ -55,22 +55,6 @@ Users book online → pay → receive PIN/QR → arrive at solar-powered locker 
 - **Development** — pnpm, Aider (AI pair programming), GitHub monorepo
 - **Deployment** — e.g. Vercel (frontend), Railway/Render/VPS (MQTT broker, future BTCPay)
 
-## Project Structure (Monorepo)
-
-Waterfront/ 
-
-├── docs/                   # Functional/Technical specs, wireframes, schemas 
-
-├── supabase-local/         # Local Supabase dev (CLI + migrations) 
-
-├── waterfront-web/         # Next.js PWA → deployed to Vercel 
-
-├── waterfront-esp32/       # ESP-IDF project 
-
-├── waterfront-infra/       # Docker Compose (Mosquitto, future BTCPay) 
-
-└── README.md
-
 ## Quick Start – Local Development
 
 ### Prerequisites
@@ -139,7 +123,6 @@ The ESP32 controller uses **ESP-IDF framework** (not Arduino core).
    cd Waterfront/waterfront-esp32
 
 
-
 ##### Build / Upload / Monitor:
 
 - **Build**: Click PlatformIO → Build (checkmark icon) or run pio run in terminal
@@ -148,7 +131,6 @@ The ESP32 controller uses **ESP-IDF framework** (not Arduino core).
 
 - **Serial Monitor**: Click PlatformIO → Serial Monitor (plug icon) or pio device monitor
 
-  
 
 ## Environment Variables
 
